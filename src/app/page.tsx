@@ -1,14 +1,26 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Scene from '@/components/3d/Scene';
+import TopBar from '@/components/ui/TopBar';
 import { resumeData } from '@/data/resumeData';
+
+type FloatingLetter = {
+  id: string;
+  char: string;
+  startX: number;
+  startY: number;
+  rot: number;
+  floatDelay: number;
+};
 
 export default function Home() {
   const [isSettled, setIsSettled] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
+  const [inputValue, setInputValue] = useState("");
+  const [letters, setLetters] = useState<FloatingLetter[]>([]);
+  const [isAssembling, setIsAssembling] = useState(false);
 
   useEffect(() => {
-    // Cinematic 2.5-second loading sequence
     const duration = 2500;
     const startTime = Date.now();
 
@@ -18,22 +30,100 @@ export default function Home() {
       
       setLoadProgress(progress);
 
-      // When the bar hits 100%, stop the timer and settle the keyboard
       if (progress === 100) {
         clearInterval(interval);
         setIsSettled(true);
       }
-    }, 16); // Runs at roughly 60 frames per second for a buttery smooth line
+    }, 16); 
 
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (!isSettled || isAssembling) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key.toLowerCase() === 'a') {
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (e.key === 'Backspace') {
+        setInputValue(prev => prev.slice(0, -1));
+        setLetters(prev => prev.slice(0, -1));
+      } else if (e.key === 'Enter') {
+        if (inputValue.length > 0) {
+          setIsAssembling(true);
+          
+          setTimeout(() => {
+            setLetters([]);
+            setInputValue("");
+            setIsAssembling(false);
+          }, 2000);
+        }
+      } else if (e.key.length === 1 && /[a-zA-Z0-9 ]/.test(e.key)) {
+        setInputValue(prev => prev + e.key);
+        setLetters(prev => [...prev, {
+          id: Date.now().toString() + Math.random(),
+          char: e.key,
+          startX: Math.random() * 80 + 10,
+          startY: Math.random() * 60 + 10,
+          rot: Math.random() * 90 - 45,
+          floatDelay: Math.random() * -5
+        }]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSettled, isAssembling, inputValue]);
+
   return (
-    <main className="relative min-h-screen bg-neutral-950 overflow-hidden font-sans">
+    <main className="relative min-h-screen bg-neutral-950 overflow-hidden font-sans select-none">
       
-      {/* 2D HTML LAYER */}
+      <div className="absolute inset-0 z-0 bg-grid pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/15 blur-[140px] rounded-[100%] pointer-events-none z-0" />
+
+      <TopBar isSettled={isSettled} />
+
+      {letters.map((letter, index) => {
+        const isSpace = letter.char === ' ';
+        const letterSpacing = 40;
+        const totalWidth = letters.length * letterSpacing;
+        const startLeft = `calc(50vw - ${totalWidth / 2}px + ${index * letterSpacing}px)`;
+        const startTop = `35vh`;
+
+        return (
+          <div
+            key={letter.id}
+            className="absolute z-0 transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-none flex items-center justify-center w-10 h-10"
+            style={{
+              left: isAssembling ? startLeft : `${letter.startX}vw`,
+              top: isAssembling ? startTop : `${letter.startY}vh`,
+              opacity: isAssembling ? 1 : 0.15,
+              scale: isAssembling ? 1 : 1.5,
+            }}
+          >
+            <div
+              className={`font-mono font-bold transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${isAssembling ? "" : "animate-float-bob"}`}
+              style={{
+                animationDelay: `${letter.floatDelay}s`,
+                transform: isAssembling ? `rotate(0deg)` : `rotate(${letter.rot}deg)`,
+                color: isAssembling ? '#22d3ee' : '#0891b2',
+                textShadow: isAssembling ? '0 0 30px rgba(34, 211, 238, 0.8)' : 'none',
+                fontSize: isAssembling ? '4rem' : '8rem',
+              }}
+            >
+              {isSpace ? "\u00A0" : letter.char}
+            </div>
+          </div>
+        );
+      })}
+
       <div 
-        className={`absolute inset-0 z-0 flex flex-col items-center justify-start pt-32 transition-all duration-1000 ease-in-out ${
+        className={`absolute inset-0 z-10 flex flex-col items-center justify-start pt-32 transition-all duration-1000 ease-in-out ${
           isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}
       >
@@ -41,7 +131,7 @@ export default function Home() {
           <h1 className="text-5xl md:text-7xl font-black text-neutral-200 tracking-tighter uppercase">
             {resumeData.personalInfo.name}
           </h1>
-          <p className="text-xl md:text-2xl text-red-500 tracking-widest uppercase font-semibold">
+          <p className="text-xl md:text-2xl text-cyan-400 tracking-widest uppercase font-semibold">
             {resumeData.personalInfo.title}
           </p>
           
@@ -49,20 +139,19 @@ export default function Home() {
             <p className="text-neutral-500 text-sm tracking-widest uppercase mb-3">
               System Ready. Type to search portfolio...
             </p>
-            <div className="w-96 h-12 border border-neutral-800 bg-neutral-900/50 rounded-md flex items-center px-4 shadow-xl">
-              <span className="text-red-500 font-mono mr-2">{">"}</span>
+            <div className={`w-96 h-12 border border-neutral-800 bg-neutral-900/80 backdrop-blur-sm rounded-md flex items-center px-4 shadow-2xl shadow-cyan-900/40 transition-opacity duration-500 ${isAssembling ? 'opacity-0' : 'opacity-100'}`}>
+              <span className="text-cyan-400 font-mono mr-2">{">"}</span>
+              <span className="text-neutral-200 font-mono">{inputValue}</span>
               <span className="text-neutral-400 font-mono animate-blink">_</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3D CANVAS LAYER */}
       <Scene isSettled={isSettled} />
 
-      {/* 🟥 THE LOADING BAR */}
       <div 
-        className={`absolute bottom-0 left-0 h-1 bg-red-500 transition-opacity duration-1000 z-50 ${
+        className={`absolute bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${
           isSettled ? 'opacity-0' : 'opacity-100'
         }`} 
         style={{ width: `${loadProgress}%` }} 
