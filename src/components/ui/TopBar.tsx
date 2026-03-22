@@ -4,9 +4,10 @@ import Image from 'next/image';
 
 interface TopBarProps {
   isSettled: boolean;
+  onCommand: (cmd: string) => void;
 }
 
-export default function TopBar({ isSettled }: TopBarProps) {
+export default function TopBar({ isSettled, onCommand }: TopBarProps) {
   const navItems = ['about me', 'experience', 'skills', 'projects', 'contact'];
 
   return (
@@ -16,13 +17,16 @@ export default function TopBar({ isSettled }: TopBarProps) {
       }`}
     >
       <div className="w-full h-20 border-b border-cyan-900/40 bg-neutral-950/60 backdrop-blur-md flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+        <div 
+          className="flex items-center space-x-3 cursor-pointer group"
+          onClick={() => onCommand('home')}
+        >
           <Image 
-            src="/logo.png" 
+            src="/logo.jpg" 
             alt="Portfolio Logo" 
             width={48} 
             height={48} 
-            className="rounded-lg border border-cyan-800 shadow-[0_0_10px_rgba(34,211,238,0.3)]"
+            className="rounded-lg border border-cyan-800 shadow-[0_0_10px_rgba(34,211,238,0.3)] transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.8)] group-hover:border-cyan-400"
           />
         </div>
 
@@ -30,7 +34,8 @@ export default function TopBar({ isSettled }: TopBarProps) {
           {navItems.map((item) => (
             <button
               key={item}
-              className="group relative px-1 py-1 font-mono text-xs md:text-sm tracking-widest uppercase text-neutral-400 transition-colors duration-300 hover:text-cyan-400"
+              onClick={() => onCommand(item)}
+              className="group relative px-1 py-1 font-mono text-xs md:text-sm tracking-widest uppercase text-neutral-400 transition-colors duration-300 hover:text-cyan-400 cursor-pointer"
             >
               <span className="absolute -left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-cyan-500">
                 {">"}
