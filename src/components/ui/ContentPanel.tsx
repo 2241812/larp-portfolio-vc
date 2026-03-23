@@ -14,7 +14,6 @@ export default function ContentPanel({ section }: ContentPanelProps) {
       case 'about me':
         return (
           <div className="space-y-6 text-neutral-300">
-            <h3 className="text-3xl font-bold text-cyan-400 mb-4 tracking-wider uppercase">About Me</h3>
             <p className="text-lg leading-relaxed">
               I am a {resumeData.personalInfo.title} currently studying at {resumeData.education.university}. 
               With a GPA of {resumeData.education.gpa}, I am part of the class of {resumeData.education.classOf}.
@@ -28,7 +27,6 @@ export default function ContentPanel({ section }: ContentPanelProps) {
       case 'projects':
         return (
           <div className="space-y-8 text-neutral-300">
-            <h3 className="text-3xl font-bold text-cyan-400 mb-6 tracking-wider uppercase">Projects & Experience</h3>
             {resumeData.projects.map((proj, idx) => (
               <div key={idx} className="p-6 bg-cyan-950/20 border border-cyan-800/30 rounded-xl hover:border-cyan-500/50 transition-colors">
                 <h4 className="text-xl font-bold text-neutral-100">{proj.title}</h4>
@@ -46,8 +44,6 @@ export default function ContentPanel({ section }: ContentPanelProps) {
       case 'skills':
         return (
           <div className="space-y-8 text-neutral-300">
-            <h3 className="text-3xl font-bold text-cyan-400 mb-6 tracking-wider uppercase">Technical Skills</h3>
-            
             <div>
               <h4 className="text-lg font-bold text-neutral-400 mb-3 uppercase tracking-widest border-b border-cyan-900/50 pb-2">Programming & Web</h4>
               <div className="flex flex-wrap gap-3 mt-4">
@@ -74,8 +70,7 @@ export default function ContentPanel({ section }: ContentPanelProps) {
       case 'contact':
         return (
           <div className="space-y-6 text-neutral-300">
-            <h3 className="text-3xl font-bold text-cyan-400 mb-4 tracking-wider uppercase">Contact Protocol</h3>
-            <div className="space-y-4 font-mono text-lg">
+            <div className="space-y-4 font-mono text-lg text-center md:text-left">
               <p><span className="text-neutral-500">Email:</span> <a href={`mailto:${resumeData.personalInfo.email}`} className="text-cyan-400 hover:underline">{resumeData.personalInfo.email}</a></p>
               <p><span className="text-neutral-500">Phone:</span> {resumeData.personalInfo.phone}</p>
               <p><span className="text-neutral-500">Location:</span> {resumeData.personalInfo.location}</p>
@@ -89,7 +84,7 @@ export default function ContentPanel({ section }: ContentPanelProps) {
   };
 
   return (
-    <div className="w-full max-w-2xl ml-auto bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/40 rounded-2xl shadow-[0_0_40px_rgba(34,211,238,0.1)] relative z-10 p-8 md:p-12">
+    <div className="w-full bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/40 rounded-2xl shadow-[0_0_40px_rgba(34,211,238,0.1)] relative z-10 p-8 md:p-12">
       {renderContent()}
     </div>
   );

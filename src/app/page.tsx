@@ -1,15 +1,14 @@
 "use client";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
-import ContentPanel from '@/components/ui/ContentPanel';
+import Sections from '@/components/ui/Sections';
 import { resumeData } from '@/data/resumeData';
 
 type FloatingLetter = { id: string; char: string; startX: number; startY: number; rot: number; floatDelay: number; };
 
-const SECTIONS = ['', 'about me', 'experience', 'skills', 'projects', 'contact'];
 const VALID_COMMANDS = ['about me', 'experience', 'skills', 'projects', 'contact'];
-const HINT_PHRASES = ["'about me'", "'projects'", "'skills'", "'experience'", "'contact'"];
+const HINT_PHRASES = ["'about me'", "'python'", "'skills'", "'docker'", "'contact'"];
 
 export default function Home() {
   const [isSettled, setIsSettled] = useState(false);
@@ -17,19 +16,11 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [letters, setLetters] = useState<FloatingLetter[]>([]);
   const [isAssembling, setIsAssembling] = useState(false);
-  
-  const [activeSection, setActiveSection] = useState("");
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isError, setIsError] = useState(false);
   
   const [hintText, setHintText] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isDeletingHint, setIsDeletingHint] = useState(false);
-
-  const activeSectionRef = useRef(activeSection);
-
-  useEffect(() => {
-    activeSectionRef.current = activeSection;
-  }, [activeSection]);
 
   useEffect(() => {
     const duration = 2500;
@@ -47,19 +38,15 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (inputValue.length > 0 || isAssembling || isTransitioning) {
+    if (inputValue.length > 0 || isAssembling || isError) {
       setHintText("");
       return;
     }
-    
     const timeout = setTimeout(() => {
       const currentPhrase = `Try typing ${HINT_PHRASES[hintIndex]}...`;
-      
       if (!isDeletingHint) {
         setHintText(currentPhrase.substring(0, hintText.length + 1));
-        if (hintText === currentPhrase) {
-          setTimeout(() => setIsDeletingHint(true), 2000);
-        }
+        if (hintText === currentPhrase) setTimeout(() => setIsDeletingHint(true), 2000);
       } else {
         setHintText(currentPhrase.substring(0, hintText.length - 1));
         if (hintText === '') {
@@ -68,75 +55,55 @@ export default function Home() {
         }
       }
     }, isDeletingHint ? 30 : 80);
-    
     return () => clearTimeout(timeout);
-  }, [hintText, isDeletingHint, hintIndex, inputValue, isAssembling, isTransitioning]);
+  }, [hintText, isDeletingHint, hintIndex, inputValue, isAssembling, isError]);
 
-  const triggerTransition = (nextSection: string) => {
-    if (isTransitioning || nextSection === activeSection) return;
-    setIsTransitioning(true);
-    
-    setTimeout(() => {
-      setActiveSection(nextSection);
-    }, 800);
+  const findSectionForKeyword = (keyword: string): string | null => {
+    const lowerKw = keyword.toLowerCase().trim();
+    if (!lowerKw) return null;
+    if (VALID_COMMANDS.includes(lowerKw)) return lowerKw;
 
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 1600);
+    const inProgramming = resumeData.skills.programming.some(s => s.toLowerCase().includes(lowerKw));
+    const inFrameworks = resumeData.skills.frameworks.some(s => s.toLowerCase().includes(lowerKw));
+    if (inProgramming || inFrameworks) return 'skills';
+
+    const inProjects = resumeData.projects.some(p => p.title.toLowerCase().includes(lowerKw) || p.description.toLowerCase().includes(lowerKw) || p.role.toLowerCase().includes(lowerKw));
+    if (inProjects) return 'projects';
+
+    if (resumeData.personalInfo.title.toLowerCase().includes(lowerKw)) return 'about me';
+
+    return null; 
   };
 
   const executeCommand = (cmd: string) => {
     if (!cmd) return;
     setIsAssembling(true);
-    const normalizedCmd = cmd.toLowerCase().trim();
-    const isValid = VALID_COMMANDS.includes(normalizedCmd) || normalizedCmd === "home" || normalizedCmd === "clear";
+    
+    const targetSection = findSectionForKeyword(cmd);
 
     setTimeout(() => {
       setLetters([]);
-      setInputValue("");
       setIsAssembling(false);
       
-      if (isValid) {
-        const nextSec = (normalizedCmd === "home" || normalizedCmd === "clear") ? "" : normalizedCmd;
-        triggerTransition(nextSec);
+      if (targetSection) {
+        setInputValue("");
+        document.getElementById(targetSection)?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        setIsError(true);
+        setInputValue("COMMAND NOT FOUND");
+        setTimeout(() => {
+          setIsError(false);
+          setInputValue("");
+        }, 1500);
       }
     }, 2000);
-  };
-
-  const handleTopBarCommand = (cmd: string) => {
-    if (isAssembling || isTransitioning) return;
-    const normalizedCmd = cmd.toLowerCase().trim();
-    if (normalizedCmd === 'home') {
-        triggerTransition('');
-        return;
-    }
-
-    setInputValue(cmd);
-    const newLetters = cmd.split('').map((char, index) => ({
-      id: Date.now().toString() + index + Math.random(),
-      char: char, startX: Math.random() * 80 + 10, startY: Math.random() * 60 + 10, rot: Math.random() * 90 - 45, floatDelay: Math.random() * -5
-    }));
-    setLetters(newLetters);
-    executeCommand(cmd);
   };
 
   useEffect(() => {
     if (!isSettled) return;
 
-    const handleWheel = (e: WheelEvent) => {
-      if (isAssembling || isTransitioning) return;
-      const currentIndex = SECTIONS.indexOf(activeSectionRef.current);
-
-      if (e.deltaY > 40 && currentIndex < SECTIONS.length - 1) {
-        triggerTransition(SECTIONS[currentIndex + 1]);
-      } else if (e.deltaY < -40 && currentIndex > 0) {
-        triggerTransition(SECTIONS[currentIndex - 1]);
-      }
-    };
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isAssembling || isTransitioning) return;
-
+      if (isAssembling || isError) return;
       if (e.ctrlKey || e.metaKey) {
         if (e.key.toLowerCase() === 'a') e.preventDefault();
         return;
@@ -154,71 +121,57 @@ export default function Home() {
         }]);
       }
     };
-
-    window.addEventListener('wheel', handleWheel);
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isSettled, isAssembling, isTransitioning, inputValue]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSettled, isAssembling, isError, inputValue]);
 
   return (
-    <main className="relative min-h-screen bg-neutral-950 overflow-hidden font-sans select-none">
-      <div className="absolute inset-0 z-0 bg-grid pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/15 blur-[140px] rounded-[100%] pointer-events-none z-0" />
+    <main className="relative bg-neutral-950 font-sans select-none text-neutral-300">
+      <div className="fixed inset-0 z-0 bg-grid pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/15 blur-[140px] rounded-[100%] pointer-events-none z-0" />
+      <Scene isSettled={isSettled} />
+      <TopBar isSettled={isSettled} />
 
-      <TopBar isSettled={isSettled} onCommand={handleTopBarCommand} />
+      <div className="fixed inset-0 z-50 pointer-events-none">
+        {letters.map((letter, index) => {
+          const isSpace = letter.char === ' ';
+          const letterSpacing = 40;
+          const totalWidth = letters.length * letterSpacing;
+          const startLeft = `calc(50vw - ${totalWidth / 2}px + ${index * letterSpacing}px)`;
+          const startTop = `35vh`;
 
-      {letters.map((letter, index) => {
-        const isSpace = letter.char === ' ';
-        const letterSpacing = 40;
-        const totalWidth = letters.length * letterSpacing;
-        const startLeft = `calc(50vw - ${totalWidth / 2}px + ${index * letterSpacing}px)`;
-        const startTop = `35vh`;
+          return (
+            <div key={letter.id} className="absolute transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] flex items-center justify-center w-10 h-10" style={{ left: isAssembling ? startLeft : `${letter.startX}vw`, top: isAssembling ? startTop : `${letter.startY}vh`, opacity: isAssembling ? 1 : 0.15, scale: isAssembling ? 1 : 1.5 }}>
+              <div className={`font-mono font-bold transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${isAssembling ? "" : "animate-float-bob"}`} style={{ animationDelay: `${letter.floatDelay}s`, transform: isAssembling ? `rotate(0deg)` : `rotate(${letter.rot}deg)`, color: isAssembling ? (isError ? '#ef4444' : '#22d3ee') : '#0891b2', textShadow: isAssembling ? (isError ? '0 0 30px rgba(239, 68, 68, 0.8)' : '0 0 30px rgba(34, 211, 238, 0.8)') : 'none', fontSize: isAssembling ? '4rem' : '8rem' }}>
+                {isSpace ? "\u00A0" : letter.char}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-        return (
-          <div key={letter.id} className="absolute z-10 transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-none flex items-center justify-center w-10 h-10" style={{ left: isAssembling ? startLeft : `${letter.startX}vw`, top: isAssembling ? startTop : `${letter.startY}vh`, opacity: isAssembling ? 1 : 0.15, scale: isAssembling ? 1 : 1.5 }}>
-            <div className={`font-mono font-bold transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${isAssembling ? "" : "animate-float-bob"}`} style={{ animationDelay: `${letter.floatDelay}s`, transform: isAssembling ? `rotate(0deg)` : `rotate(${letter.rot}deg)`, color: isAssembling ? '#22d3ee' : '#0891b2', textShadow: isAssembling ? '0 0 30px rgba(34, 211, 238, 0.8)' : 'none', fontSize: isAssembling ? '4rem' : '8rem' }}>
-              {isSpace ? "\u00A0" : letter.char}
+      <div className="relative z-10 flex flex-col w-full">
+        <section id="home" className="min-h-screen flex flex-col items-center justify-start pt-32 pointer-events-none">
+          <div className={`text-center space-y-4 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
+            <h1 className="text-5xl md:text-7xl font-black text-neutral-200 tracking-tighter uppercase">{resumeData.personalInfo.name}</h1>
+            <p className="text-xl md:text-2xl text-cyan-400 tracking-widest uppercase font-semibold">{resumeData.personalInfo.title}</p>
+            <div className="mt-12 flex flex-col items-center">
+              <p className={`text-sm tracking-widest uppercase mb-3 h-5 ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
+                {isError ? "Error" : (inputValue || isAssembling ? "System Ready." : hintText)}
+              </p>
+              <div className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-sm rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0' : 'opacity-100'} ${isError ? 'border-red-500 shadow-red-900/40' : 'border-neutral-800 shadow-cyan-900/40'}`}>
+                <span className={`font-mono mr-2 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
+                <span className={`font-mono ${isError ? 'text-red-400' : 'text-neutral-200'}`}>{inputValue}</span>
+                <span className={`font-mono animate-blink ${isError ? 'text-red-500' : 'text-neutral-400'}`}>_</span>
+              </div>
             </div>
           </div>
-        );
-      })}
+        </section>
 
-      {/* HOME LAYER */}
-      <div className={`absolute inset-0 z-20 flex flex-col items-center justify-start pt-32 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${isSettled && !activeSection && !isTransitioning ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-12 pointer-events-none'}`}>
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl md:text-7xl font-black text-neutral-200 tracking-tighter uppercase">{resumeData.personalInfo.name}</h1>
-          <p className="text-xl md:text-2xl text-cyan-400 tracking-widest uppercase font-semibold">{resumeData.personalInfo.title}</p>
-          <div className="mt-12 flex flex-col items-center">
-            <p className="text-neutral-500 text-sm tracking-widest uppercase mb-3 h-5">
-              {inputValue || isAssembling || isTransitioning ? "System Ready." : hintText}
-            </p>
-            <div className={`w-96 h-12 border border-neutral-800 bg-neutral-900/80 backdrop-blur-sm rounded-md flex items-center px-4 shadow-2xl shadow-cyan-900/40 transition-opacity duration-500 ${isAssembling ? 'opacity-0' : 'opacity-100'}`}>
-              <span className="text-cyan-400 font-mono mr-2">{">"}</span>
-              <span className="text-neutral-200 font-mono">{inputValue}</span>
-              <span className="text-neutral-400 font-mono animate-blink">_</span>
-            </div>
-          </div>
-        </div>
+        <Sections />
       </div>
 
-      {/* CONTENT LAYER */}
-      <div className={`absolute right-0 top-0 bottom-0 w-full md:w-[55%] pt-32 px-8 pb-12 overflow-y-auto transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${activeSection && !isTransitioning ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 translate-x-24 pointer-events-none'}`}>
-        <ContentPanel section={activeSection} />
-      </div>
-
-      {/* RIGHT ALIGNED WATERMARK */}
-      <div className={`absolute top-24 right-12 md:right-24 w-1/2 flex flex-col items-end transition-all duration-700 ease-in-out pointer-events-none ${activeSection && !isTransitioning ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
-          <h2 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-cyan-800 tracking-tighter uppercase opacity-80" style={{ textShadow: '0 0 40px rgba(34,211,238,0.2)' }}>
-            {activeSection}
-          </h2>
-      </div>
-
-      <Scene isSettled={isSettled} activeSection={activeSection} isTransitioning={isTransitioning} />
-
-      <div className={`absolute bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
+      <div className={`fixed bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
     </main>
   );
 }

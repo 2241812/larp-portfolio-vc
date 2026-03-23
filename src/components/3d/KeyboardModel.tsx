@@ -4,10 +4,11 @@ import { useGLTF, Center } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export default function KeyboardModel({ isSettled, activeSection = "", isTransitioning = false }: any) {
+export default function KeyboardModel({ isSettled }: any) {
   const { scene, nodes } = useGLTF('/models/keyboard.glb') as any;
   const groupRef = useRef<THREE.Group>(null);
   const targetRotY = useRef<number | null>(null);
+  const scrollProgress = useRef(0);
   
   const pressedKeys = useRef<Set<string>>(new Set());
   const initialPositions = useRef<Record<string, number>>({});
@@ -25,59 +26,75 @@ export default function KeyboardModel({ isSettled, activeSection = "", isTransit
 
     const handleKeyDown = (e: KeyboardEvent) => pressedKeys.current.add(e.code);
     const handleKeyUp = (e: KeyboardEvent) => pressedKeys.current.delete(e.code);
+    
+    const handleScroll = () => {
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      scrollProgress.current = totalScroll > 0 ? window.scrollY / totalScroll : 0;
+    };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [nodes]);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    const isFloating = !isSettled || isTransitioning;
+    const p = scrollProgress.current;
+    
+    let targetScale = isSettled ? 15.0 : 9.75;
+    let targetPosX = 0;
+    let targetPosY = isSettled ? 0.45 : 1.0;
+    let targetRotX = 0.4;
+    
+    if (isSettled && targetRotY.current === null) {
+      const currentY = groupRef.current.rotation.y;
+      targetRotY.current = Math.ceil(currentY / (Math.PI * 2)) * (Math.PI * 2);
+    }
 
-    const targetScale = isFloating ? 9.5 : (activeSection ? 9.5 : 15.0);
-    groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.04);
-    groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, targetScale, 0.04);
-    groupRef.current.scale.z = THREE.MathUtils.lerp(groupRef.current.scale.z, targetScale, 0.04);
+    let finalRotY = targetRotY.current || 0;
 
-    const targetPosX = activeSection ? -1.5 : 0;
-    groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetPosX, 0.03);
+    if (isSettled) {
+      const breath = Math.sin(state.clock.elapsedTime * 2) * 0.05;
+      
+      const fadeOutFactor = Math.min(p * 5, 1); 
+      
+      targetScale = THREE.MathUtils.lerp(15.0, 0.1, fadeOutFactor);
+      targetPosY = THREE.MathUtils.lerp(0.45 + breath, -5.0, fadeOutFactor);
+      targetRotX = THREE.MathUtils.lerp(0.4, -2.0, fadeOutFactor);
+      finalRotY += p * Math.PI * 8; 
+    }
 
-    const targetPosY = isFloating ? 1.2 : (activeSection ? -0.2 : 0.45);
-    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetPosY, 0.03);
+    groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.08);
+    groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, targetScale, 0.08);
+    groupRef.current.scale.z = THREE.MathUtils.lerp(groupRef.current.scale.z, targetScale, 0.08);
 
-    if (!isFloating) {
-      if (targetRotY.current === null) {
-        const currentY = groupRef.current.rotation.y;
-        const spinSpeed = 0.01 + (state.pointer.x * 0.08);
-        if (spinSpeed >= 0) targetRotY.current = Math.ceil(currentY / (Math.PI * 2)) * (Math.PI * 2);
-        else targetRotY.current = Math.floor(currentY / (Math.PI * 2)) * (Math.PI * 2);
+    groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetPosX, 0.08);
+    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetPosY, 0.08);
+
+    if (isSettled) {
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.08);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, finalRotY, 0.08);
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.08);
+
+      if (p < 0.1) {
+        Object.entries(keyMap).forEach(([keyCode, nodeName]) => {
+          if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
+            const node = nodes[nodeName];
+            const basePosY = initialPositions.current[nodeName];
+            const isPressed = pressedKeys.current.has(keyCode);
+            const targetKeyY = isPressed ? basePosY - 0.02 : basePosY;
+            node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.4);
+          }
+        });
       }
-
-      const finalRotX = activeSection ? 0.7 : 0.4;
-      const finalRotY = activeSection ? (targetRotY.current + Math.PI / 8) : targetRotY.current;
-
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, finalRotX, 0.025);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, finalRotY, 0.025);
-      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.025);
-
-      Object.entries(keyMap).forEach(([keyCode, nodeName]) => {
-        if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
-          const node = nodes[nodeName];
-          const basePosY = initialPositions.current[nodeName];
-          const isPressed = pressedKeys.current.has(keyCode);
-          const targetKeyY = isPressed ? basePosY - 0.02 : basePosY;
-          node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.3);
-        }
-      });
-
     } else {
-      targetRotY.current = null;
       const spinSpeed = 0.01 + (state.pointer.x * 0.08);
       groupRef.current.rotation.y += spinSpeed;
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, state.pointer.y * 0.5, 0.05);
