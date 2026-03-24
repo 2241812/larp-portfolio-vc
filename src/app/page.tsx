@@ -5,7 +5,7 @@ import TopBar from '@/components/ui/TopBar';
 import Sections from '@/components/ui/Sections';
 import { resumeData } from '@/data/resumeData';
 
-type FloatingLetter = { id: string; char: string; startX: number; startY: number; rot: number; floatDelay: number; };
+type FloatingLetter = { id: string; char: string; startX: number; startY: number; startXEnd: number; startYEnd: number; rot: number; floatDelay: number; scale: number; };
 
 const VALID_COMMANDS = ['about me', 'experience', 'skills', 'projects', 'contact'];
 const HINT_PHRASES = ["'about me'", "'python'", "'skills'", "'docker'", "'contact'"];
@@ -117,7 +117,14 @@ export default function Home() {
         setInputValue(prev => prev + e.key);
         setLetters(prev => [...prev, {
           id: Date.now().toString() + Math.random(),
-          char: e.key, startX: Math.random() * 80 + 10, startY: Math.random() * 60 + 10, rot: Math.random() * 90 - 45, floatDelay: Math.random() * -5
+          char: e.key, 
+          startX: Math.random() * 70 + 15, 
+          startY: Math.random() * 50 + 25, 
+          startXEnd: 50 + (prev.length - 2.5) * 4,
+          startYEnd: 35,
+          rot: (Math.random() - 0.5) * 60, 
+          floatDelay: Math.random() * -3,
+          scale: 0.8 + Math.random() * 0.4
         }]);
       }
     };
@@ -132,17 +139,36 @@ export default function Home() {
       <Scene isSettled={isSettled} />
       <TopBar isSettled={isSettled} />
 
-      <div className="fixed inset-0 z-50 pointer-events-none">
+      <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
         {letters.map((letter, index) => {
           const isSpace = letter.char === ' ';
-          const letterSpacing = 40;
-          const totalWidth = letters.length * letterSpacing;
-          const startLeft = `calc(50vw - ${totalWidth / 2}px + ${index * letterSpacing}px)`;
-          const startTop = `35vh`;
-
+          const targetX = letter.startXEnd + (index * 0);
+          
           return (
-            <div key={letter.id} className="absolute transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] flex items-center justify-center w-10 h-10" style={{ left: isAssembling ? startLeft : `${letter.startX}vw`, top: isAssembling ? startTop : `${letter.startY}vh`, opacity: isAssembling ? 1 : 0.15, scale: isAssembling ? 1 : 1.5 }}>
-              <div className={`font-mono font-bold transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${isAssembling ? "" : "animate-float-bob"}`} style={{ animationDelay: `${letter.floatDelay}s`, transform: isAssembling ? `rotate(0deg)` : `rotate(${letter.rot}deg)`, color: isAssembling ? (isError ? '#ef4444' : '#22d3ee') : '#0891b2', textShadow: isAssembling ? (isError ? '0 0 30px rgba(239, 68, 68, 0.8)' : '0 0 30px rgba(34, 211, 238, 0.8)') : 'none', fontSize: isAssembling ? '4rem' : '8rem' }}>
+            <div 
+              key={letter.id} 
+              className="absolute flex items-center justify-center will-change-transform"
+              style={{ 
+                left: isAssembling ? `${targetX}vw` : `${letter.startX}vw`, 
+                top: isAssembling ? `${letter.startYEnd}vh` : `${letter.startY}vh`, 
+                opacity: isAssembling ? 1 : 0.12,
+                transform: `scale(${isAssembling ? 1 : letter.scale})`,
+                transition: 'all 1.2s cubic-bezier(0.22, 1, 0.36, 1)',
+              }}
+            >
+              <div 
+                className={`font-mono font-bold ${!isAssembling ? "animate-float-bob" : ""}`}
+                style={{ 
+                  animationDelay: `${letter.floatDelay}s`, 
+                  transform: isAssembling ? `rotate(0deg)` : `rotate(${letter.rot}deg)`,
+                  color: isAssembling ? (isError ? '#ef4444' : '#22d3ee') : '#0891b2', 
+                  textShadow: isAssembling 
+                    ? (isError ? '0 0 40px rgba(239, 68, 68, 0.9)' : '0 0 40px rgba(34, 211, 238, 0.9)') 
+                    : '0 0 20px rgba(8, 145, 178, 0.5)', 
+                  fontSize: isAssembling ? '3.5rem' : '6rem',
+                  transition: 'all 1.2s cubic-bezier(0.22, 1, 0.36, 1)',
+                }}
+              >
                 {isSpace ? "\u00A0" : letter.char}
               </div>
             </div>
@@ -152,17 +178,21 @@ export default function Home() {
 
       <div className="relative z-10 flex flex-col w-full">
         <section id="home" className="min-h-screen flex flex-col items-center justify-start pt-32 pointer-events-none">
-          <div className={`text-center space-y-4 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
-            <h1 className="text-5xl md:text-7xl font-black text-neutral-200 tracking-tighter uppercase">{resumeData.personalInfo.name}</h1>
-            <p className="text-xl md:text-2xl text-cyan-400 tracking-widest uppercase font-semibold">{resumeData.personalInfo.title}</p>
-            <div className="mt-12 flex flex-col items-center">
-              <p className={`text-sm tracking-widest uppercase mb-3 h-5 ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
-                {isError ? "Error" : (inputValue || isAssembling ? "System Ready." : hintText)}
+          <div className={`text-center space-y-6 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-neutral-100 tracking-tight uppercase break-words max-w-[90vw] bg-gradient-to-r from-neutral-100 via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
+              {resumeData.personalInfo.name}
+            </h1>
+            <p className="text-lg md:text-2xl text-cyan-400 tracking-[0.3em] uppercase font-medium">{resumeData.personalInfo.title}</p>
+              <div className="mt-12 flex flex-col items-center">
+              <p className={`text-xs tracking-[0.3em] uppercase mb-4 h-5 font-mono ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
+                {isError ? "COMMAND NOT FOUND" : (inputValue || isAssembling ? "READY" : hintText)}
               </p>
-              <div className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-sm rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0' : 'opacity-100'} ${isError ? 'border-red-500 shadow-red-900/40' : 'border-neutral-800 shadow-cyan-900/40'}`}>
-                <span className={`font-mono mr-2 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
-                <span className={`font-mono ${isError ? 'text-red-400' : 'text-neutral-200'}`}>{inputValue}</span>
-                <span className={`font-mono animate-blink ${isError ? 'text-red-500' : 'text-neutral-400'}`}>_</span>
+              <div 
+                className={`w-80 md:w-96 h-12 border bg-neutral-900/60 backdrop-blur-md rounded-lg flex items-center px-4 transition-all duration-300 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)]' : 'border-neutral-700/50 shadow-[0_0_30px_rgba(34,211,238,0.15)]'}`}
+              >
+                <span className={`font-mono mr-2 select-none ${isError ? 'text-red-500' : 'text-cyan-400'}`}>›</span>
+                <span className={`font-mono flex-1 overflow-hidden ${isError ? 'text-red-400' : 'text-neutral-100'}`}>{inputValue}</span>
+                <span className={`font-mono animate-pulse ${isError ? 'text-red-500' : 'text-cyan-400/60'}`}>▋</span>
               </div>
             </div>
           </div>
@@ -171,7 +201,13 @@ export default function Home() {
         <Sections />
       </div>
 
-      <div className={`fixed bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
+      <div 
+        className={`fixed bottom-0 left-0 h-[3px] bg-gradient-to-r from-cyan-500 via-cyan-400 to-cyan-500 transition-all duration-500 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} 
+        style={{ 
+          width: `${loadProgress}%`,
+          boxShadow: '0 0 20px rgba(34, 211, 238, 0.8)'
+        }} 
+      />
     </main>
   );
 }
