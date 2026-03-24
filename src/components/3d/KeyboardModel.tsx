@@ -98,6 +98,7 @@ export default function KeyboardModel({ isSettled }: any) {
       let tiltX = 0;
       let tiltZ = 0;
       let keysPressed = 0;
+      let pressedKeyNames: string[] = [];
       
       Object.entries(keyMap).forEach(([keyCode, nodeName]) => {
         if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
@@ -107,6 +108,7 @@ export default function KeyboardModel({ isSettled }: any) {
           
           if (isPressed) {
             keysPressed++;
+            pressedKeyNames.push(keyCode);
             const keyX = keyCenterX[keyCode] || 0;
             tiltZ += keyX * MAX_TILT;
             tiltX += MAX_TILT * 0.3;
@@ -116,6 +118,12 @@ export default function KeyboardModel({ isSettled }: any) {
           node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.3);
         }
       });
+      
+      if (keysPressed > 0) {
+        console.log('[KEYBOARD] Keys pressed:', pressedKeyNames.join(', '));
+        console.log('[KEYBOARD] tiltX target:', tiltX, 'tiltZ target:', tiltZ);
+        console.log('[KEYBOARD] Current rotX:', groupRef.current.rotation.x, 'rotZ:', groupRef.current.rotation.z);
+      }
       
       if (keysPressed > 0) {
         const targetTiltX = Math.min(tiltX, MAX_TILT);
