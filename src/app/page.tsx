@@ -228,36 +228,78 @@ export default function Home() {
             
             <div className={`text-center space-y-2 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
               
-              <div className="relative flex justify-center items-center mt-4 mb-2 w-full max-w-[90vw]">
-                <h1 className="absolute text-[8vw] md:text-8xl font-black text-cyan-600 blur-[20px] opacity-60 tracking-tighter uppercase select-none pointer-events-none mix-blend-screen animate-pulse whitespace-nowrap">
+              <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
+                {/* Glitch effect layers */}
+                <motion.h1 
+                  className="absolute text-[8vw] md:text-8xl font-black text-cyan-500/30 blur-[25px] tracking-tighter uppercase select-none pointer-events-none mix-blend-screen"
+                  animate={{ x: [0, -3, 3, 0], opacity: [0.6, 0.8, 0.4, 0.6] }}
+                  transition={{ duration: 0.3, repeat: Infinity, repeatDelay: 4 }}
+                  style={{ fontFamily: 'var(--font-orbitron)' }}
+                >
                   {resumeData.personalInfo.name}
-                </h1>
-                <h1 className="absolute top-[3px] left-[3px] md:top-[5px] md:left-[5px] text-[8vw] md:text-8xl font-black text-cyan-900/80 tracking-tighter uppercase select-none pointer-events-none whitespace-nowrap">
+                </motion.h1>
+                <motion.h1 
+                  className="absolute top-[2px] left-[2px] text-[8vw] md:text-8xl font-black text-cyan-800/40 tracking-tighter uppercase select-none pointer-events-none"
+                  animate={{ x: [0, 2, -2, 0] }}
+                  transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 5 }}
+                  style={{ fontFamily: 'var(--font-orbitron)' }}
+                >
                   {resumeData.personalInfo.name}
-                </h1>
-                <h1 className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-300 to-neutral-950/20 drop-shadow-2xl whitespace-nowrap">
+                </motion.h1>
+                <motion.h1 
+                  className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)]"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={isSettled ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  style={{ fontFamily: 'var(--font-orbitron)' }}
+                >
                   {resumeData.personalInfo.name}
-                </h1>
+                </motion.h1>
               </div>
+
+              {/* Cyber accent line */}
+              <motion.div 
+                className="w-64 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-6"
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={isSettled ? { scaleX: 1, opacity: 1 } : {}}
+                transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+              />
 
               <motion.p 
                 initial={{ opacity: 0, letterSpacing: "0em" }}
-                animate={isSettled ? { opacity: 1, letterSpacing: "0.2em" } : {}}
+                animate={isSettled ? { opacity: 1, letterSpacing: "0.4em" } : {}}
                 transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                className="text-sm md:text-lg text-cyan-400 uppercase font-semibold"
+                className="text-sm md:text-lg text-cyan-400 uppercase font-medium tracking-[0.4em]"
+                style={{ fontFamily: 'var(--font-rajdhani)' }}
               >
                 {resumeData.personalInfo.title}
               </motion.p>
               
-              <div className="mt-16 flex flex-col items-center">
-                <p className={`text-xs tracking-[0.2em] uppercase mb-4 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
-                  {isError ? "Error: Invalid Command" : (inputValue || isAssembling ? "System Ready." : hintText)}
-                </p>
-                <div className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-md rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-cyan-900/40 shadow-[0_0_20px_rgba(34,211,238,0.1)]'}`}>
-                  <span className={`font-mono mr-3 text-sm ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
-                  <span className={`font-mono text-sm tracking-wider ${isError ? 'text-red-400' : 'text-neutral-200'}`}>{inputValue}</span>
-                  <span className={`font-mono animate-blink ml-1 ${isError ? 'text-red-500' : 'text-cyan-600'}`}>_</span>
-                </div>
+              <div className="mt-20 flex flex-col items-center">
+                <motion.p 
+                  className={`text-xs tracking-[0.3em] uppercase mb-6 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}
+                  initial={{ opacity: 0 }}
+                  animate={isSettled ? { opacity: 1 } : {}}
+                  transition={{ delay: 0.8 }}
+                  style={{ fontFamily: 'var(--font-rajdhani)' }}
+                >
+                  {isError ? "ERROR: COMMAND NOT FOUND" : (inputValue || isAssembling ? "SYSTEM READY" : hintText)}
+                </motion.p>
+                <motion.div 
+                  className={`w-80 md:w-96 h-14 border bg-neutral-950/90 backdrop-blur-xl rounded-lg flex items-center px-5 transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.3)]' : 'border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)]'}`}
+                  whileHover={{ boxShadow: '0 0 60px rgba(34,211,238,0.25)', borderColor: 'rgba(34,211,238,0.5)' }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className={`font-mono text-lg mr-4 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
+                  <span className={`font-mono text-base tracking-wider flex-1 ${isError ? 'text-red-400' : 'text-neutral-100'}`}>{inputValue}</span>
+                  <motion.span 
+                    className={`font-mono ml-2 ${isError ? 'text-red-500' : 'text-cyan-400'}`}
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                  >
+                    ▋
+                  </motion.span>
+                </motion.div>
               </div>
             </div>
             

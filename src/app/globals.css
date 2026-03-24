@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
+  --background: #000000;
   --foreground: #ededed;
 }
 
@@ -10,28 +10,81 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-orbitron: var(--font-orbitron);
+  --font-rajdhani: var(--font-rajdhani);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
+/* Cyber grid background */
 .bg-grid {
-  background-size: 40px 40px;
-  background-image: linear-gradient(to right, rgba(34, 211, 238, 0.05) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
-  mask-image: linear-gradient(to bottom, transparent 10%, black 50%, transparent 90%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 10%, black 50%, transparent 90%);
-  animation: panDown 20s linear infinite;
+  background-size: 50px 50px;
+  background-image: linear-gradient(to right, rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+  animation: panDown 30s linear infinite;
 }
 
 @keyframes panDown {
   0% { background-position: 0px 0px; }
-  100% { background-position: 0px 40px; }
+  100% { background-position: 0px 50px; }
 }
 
+/* CRT scanline overlay */
+.scanlines::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.05) 0px,
+    rgba(0, 0, 0, 0.05) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* Glitch text effect */
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+.glitch-text {
+  animation: glitch 0.3s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+/* Neon border glow */
+.neon-border {
+  position: relative;
+}
+
+.neon-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.5), transparent, rgba(34, 211, 238, 0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Float animation */
 @keyframes floatBob {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-25px); }
@@ -39,4 +92,14 @@ body {
 
 .animate-float-bob {
   animation: floatBob 6s ease-in-out infinite;
+}
+
+/* Pulse glow effect */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.6); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
 }
