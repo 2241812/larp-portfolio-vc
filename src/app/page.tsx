@@ -11,7 +11,7 @@ type FloatingLetter = { id: string; char: string; startX: number; startY: number
 type DebrisLetter = FloatingLetter & { startLeft: string; driftX: number; driftY: number; driftRot: number; scale: number; duration: number; };
 
 const VALID_COMMANDS = ['about me', 'experience', 'skills', 'projects', 'contact'];
-const HINT_PHRASES = ["try typing 'about me'", "try typing 'skills'", "try typing 'projects'", "try typing 'experience'", "try typing 'contact'"];
+const HINT_PHRASES = ["Try typing 'about me'", "Try typing 'skills'", "Try typing 'projects'", "Try typing 'experience'", "Try typing 'contact'"];
 
 export default function Home() {
   const [isSettled, setIsSettled] = useState(false);
@@ -77,7 +77,7 @@ export default function Home() {
       return;
     }
     const timeout = setTimeout(() => {
-      const currentPhrase = `Try typing ${HINT_PHRASES[hintIndex]}...`;
+      const currentPhrase = `${HINT_PHRASES[hintIndex]}...`;
       if (!isDeletingHint) {
         setHintText(currentPhrase.substring(0, hintText.length + 1));
         if (hintText === currentPhrase) setTimeout(() => setIsDeletingHint(true), 2000);
@@ -256,8 +256,8 @@ export default function Home() {
         {/* --- LAYER 2: 3D KEYBOARD SCENE (z-10) --- */}
         {/* Keyboard positioned at bottom center with 3D isometric transform */}
         <div className={`fixed bottom-0 left-0 right-0 z-10 pointer-events-none flex items-end justify-center h-[55vh] transition-all duration-700 ${isSettled ? 'opacity-100' : 'opacity-0'}`}>
-          <div className={`keyboard-3d-container w-full h-full ${isBouncing ? '' : ''}`}>
-            <div className={`w-full h-full ${isBouncing ? 'keyboard-bounce' : ''}`} style={{ transform: isBouncing ? undefined : 'rotateX(35deg) rotateY(50deg) rotateZ(18deg)', transformStyle: 'preserve-3d' }}>
+            <div className="w-full h-full">
+            <div className={`w-full h-full ${isBouncing ? 'keyboard-bounce' : ''}`}>
               <Scene isSettled={isSettled} />
             </div>
           </div>
