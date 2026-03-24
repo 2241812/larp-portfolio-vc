@@ -233,7 +233,7 @@ export default function Home() {
               <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
                 {/* Main name - single clean layer */}
                 <motion.h1 
-                  className="relative text-[8vw] md:text-7xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap"
+                  className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap"
                   initial={{ opacity: 0, y: 20 }}
                   animate={isSettled ? { opacity: 1, y: 0 } : {}}
                   transition={{ duration: 0.8, ease: "easeOut" }}
