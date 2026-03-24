@@ -21,10 +21,29 @@ export default function Home() {
   const [debris, setDebris] = useState<DebrisLetter[]>([]);
   const [isAssembling, setIsAssembling] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [typedName, setTypedName] = useState("");
+  const [isTypingName, setIsTypingName] = useState(true);
   
   const [hintText, setHintText] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isDeletingHint, setIsDeletingHint] = useState(false);
+  
+  const fullName = resumeData.personalInfo.name;
+  
+  useEffect(() => {
+    let index = 0;
+    const typeInterval = setInterval(() => {
+      if (index <= fullName.length) {
+        setTypedName(fullName.slice(0, index));
+        index++;
+      } else {
+        clearInterval(typeInterval);
+        setIsTypingName(false);
+        setTimeout(() => setIsSettled(true), 500);
+      }
+    }, 120);
+    return () => clearInterval(typeInterval);
+  }, [fullName]);
 
   useEffect(() => {
     const duration = 2500;
@@ -229,36 +248,67 @@ export default function Home() {
             <div className={`text-center space-y-2 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
               
               <div className="relative flex justify-center items-center mt-4 mb-2 w-full max-w-[90vw]">
-                <h1 className="absolute text-[8vw] md:text-8xl font-black text-cyan-600 blur-[20px] opacity-60 tracking-tighter uppercase select-none pointer-events-none mix-blend-screen animate-pulse whitespace-nowrap">
-                  {resumeData.personalInfo.name}
-                </h1>
-                <h1 className="absolute top-[3px] left-[3px] md:top-[5px] md:left-[5px] text-[8vw] md:text-8xl font-black text-cyan-900/80 tracking-tighter uppercase select-none pointer-events-none whitespace-nowrap">
-                  {resumeData.personalInfo.name}
-                </h1>
-                <h1 className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-300 to-neutral-950/20 drop-shadow-2xl whitespace-nowrap">
-                  {resumeData.personalInfo.name}
-                </h1>
+                <motion.h1 
+                  className="absolute text-[8vw] md:text-8xl font-black text-cyan-600 blur-[25px] opacity-50 tracking-tighter uppercase select-none pointer-events-none mix-blend-screen"
+                  animate={{ opacity: isTypingName ? [0.3, 0.6, 0.3] : 0.6 }}
+                  transition={{ duration: 1.5, repeat: isTypingName ? Infinity : 0, ease: "easeInOut" }}
+                >
+                  {typedName}
+                  <span className="animate-pulse">|</span>
+                </motion.h1>
+                <motion.h1 
+                  className="absolute top-[3px] left-[3px] md:top-[5px] md:left-[5px] text-[8vw] md:text-8xl font-black text-cyan-900/70 tracking-tighter uppercase select-none pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isTypingName ? 0 : 0.8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {typedName}
+                </motion.h1>
+                <motion.h1 
+                  className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-200 to-neutral-600 drop-shadow-[0_0_30px_rgba(34,211,238,0.3)]"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: isTypingName ? 0 : 1, scale: isTypingName ? 0.8 : 1 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
+                  {typedName}
+                  {isTypingName && (
+                    <motion.span 
+                      className="inline-block w-1 h-[0.7em] bg-cyan-400 ml-1 align-middle"
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                    />
+                  )}
+                </motion.h1>
               </div>
 
               <motion.p 
-                initial={{ opacity: 0, letterSpacing: "0em" }}
-                animate={isSettled ? { opacity: 1, letterSpacing: "0.2em" } : {}}
-                transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                className="text-sm md:text-lg text-cyan-400 uppercase font-semibold"
+                initial={{ opacity: 0, letterSpacing: "0em", y: 10 }}
+                animate={isSettled ? { opacity: 1, letterSpacing: "0.3em", y: 0 } : {}}
+                transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                className="text-sm md:text-xl text-cyan-400 uppercase font-medium tracking-[0.3em]"
               >
                 {resumeData.personalInfo.title}
               </motion.p>
               
-              <div className="mt-16 flex flex-col items-center">
+              <motion.div 
+                className="mt-16 flex flex-col items-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: isSettled ? 1 : 0, y: isSettled ? 0 : 20 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+              >
                 <p className={`text-xs tracking-[0.2em] uppercase mb-4 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
                   {isError ? "Error: Invalid Command" : (inputValue || isAssembling ? "System Ready." : hintText)}
                 </p>
-                <div className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-md rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-cyan-900/40 shadow-[0_0_20px_rgba(34,211,238,0.1)]'}`}>
+                <motion.div 
+                  className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-md rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-cyan-900/40 shadow-[0_0_20px_rgba(34,211,238,0.1)]'}`}
+                  whileHover={{ boxShadow: '0 0 30px rgba(34,211,238,0.2)' }}
+                  transition={{ duration: 0.2 }}
+                >
                   <span className={`font-mono mr-3 text-sm ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
                   <span className={`font-mono text-sm tracking-wider ${isError ? 'text-red-400' : 'text-neutral-200'}`}>{inputValue}</span>
                   <span className={`font-mono animate-blink ml-1 ${isError ? 'text-red-500' : 'text-cyan-600'}`}>_</span>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
             
           </section>
@@ -266,7 +316,12 @@ export default function Home() {
           <Sections />
         </div>
 
-        <div className={`fixed bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
+        <motion.div 
+          className="fixed bottom-0 left-0 h-[3px] bg-gradient-to-r from-cyan-900 via-cyan-400 to-cyan-600 z-50"
+          animate={{ opacity: isSettled ? 0 : 1 }}
+          transition={{ duration: 0.5 }}
+          style={{ width: `${loadProgress}%`, boxShadow: '0 0 20px rgba(34, 211, 238, 0.8)' }}
+        />
       </main>
     </ReactLenis>
   );
