@@ -11,7 +11,7 @@ type FloatingLetter = { id: string; char: string; startX: number; startY: number
 type DebrisLetter = FloatingLetter & { startLeft: string; driftX: number; driftY: number; driftRot: number; scale: number; duration: number; };
 
 const VALID_COMMANDS = ['about me', 'experience', 'skills', 'projects', 'contact'];
-const HINT_PHRASES = ["'about me'", "'python'", "'skills'", "'docker'", "'contact'"];
+const HINT_PHRASES = ["try typing 'about me'", "try typing 'skills'", "try typing 'projects'", "try typing 'experience'", "try typing 'contact'"];
 
 export default function Home() {
   const [isSettled, setIsSettled] = useState(false);
@@ -247,33 +247,26 @@ export default function Home() {
             
             <div className={`text-center space-y-2 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
               
-              <div className="relative flex justify-center items-center mt-4 mb-2 w-full max-w-[90vw]">
+              <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
+                {/* Cyberpunk glow layer */}
                 <motion.h1 
-                  className="absolute text-[8vw] md:text-8xl font-black text-cyan-600 blur-[25px] opacity-50 tracking-tighter uppercase select-none pointer-events-none mix-blend-screen"
-                  animate={{ opacity: isTypingName ? [0.3, 0.6, 0.3] : 0.6 }}
-                  transition={{ duration: 1.5, repeat: isTypingName ? Infinity : 0, ease: "easeInOut" }}
+                  className="absolute text-[8vw] md:text-7xl font-black text-cyan-400 blur-[30px] opacity-80 tracking-tighter uppercase select-none pointer-events-none mix-blend-screen"
+                  animate={{ opacity: isTypingName ? [0.4, 0.8, 0.4] : 0.8 }}
+                  transition={{ duration: 2, repeat: isTypingName ? Infinity : 0, ease: "easeInOut" }}
                 >
                   {typedName}
-                  <span className="animate-pulse">|</span>
                 </motion.h1>
+                {/* Main cyberpunk text */}
                 <motion.h1 
-                  className="absolute top-[3px] left-[3px] md:top-[5px] md:left-[5px] text-[8vw] md:text-8xl font-black text-cyan-900/70 tracking-tighter uppercase select-none pointer-events-none"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isTypingName ? 0 : 0.8 }}
+                  className="relative text-[8vw] md:text-7xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)]"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: isTypingName ? 0 : 1, scale: isTypingName ? 0.9 : 1 }}
                   transition={{ duration: 0.3 }}
-                >
-                  {typedName}
-                </motion.h1>
-                <motion.h1 
-                  className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-200 to-neutral-600 drop-shadow-[0_0_30px_rgba(34,211,238,0.3)]"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: isTypingName ? 0 : 1, scale: isTypingName ? 0.8 : 1 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
                 >
                   {typedName}
                   {isTypingName && (
                     <motion.span 
-                      className="inline-block w-1 h-[0.7em] bg-cyan-400 ml-1 align-middle"
+                      className="inline-block w-1 h-[0.6em] bg-cyan-400 ml-1 align-middle"
                       animate={{ opacity: [1, 0] }}
                       transition={{ duration: 0.5, repeat: Infinity }}
                     />
@@ -281,32 +274,40 @@ export default function Home() {
                 </motion.h1>
               </div>
 
+              {/* Glitch accent line */}
+              <motion.div 
+                className="w-64 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-8"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: isSettled ? 1 : 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+              />
+              
               <motion.p 
                 initial={{ opacity: 0, letterSpacing: "0em", y: 10 }}
-                animate={isSettled ? { opacity: 1, letterSpacing: "0.3em", y: 0 } : {}}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                className="text-sm md:text-xl text-cyan-400 uppercase font-medium tracking-[0.3em]"
+                animate={isSettled ? { opacity: 1, letterSpacing: "0.4em", y: 0 } : {}}
+                transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
+                className="text-sm md:text-lg text-cyan-400 uppercase font-medium tracking-[0.4em] text-center"
               >
                 {resumeData.personalInfo.title}
               </motion.p>
               
               <motion.div 
-                className="mt-16 flex flex-col items-center"
+                className="mt-24 flex flex-col items-center"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: isSettled ? 1 : 0, y: isSettled ? 0 : 20 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
               >
-                <p className={`text-xs tracking-[0.2em] uppercase mb-4 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
-                  {isError ? "Error: Invalid Command" : (inputValue || isAssembling ? "System Ready." : hintText)}
+                <p className={`text-xs tracking-[0.3em] uppercase mb-6 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-cyan-600/70'}`}>
+                  {isError ? "ERROR: COMMAND NOT FOUND" : (inputValue || isAssembling ? "SYSTEM READY" : hintText)}
                 </p>
                 <motion.div 
-                  className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-md rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-cyan-900/40 shadow-[0_0_20px_rgba(34,211,238,0.1)]'}`}
-                  whileHover={{ boxShadow: '0 0 30px rgba(34,211,238,0.2)' }}
-                  transition={{ duration: 0.2 }}
+                  className={`w-80 md:w-96 h-14 border bg-neutral-950/90 backdrop-blur-xl rounded-lg flex items-center px-5 transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.4)]' : 'border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)]'}`}
+                  whileHover={{ boxShadow: '0 0 50px rgba(34,211,238,0.3)', borderColor: 'rgba(34,211,238,0.5)' }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <span className={`font-mono mr-3 text-sm ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
-                  <span className={`font-mono text-sm tracking-wider ${isError ? 'text-red-400' : 'text-neutral-200'}`}>{inputValue}</span>
-                  <span className={`font-mono animate-blink ml-1 ${isError ? 'text-red-500' : 'text-cyan-600'}`}>_</span>
+                  <span className={`font-mono text-lg mr-3 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
+                  <span className={`font-mono text-base tracking-wider flex-1 ${isError ? 'text-red-400' : 'text-neutral-100'}`}>{inputValue}</span>
+                  <span className={`font-mono animate-pulse ml-1 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>▋</span>
                 </motion.div>
               </motion.div>
             </div>
