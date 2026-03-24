@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ReactLenis } from '@studio-freight/react-lenis';
+import { ReactLenis, useLenis } from '@studio-freight/react-lenis';
 import { motion } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
@@ -77,10 +77,15 @@ export default function Home() {
   useEffect(() => {
     if (isLoading) {
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
   }, [isLoading]);
 
   useEffect(() => {
@@ -207,8 +212,12 @@ export default function Home() {
   }, [isSettled, isAssembling, isError, inputValue, playClick]);
 
   return (
-    <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }}>
-      <main className="relative bg-neutral-950 font-sans select-none text-neutral-300">
+    <ReactLenis root options={{ lerp: 0.05, smoothWheel: true, duration: isLoading ? 0 : undefined }}>
+      <main
+        className="relative bg-neutral-950 font-sans select-none text-neutral-300"
+        onWheel={isLoading ? (e) => e.preventDefault() : undefined}
+        onTouchMove={isLoading ? (e) => e.preventDefault() : undefined}
+      >
 
 
         

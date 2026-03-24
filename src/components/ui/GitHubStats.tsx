@@ -306,7 +306,6 @@ export default function GitHubStats() {
         'https://api.github.com/users/2241812/events/public?per_page=5',
         {
           headers: { Accept: 'application/vnd.github.v3+json' },
-          next: { revalidate: 60 },
         }
       );
       if (!res.ok) throw new Error('API error');

@@ -38,8 +38,8 @@ export default function Sections() {
 
       {/* ──────────── ABOUT ME ──────────── */}
       <section id="about me" className="min-h-screen flex items-center justify-end px-8 md:px-24 relative overflow-hidden">
-        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
-          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>ABOUT ME</h2>
+        <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-l from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>ABOUT ME</h2>
         </div>
         <motion.div
           variants={containerVariants}
@@ -61,8 +61,8 @@ export default function Sections() {
 
       {/* ──────────── EXPERIENCE ──────────── */}
       <section id="experience" className="min-h-screen flex items-center justify-start px-8 md:px-24 relative overflow-hidden">
-        <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
-          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-l from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>EXPERIENCE</h2>
+        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>EXPERIENCE</h2>
         </div>
         <motion.div
           variants={containerVariants}
@@ -90,8 +90,8 @@ export default function Sections() {
 
       {/* ──────────── SKILLS ──────────── */}
       <section id="skills" className="min-h-screen flex items-center justify-end px-8 md:px-24 relative overflow-hidden">
-        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
-          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>SKILLS</h2>
+        <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-l from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>SKILLS</h2>
         </div>
         <motion.div
           variants={containerVariants}
@@ -142,8 +142,8 @@ export default function Sections() {
 
       {/* ──────────── PROJECTS ──────────── */}
       <section id="projects" className="min-h-screen flex items-center justify-start px-8 md:px-24 relative overflow-hidden">
-        <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
-          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-l from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>PROJECTS</h2>
+        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>PROJECTS</h2>
         </div>
         <motion.div
           variants={containerVariants}
@@ -179,9 +179,9 @@ export default function Sections() {
       </section>
 
       {/* ──────────── CONTACT ──────────── */}
-      <section id="contact" className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
-          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-900/20 to-transparent tracking-tighter uppercase text-center" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>CONTACT</h2>
+      <section id="contact" className="min-h-screen flex items-center justify-end px-8 md:px-24 relative overflow-hidden">
+        <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+          <h2 className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap" style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}>CONTACT</h2>
         </div>
         <motion.div
           variants={containerVariants}
