@@ -1,11 +1,14 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { ReactLenis } from '@studio-freight/react-lenis';
+import { motion } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
 import Sections from '@/components/ui/Sections';
 import { resumeData } from '@/data/resumeData';
 
 type FloatingLetter = { id: string; char: string; startX: number; startY: number; rot: number; floatDelay: number; };
+type DebrisLetter = FloatingLetter & { startLeft: string; driftX: number; driftY: number; driftRot: number; scale: number; duration: number; };
 
 const VALID_COMMANDS = ['about me', 'experience', 'skills', 'projects', 'contact'];
 const HINT_PHRASES = ["'about me'", "'python'", "'skills'", "'docker'", "'contact'"];
@@ -15,6 +18,7 @@ export default function Home() {
   const [loadProgress, setLoadProgress] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const [letters, setLetters] = useState<FloatingLetter[]>([]);
+  const [debris, setDebris] = useState<DebrisLetter[]>([]);
   const [isAssembling, setIsAssembling] = useState(false);
   const [isError, setIsError] = useState(false);
   
@@ -82,6 +86,25 @@ export default function Home() {
     const targetSection = findSectionForKeyword(cmd);
 
     setTimeout(() => {
+      // 1. Convert active letters into drifting debris
+      const letterSpacing = 40;
+      const totalWidth = letters.length * letterSpacing;
+      
+      const newDebris = letters.map((l, index) => {
+        const startLeft = `calc(50vw - ${totalWidth / 2}px + ${index * letterSpacing}px)`;
+        return {
+          ...l,
+          startLeft,
+          driftX: (Math.random() - 0.5) * 60, // Drift across the screen
+          driftY: (Math.random() - 0.5) * 80, // Drift up/down
+          driftRot: (Math.random() - 0.5) * 720, // Tumble
+          scale: Math.random() * 0.6 + 0.3, // Random depth size
+          duration: Math.random() * 30 + 30 // Extremely slow 30-60s drift
+        };
+      });
+
+      // Keep only the last 50 debris particles so the browser doesn't lag
+      setDebris(prev => [...prev, ...newDebris].slice(-50));
       setLetters([]);
       setIsAssembling(false);
       
@@ -104,16 +127,24 @@ export default function Home() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAssembling || isError) return;
+      
       if (e.ctrlKey || e.metaKey) {
         if (e.key.toLowerCase() === 'a') e.preventDefault();
         return;
       }
+      
       if (e.key === 'Backspace') {
         setInputValue(prev => prev.slice(0, -1));
         setLetters(prev => prev.slice(0, -1));
       } else if (e.key === 'Enter') {
+        e.preventDefault(); 
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
         executeCommand(inputValue);
       } else if (e.key.length === 1 && /[a-zA-Z0-9 ]/.test(e.key)) {
+        if (e.key === ' ') e.preventDefault(); 
+        
         setInputValue(prev => prev + e.key);
         setLetters(prev => [...prev, {
           id: Date.now().toString() + Math.random(),
@@ -126,52 +157,114 @@ export default function Home() {
   }, [isSettled, isAssembling, isError, inputValue]);
 
   return (
-    <main className="relative bg-neutral-950 font-sans select-none text-neutral-300">
-      <div className="fixed inset-0 z-0 bg-grid pointer-events-none" />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/15 blur-[140px] rounded-[100%] pointer-events-none z-0" />
-      <Scene isSettled={isSettled} />
-      <TopBar isSettled={isSettled} />
+    <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }}>
+      <main className="relative bg-neutral-950 font-sans select-none text-neutral-300">
+        
+        {/* --- LAYER 1: DEEP BACKGROUND (z-0) --- */}
+        <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" />
+        <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
+        
+        {/* The Vanta.js Style Debris Asteroids */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
+          {debris.map((item) => (
+            <motion.div
+              key={item.id}
+              className="absolute flex items-center justify-center font-mono font-black text-cyan-900/60"
+              initial={{ left: item.startLeft, top: '35vh', rotate: 0, opacity: 1, scale: 1 }}
+              animate={{
+                left: `calc(${item.startLeft} + ${item.driftX}vw)`,
+                top: `calc(35vh + ${item.driftY}vh)`,
+                rotate: item.driftRot,
+                opacity: [0.8, 0.1, 0.4],
+                scale: item.scale
+              }}
+              transition={{
+                duration: item.duration,
+                repeat: Infinity,
+                repeatType: "mirror",
+                ease: "linear"
+              }}
+              style={{
+                fontSize: '8rem',
+                filter: `blur(${item.scale < 0.6 ? 8 : 3}px)` // Adds photographic depth-of-field
+              }}
+            >
+              {item.char === ' ' ? "\u00A0" : item.char}
+            </motion.div>
+          ))}
+        </div>
 
-      <div className="fixed inset-0 z-50 pointer-events-none">
-        {letters.map((letter, index) => {
-          const isSpace = letter.char === ' ';
-          const letterSpacing = 40;
-          const totalWidth = letters.length * letterSpacing;
-          const startLeft = `calc(50vw - ${totalWidth / 2}px + ${index * letterSpacing}px)`;
-          const startTop = `35vh`;
+        {/* The Active Floating Typing Letters */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          {letters.map((letter, index) => {
+            const isSpace = letter.char === ' ';
+            const letterSpacing = 40;
+            const totalWidth = letters.length * letterSpacing;
+            const startLeft = `calc(50vw - ${totalWidth / 2}px + ${index * letterSpacing}px)`;
+            const startTop = `35vh`;
 
-          return (
-            <div key={letter.id} className="absolute transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] flex items-center justify-center w-10 h-10" style={{ left: isAssembling ? startLeft : `${letter.startX}vw`, top: isAssembling ? startTop : `${letter.startY}vh`, opacity: isAssembling ? 1 : 0.15, scale: isAssembling ? 1 : 1.5 }}>
-              <div className={`font-mono font-bold transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${isAssembling ? "" : "animate-float-bob"}`} style={{ animationDelay: `${letter.floatDelay}s`, transform: isAssembling ? `rotate(0deg)` : `rotate(${letter.rot}deg)`, color: isAssembling ? (isError ? '#ef4444' : '#22d3ee') : '#0891b2', textShadow: isAssembling ? (isError ? '0 0 30px rgba(239, 68, 68, 0.8)' : '0 0 30px rgba(34, 211, 238, 0.8)') : 'none', fontSize: isAssembling ? '4rem' : '8rem' }}>
-                {isSpace ? "\u00A0" : letter.char}
+            return (
+              <div key={letter.id} className="absolute transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] flex items-center justify-center w-10 h-10" style={{ left: isAssembling ? startLeft : `${letter.startX}vw`, top: isAssembling ? startTop : `${letter.startY}vh`, opacity: isAssembling ? 1 : 0.15, scale: isAssembling ? 1 : 1.5 }}>
+                <div className={`font-mono font-bold transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${isAssembling ? "" : "animate-float-bob"}`} style={{ animationDelay: `${letter.floatDelay}s`, transform: isAssembling ? `rotate(0deg)` : `rotate(${letter.rot}deg)`, color: isAssembling ? (isError ? '#ef4444' : '#22d3ee') : '#0891b2', textShadow: isAssembling ? (isError ? '0 0 30px rgba(239, 68, 68, 0.8)' : '0 0 30px rgba(34, 211, 238, 0.8)') : 'none', fontSize: isAssembling ? '4rem' : '8rem' }}>
+                  {isSpace ? "\u00A0" : letter.char}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* --- LAYER 2: 3D SCENE (z-10) --- */}
+        <Scene isSettled={isSettled} />
+        
+        {/* --- LAYER 3: UI CONTENT (z-20 & z-50) --- */}
+        <TopBar isSettled={isSettled} />
+
+        <div className="relative z-20 flex flex-col w-full">
+          <section id="home" className="min-h-screen flex flex-col items-center justify-start pt-32 pointer-events-none">
+            
+            <div className={`text-center space-y-2 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
+              
+              <div className="relative flex justify-center items-center mt-4 mb-2 w-full max-w-[90vw]">
+                <h1 className="absolute text-[8vw] md:text-8xl font-black text-cyan-600 blur-[20px] opacity-60 tracking-tighter uppercase select-none pointer-events-none mix-blend-screen animate-pulse whitespace-nowrap">
+                  {resumeData.personalInfo.name}
+                </h1>
+                <h1 className="absolute top-[3px] left-[3px] md:top-[5px] md:left-[5px] text-[8vw] md:text-8xl font-black text-cyan-900/80 tracking-tighter uppercase select-none pointer-events-none whitespace-nowrap">
+                  {resumeData.personalInfo.name}
+                </h1>
+                <h1 className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-300 to-neutral-950/20 drop-shadow-2xl whitespace-nowrap">
+                  {resumeData.personalInfo.name}
+                </h1>
+              </div>
+
+              <motion.p 
+                initial={{ opacity: 0, letterSpacing: "0em" }}
+                animate={isSettled ? { opacity: 1, letterSpacing: "0.2em" } : {}}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                className="text-sm md:text-lg text-cyan-400 uppercase font-semibold"
+              >
+                {resumeData.personalInfo.title}
+              </motion.p>
+              
+              <div className="mt-16 flex flex-col items-center">
+                <p className={`text-xs tracking-[0.2em] uppercase mb-4 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
+                  {isError ? "Error: Invalid Command" : (inputValue || isAssembling ? "System Ready." : hintText)}
+                </p>
+                <div className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-md rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-cyan-900/40 shadow-[0_0_20px_rgba(34,211,238,0.1)]'}`}>
+                  <span className={`font-mono mr-3 text-sm ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
+                  <span className={`font-mono text-sm tracking-wider ${isError ? 'text-red-400' : 'text-neutral-200'}`}>{inputValue}</span>
+                  <span className={`font-mono animate-blink ml-1 ${isError ? 'text-red-500' : 'text-cyan-600'}`}>_</span>
+                </div>
               </div>
             </div>
-          );
-        })}
-      </div>
+            
+          </section>
 
-      <div className="relative z-10 flex flex-col w-full">
-        <section id="home" className="min-h-screen flex flex-col items-center justify-start pt-32 pointer-events-none">
-          <div className={`text-center space-y-4 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
-            <h1 className="text-5xl md:text-7xl font-black text-neutral-200 tracking-tighter uppercase">{resumeData.personalInfo.name}</h1>
-            <p className="text-xl md:text-2xl text-cyan-400 tracking-widest uppercase font-semibold">{resumeData.personalInfo.title}</p>
-            <div className="mt-12 flex flex-col items-center">
-              <p className={`text-sm tracking-widest uppercase mb-3 h-5 ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
-                {isError ? "Error" : (inputValue || isAssembling ? "System Ready." : hintText)}
-              </p>
-              <div className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-sm rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0' : 'opacity-100'} ${isError ? 'border-red-500 shadow-red-900/40' : 'border-neutral-800 shadow-cyan-900/40'}`}>
-                <span className={`font-mono mr-2 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
-                <span className={`font-mono ${isError ? 'text-red-400' : 'text-neutral-200'}`}>{inputValue}</span>
-                <span className={`font-mono animate-blink ${isError ? 'text-red-500' : 'text-neutral-400'}`}>_</span>
-              </div>
-            </div>
-          </div>
-        </section>
+          <Sections />
+        </div>
 
-        <Sections />
-      </div>
-
-      <div className={`fixed bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
-    </main>
+        <div className={`fixed bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
+      </main>
+    </ReactLenis>
   );
-}
+} 

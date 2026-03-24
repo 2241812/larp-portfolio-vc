@@ -9,7 +9,8 @@ interface SceneProps {
 
 export default function Scene({ isSettled }: SceneProps) {
   return (
-    <div className="w-full h-full fixed inset-0 z-0 pointer-events-none">
+    // Changed z-0 to z-10 here to ensure it sits above the background letters
+    <div className="w-full h-full fixed inset-0 z-10 pointer-events-none">
       <Canvas>
         <PerspectiveCamera makeDefault position={[0, 1, 4]} fov={50} />
         <ambientLight intensity={0.5} />
