@@ -329,12 +329,12 @@ export default function GitHubStats() {
   return (
     <section
       id="github"
-      className="min-h-screen flex items-center justify-start px-4 md:px-24 py-24 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center px-4 md:px-24 py-24 relative overflow-hidden"
     >
       {/* Background watermark */}
-      <div className="absolute left-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+      <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
         <h2
-          className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap"
+          className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-l from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap"
           style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}
         >
           GITHUB
@@ -342,7 +342,7 @@ export default function GitHubStats() {
       </div>
 
       {/* Neon glow accent */}
-      <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-600/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] bg-cyan-600/5 blur-[120px] rounded-full pointer-events-none" />
 
       <motion.div
         variants={containerVariants}
@@ -370,7 +370,7 @@ export default function GitHubStats() {
         {/* ── Stat Cards Row ── */}
         <motion.div
           variants={containerVariants}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10"
         >
           {stats.map((stat) => (
             <motion.div
@@ -408,7 +408,7 @@ export default function GitHubStats() {
         {/* ── Two-column layout: Stats + Streak ── */}
         <motion.div
           variants={containerVariants}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
         >
           {/* GitHub Stats Card */}
           <motion.div
@@ -462,7 +462,7 @@ export default function GitHubStats() {
             borderColor: 'rgba(34,211,238,0.4)',
             boxShadow: '0 0 40px rgba(34,211,238,0.08)',
           }}
-          className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-5 mb-8"
+          className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-6 mb-8"
         >
           <div className="flex items-center gap-2 mb-4">
             <svg className="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -480,7 +480,7 @@ export default function GitHubStats() {
         {/* ── Recent Activity Feed ── */}
         <motion.div
           variants={containerVariants}
-          className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-5 md:p-8 mb-8"
+          className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-6 md:p-8"
         >
           {/* Feed header */}
           <motion.div
