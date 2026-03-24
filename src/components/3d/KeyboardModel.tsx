@@ -108,8 +108,8 @@ export default function KeyboardModel({ isSettled }: any) {
           if (isPressed) {
             keysPressed++;
             const keyX = keyCenterX[keyCode] || 0;
-            tiltZ += keyX * MAX_TILT;
-            tiltX += MAX_TILT * 0.5;
+            tiltZ -= keyX * MAX_TILT;
+            tiltX -= MAX_TILT * 0.3;
           }
           
           const targetKeyY = isPressed ? basePosY - 0.008 : basePosY;
