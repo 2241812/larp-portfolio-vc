@@ -19,10 +19,10 @@ export default function KeyboardModel({ isSettled }: any) {
   const MAX_TILT = 0.04;
   
   const keyCenterX: Record<string, number> = {
-    'Digit1': -0.35, 'Digit2': -0.3, 'Digit3': -0.25, 'Digit4': -0.2, 'Digit5': -0.15, 'Digit6': -0.1, 'Digit7': -0.05, 'Digit8': 0, 'Digit9': 0.05, 'Digit0': 0.1,
-    'KeyQ': -0.25, 'KeyW': -0.2, 'KeyE': -0.15, 'KeyR': -0.1, 'KeyT': -0.05, 'KeyY': 0, 'KeyU': 0.05, 'KeyI': 0.1, 'KeyO': 0.15, 'KeyP': 0.2,
-    'KeyA': -0.2, 'KeyS': -0.15, 'KeyD': -0.1, 'KeyF': -0.05, 'KeyG': 0, 'KeyH': 0.05, 'KeyJ': 0.1, 'KeyK': 0.15, 'KeyL': 0.2,
-    'KeyZ': -0.15, 'KeyX': -0.1, 'KeyC': -0.05, 'KeyV': 0, 'KeyB': 0.05, 'KeyN': 0.1, 'KeyM': 0.15,
+    'Digit1': 0.35, 'Digit2': 0.3, 'Digit3': 0.25, 'Digit4': 0.2, 'Digit5': 0.15, 'Digit6': 0.1, 'Digit7': 0.05, 'Digit8': 0, 'Digit9': -0.05, 'Digit0': -0.1,
+    'KeyQ': 0.25, 'KeyW': 0.2, 'KeyE': 0.15, 'KeyR': 0.1, 'KeyT': 0.05, 'KeyY': 0, 'KeyU': -0.05, 'KeyI': -0.1, 'KeyO': -0.15, 'KeyP': -0.2,
+    'KeyA': 0.2, 'KeyS': 0.15, 'KeyD': 0.1, 'KeyF': 0.05, 'KeyG': 0, 'KeyH': -0.05, 'KeyJ': -0.1, 'KeyK': -0.15, 'KeyL': -0.2,
+    'KeyZ': 0.15, 'KeyX': 0.1, 'KeyC': 0.05, 'KeyV': 0, 'KeyB': -0.05, 'KeyN': -0.1, 'KeyM': -0.15,
     'Space': 0,
   };
 
@@ -110,7 +110,7 @@ export default function KeyboardModel({ isSettled }: any) {
             keysPressed++;
             pressedKeyNames.push(keyCode);
             const keyX = keyCenterX[keyCode] || 0;
-            tiltZ += keyX * MAX_TILT;
+            tiltZ -= keyX * MAX_TILT;
             tiltX += MAX_TILT * 0.3;
           }
           
