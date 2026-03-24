@@ -12,6 +12,18 @@ export default function KeyboardModel({ isSettled }: any) {
   
   const pressedKeys = useRef<Set<string>>(new Set());
   const initialPositions = useRef<Record<string, number>>({});
+  
+  const keyboardTilt = useRef({ rotX: 0, rotXVel: 0, rotZ: 0, rotZVel: 0 });
+  const TILT_STIFFNESS = 600;
+  const TILT_DAMPING = 18;
+  const MAX_TILT = 0.04;
+  
+  const keyCenterX: Record<string, number> = {
+    'KeyA': -0.15, 'KeyS': -0.1, 'KeyD': -0.05, 'KeyF': 0, 'KeyG': 0.05, 'KeyH': 0.1, 'KeyJ': 0.15, 'KeyK': 0.2, 'KeyL': 0.25,
+    'KeyQ': -0.1, 'KeyW': -0.05, 'KeyE': 0, 'KeyR': 0.05, 'KeyT': 0.1, 'KeyY': 0.15, 'KeyU': 0.2, 'KeyI': 0.25, 'KeyO': 0.3, 'KeyP': 0.35,
+    'KeyZ': -0.1, 'KeyX': -0.05, 'KeyC': 0, 'KeyV': 0.05, 'KeyB': 0.1, 'KeyN': 0.15, 'KeyM': 0.2,
+    'Space': 0.05,
+  };
 
   const keyMap: Record<string, string> = {
     'Digit1': 'Object_104', 'Digit2': 'Object_106', 'Digit3': 'Object_108', 'Digit4': 'Object_110', 'Digit5': 'Object_112', 'Digit6': 'Object_114', 'Digit7': 'Object_116', 'Digit8': 'Object_118', 'Digit9': 'Object_120', 'Digit0': 'Object_122', 'Minus': 'Object_124', 'Backspace': 'Object_98', 'KeyQ': 'Object_74', 'KeyW': 'Object_166', 'KeyE': 'Object_168', 'KeyR': 'Object_170', 'KeyT': 'Object_172', 'KeyY': 'Object_174', 'KeyU': 'Object_176', 'KeyI': 'Object_178', 'KeyO': 'Object_180', 'KeyP': 'Object_182', 'KeyA': 'Object_68', 'KeyS': 'Object_128', 'KeyD': 'Object_130', 'KeyF': 'Object_132', 'KeyG': 'Object_134', 'KeyH': 'Object_136', 'KeyJ': 'Object_138', 'KeyK': 'Object_140', 'KeyL': 'Object_142', 'Enter': 'Object_100', 'KeyZ': 'Object_70', 'KeyX': 'Object_148', 'KeyC': 'Object_150', 'KeyV': 'Object_152', 'KeyB': 'Object_154', 'KeyN': 'Object_156', 'KeyM': 'Object_158', 'Comma': 'Object_160', 'Period': 'Object_162', 'Slash': 'Object_164', 'Space': 'Object_80'
@@ -82,15 +94,55 @@ export default function KeyboardModel({ isSettled }: any) {
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.08);
 
       // Individual key movement when pressed
+      let tiltX = 0;
+      let tiltZ = 0;
+      let keysPressed = 0;
+      
       Object.entries(keyMap).forEach(([keyCode, nodeName]) => {
         if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
           const node = nodes[nodeName];
           const basePosY = initialPositions.current[nodeName];
           const isPressed = pressedKeys.current.has(keyCode);
-          const targetKeyY = isPressed ? basePosY - 0.02 : basePosY;
+          
+          if (isPressed) {
+            keysPressed++;
+            const keyX = keyCenterX[keyCode] || 0;
+            tiltZ -= keyX * MAX_TILT;
+            tiltX += MAX_TILT * 0.5;
+          }
+          
+          const targetKeyY = isPressed ? basePosY - 0.008 : basePosY;
           node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.3);
         }
       });
+      
+      if (keysPressed > 0) {
+        const targetTiltX = Math.min(tiltX, MAX_TILT);
+        const targetTiltZ = THREE.MathUtils.clamp(tiltZ, -MAX_TILT, MAX_TILT);
+        
+        const springX = -TILT_STIFFNESS * (keyboardTilt.current.rotX - targetTiltX);
+        const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
+        keyboardTilt.current.rotXVel += (springX + dampX) * delta;
+        keyboardTilt.current.rotX += keyboardTilt.current.rotXVel * delta;
+        
+        const springZ = -TILT_STIFFNESS * (keyboardTilt.current.rotZ - targetTiltZ);
+        const dampZ = -TILT_DAMPING * keyboardTilt.current.rotZVel;
+        keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
+        keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
+      } else {
+        const springX = -TILT_STIFFNESS * keyboardTilt.current.rotX;
+        const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
+        keyboardTilt.current.rotXVel += (springX + dampX) * delta;
+        keyboardTilt.current.rotX += keyboardTilt.current.rotXVel * delta;
+        
+        const springZ = -TILT_STIFFNESS * keyboardTilt.current.rotZ;
+        const dampZ = -TILT_DAMPING * keyboardTilt.current.rotZVel;
+        keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
+        keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
+      }
+      
+      groupRef.current.rotation.x += keyboardTilt.current.rotX;
+      groupRef.current.rotation.z += keyboardTilt.current.rotZ;
     } else {
       const spinSpeed = 0.01 + (state.pointer.x * 0.08);
       groupRef.current.rotation.y += spinSpeed;
