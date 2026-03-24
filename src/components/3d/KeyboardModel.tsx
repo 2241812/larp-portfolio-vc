@@ -18,10 +18,6 @@ export default function KeyboardModel({ isSettled }: any) {
   const TILT_DAMPING = 18;
   const MAX_TILT = 0.04;
   
-  // keyCenterX: negative = left side, positive = right side
-  // This ensures tiltZ -= keyX * MAX_TILT produces:
-  //   - Positive tiltZ for left keys (left side goes down)
-  //   - Negative tiltZ for right keys (right side goes down)
   const keyCenterX: Record<string, number> = {
     'Digit1': -0.35, 'Digit2': -0.3, 'Digit3': -0.25, 'Digit4': -0.2, 'Digit5': -0.15, 'Digit6': -0.1, 'Digit7': -0.05, 'Digit8': 0, 'Digit9': 0.05, 'Digit0': 0.1,
     'KeyQ': -0.25, 'KeyW': -0.2, 'KeyE': -0.15, 'KeyR': -0.1, 'KeyT': -0.05, 'KeyY': 0, 'KeyU': 0.05, 'KeyI': 0.1, 'KeyO': 0.15, 'KeyP': 0.2,
@@ -65,10 +61,11 @@ export default function KeyboardModel({ isSettled }: any) {
 
     const p = scrollProgress.current;
     
-    let targetScale = isSettled ? 15.0 : 9.75;
+    let targetScale = isSettled ? 14.0 : 9.75;
     let targetPosX = 0;
-    let targetPosY = isSettled ? 0.45 : 1.0;
-    let targetRotX = 0.4;
+    let targetPosY = isSettled ? 0.2 : 1.0;
+    // Base rotation aligned with isometric view - subtle tilt to show keycaps
+    let targetRotX = 0.35;
     
     if (isSettled && targetRotY.current === null) {
       const currentY = groupRef.current.rotation.y;
@@ -80,9 +77,9 @@ export default function KeyboardModel({ isSettled }: any) {
     if (isSettled) {
       const fadeOutFactor = Math.min(p * 5, 1); 
       
-      targetScale = THREE.MathUtils.lerp(15.0, 0.1, fadeOutFactor);
-      targetPosY = THREE.MathUtils.lerp(0.45, -5.0, fadeOutFactor);
-      targetRotX = THREE.MathUtils.lerp(0.4, -2.0, fadeOutFactor);
+      targetScale = THREE.MathUtils.lerp(14.0, 0.1, fadeOutFactor);
+      targetPosY = THREE.MathUtils.lerp(0.2, -5.0, fadeOutFactor);
+      targetRotX = THREE.MathUtils.lerp(0.35, -2.0, fadeOutFactor);
       finalRotY += p * Math.PI * 8; 
     }
 
@@ -102,7 +99,6 @@ export default function KeyboardModel({ isSettled }: any) {
       let tiltX = 0;
       let tiltZ = 0;
       let keysPressed = 0;
-      let pressedKeyNames: string[] = [];
       
       Object.entries(keyMap).forEach(([keyCode, nodeName]) => {
         if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
@@ -112,7 +108,6 @@ export default function KeyboardModel({ isSettled }: any) {
           
           if (isPressed) {
             keysPressed++;
-            pressedKeyNames.push(keyCode);
             const keyX = keyCenterX[keyCode] || 0;
             tiltZ -= keyX * MAX_TILT;
             tiltX += MAX_TILT * 0.3;
@@ -122,12 +117,6 @@ export default function KeyboardModel({ isSettled }: any) {
           node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.3);
         }
       });
-      
-      if (keysPressed > 0) {
-        console.log('[KEYBOARD] Keys pressed:', pressedKeyNames.join(', '));
-        console.log('[KEYBOARD] tiltX target:', tiltX, 'tiltZ target:', tiltZ);
-        console.log('[KEYBOARD] Current rotX:', groupRef.current.rotation.x, 'rotZ:', groupRef.current.rotation.z);
-      }
       
       if (keysPressed > 0) {
         const targetTiltX = Math.min(tiltX, MAX_TILT);

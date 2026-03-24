@@ -25,7 +25,7 @@ export default function TopBar({ isSettled }: TopBarProps) {
       animate={{ y: isSettled ? 0 : -100, opacity: isSettled ? 1 : 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
-      <div className="w-full h-20 border-b border-cyan-900/40 bg-neutral-950/80 backdrop-blur-md flex items-center justify-between">
+      <div className="w-full h-20 border-b border-cyan-900/40 bg-black/80 backdrop-blur-md flex items-center justify-between">
         <motion.div 
           className="flex items-center space-x-3 cursor-pointer group"
           onClick={() => scrollToSection('home')}
@@ -40,6 +40,12 @@ export default function TopBar({ isSettled }: TopBarProps) {
             height={44} 
             className="rounded-lg border border-cyan-800 shadow-[0_0_10px_rgba(34,211,238,0.3)] transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(34,211,238,0.8)] group-hover:border-cyan-400"
           />
+          <span 
+            className="hidden md:block text-sm font-bold tracking-[0.2em] uppercase text-cyan-400/80 group-hover:text-cyan-300 transition-colors duration-300"
+            style={{ fontFamily: 'var(--font-orbitron), sans-serif' }}
+          >
+            Portfolio
+          </span>
         </motion.div>
 
         <nav className="flex space-x-2 md:space-x-6">
@@ -50,7 +56,8 @@ export default function TopBar({ isSettled }: TopBarProps) {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: isSettled ? 1 : 0, y: isSettled ? 0 : -20 }}
               transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
-              className="group relative px-1 py-1 font-mono text-[10px] md:text-sm tracking-widest uppercase text-neutral-400 transition-colors duration-300 hover:text-cyan-400 cursor-pointer"
+              className="group relative px-1 py-1 text-[10px] md:text-sm tracking-widest uppercase text-neutral-400 transition-colors duration-300 hover:text-cyan-400 cursor-pointer"
+              style={{ fontFamily: 'var(--font-rajdhani), sans-serif', fontWeight: 500 }}
             >
               <span className="absolute -left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-cyan-500">
                 {">"}
