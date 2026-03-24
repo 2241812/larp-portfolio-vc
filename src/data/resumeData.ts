@@ -1,6 +1,6 @@
 export const resumeData = {
   personalInfo: {
-    name: "Narciso III C. Javier", // [cite: 30]
+    name: "Narciso III Javier",
     title: "Computer Science Major", // [cite: 32]
     location: "Baguio City, Benguet", // [cite: 31]
     phone: "+63-927-872-0192", // [cite: 31]

@@ -7,7 +7,6 @@ import TopBar from '@/components/ui/TopBar';
 import Sections from '@/components/ui/Sections';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
-import CursorTrail from '@/components/ui/CursorTrail';
 import { resumeData } from '@/data/resumeData';
 
 type FloatingLetter = { id: string; char: string; startX: number; startY: number; rot: number; floatDelay: number; };
@@ -202,9 +201,6 @@ export default function Home() {
 
         {/* Matrix rain – sits above grid, below 3D scene */}
         <MatrixRain />
-        
-        {/* Cursor trail */}
-        <CursorTrail />
         
         {/* The Vanta.js Style Debris Asteroids */}
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
