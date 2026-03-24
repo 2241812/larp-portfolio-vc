@@ -9,12 +9,12 @@ interface SceneProps {
 
 export default function Scene({ isSettled }: SceneProps) {
   return (
-    <div className="w-full h-full">
+    // Changed z-0 to z-10 here to ensure it sits above the background letters
+    <div className="w-full h-full fixed inset-0 z-10 pointer-events-none">
       <Canvas>
-        <PerspectiveCamera makeDefault position={[0, 1, 5]} fov={45} />
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[10, 10, 5]} intensity={1.8} />
-        <pointLight position={[-5, 3, -3]} intensity={0.5} color="#22d3ee" />
+        <PerspectiveCamera makeDefault position={[0, 1, 4]} fov={50} />
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 10, 5]} intensity={1.5} />
         <Environment preset="city" />
         <KeyboardModel isSettled={isSettled} />
         <ContactShadows position={[0, -0.3, 0]} opacity={0.6} scale={5} blur={2.5} far={4} />

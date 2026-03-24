@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { ReactLenis } from '@studio-freight/react-lenis';
 import { motion } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
@@ -11,7 +11,7 @@ type FloatingLetter = { id: string; char: string; startX: number; startY: number
 type DebrisLetter = FloatingLetter & { startLeft: string; driftX: number; driftY: number; driftRot: number; scale: number; duration: number; };
 
 const VALID_COMMANDS = ['about me', 'experience', 'skills', 'projects', 'contact'];
-const HINT_PHRASES = ["Try typing 'about me'", "Try typing 'skills'", "Try typing 'projects'", "Try typing 'experience'", "Try typing 'contact'"];
+const HINT_PHRASES = ["'about me'", "'python'", "'skills'", "'docker'", "'contact'"];
 
 export default function Home() {
   const [isSettled, setIsSettled] = useState(false);
@@ -21,40 +21,10 @@ export default function Home() {
   const [debris, setDebris] = useState<DebrisLetter[]>([]);
   const [isAssembling, setIsAssembling] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [typedName, setTypedName] = useState("");
-  const [isTypingName, setIsTypingName] = useState(true);
   
   const [hintText, setHintText] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isDeletingHint, setIsDeletingHint] = useState(false);
-
-  // Keyboard bounce state
-  const [isBouncing, setIsBouncing] = useState(false);
-  const bounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const fullName = resumeData.personalInfo.name;
-  
-  // Trigger keyboard bounce
-  const triggerBounce = () => {
-    setIsBouncing(true);
-    if (bounceTimeoutRef.current) clearTimeout(bounceTimeoutRef.current);
-    bounceTimeoutRef.current = setTimeout(() => setIsBouncing(false), 250);
-  };
-  
-  useEffect(() => {
-    let index = 0;
-    const typeInterval = setInterval(() => {
-      if (index <= fullName.length) {
-        setTypedName(fullName.slice(0, index));
-        index++;
-      } else {
-        clearInterval(typeInterval);
-        setIsTypingName(false);
-        setTimeout(() => setIsSettled(true), 500);
-      }
-    }, 120);
-    return () => clearInterval(typeInterval);
-  }, [fullName]);
 
   useEffect(() => {
     const duration = 2500;
@@ -77,7 +47,7 @@ export default function Home() {
       return;
     }
     const timeout = setTimeout(() => {
-      const currentPhrase = `${HINT_PHRASES[hintIndex]}...`;
+      const currentPhrase = `Try typing ${HINT_PHRASES[hintIndex]}...`;
       if (!isDeletingHint) {
         setHintText(currentPhrase.substring(0, hintText.length + 1));
         if (hintText === currentPhrase) setTimeout(() => setIsDeletingHint(true), 2000);
@@ -116,6 +86,7 @@ export default function Home() {
     const targetSection = findSectionForKeyword(cmd);
 
     setTimeout(() => {
+      // 1. Convert active letters into drifting debris
       const letterSpacing = 40;
       const totalWidth = letters.length * letterSpacing;
       
@@ -124,14 +95,15 @@ export default function Home() {
         return {
           ...l,
           startLeft,
-          driftX: (Math.random() - 0.5) * 60,
-          driftY: (Math.random() - 0.5) * 80,
-          driftRot: (Math.random() - 0.5) * 720,
-          scale: Math.random() * 0.6 + 0.3,
-          duration: Math.random() * 30 + 30
+          driftX: (Math.random() - 0.5) * 60, // Drift across the screen
+          driftY: (Math.random() - 0.5) * 80, // Drift up/down
+          driftRot: (Math.random() - 0.5) * 720, // Tumble
+          scale: Math.random() * 0.6 + 0.3, // Random depth size
+          duration: Math.random() * 30 + 30 // Extremely slow 30-60s drift
         };
       });
 
+      // Keep only the last 50 debris particles so the browser doesn't lag
       setDebris(prev => [...prev, ...newDebris].slice(-50));
       setLetters([]);
       setIsAssembling(false);
@@ -156,6 +128,7 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAssembling || isError) return;
       
+      // Prevent spacebar from scrolling the page
       if (e.code === 'Space') e.preventDefault();
       
       if (e.ctrlKey || e.metaKey) {
@@ -166,14 +139,12 @@ export default function Home() {
       if (e.key === 'Backspace') {
         setInputValue(prev => prev.slice(0, -1));
         setLetters(prev => prev.slice(0, -1));
-        triggerBounce();
       } else if (e.key === 'Enter') {
         e.preventDefault(); 
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
         executeCommand(inputValue);
-        triggerBounce();
       } else if (e.key.length === 1 && /[a-zA-Z0-9 ]/.test(e.key)) {
         if (e.key === ' ') e.preventDefault(); 
         
@@ -182,7 +153,6 @@ export default function Home() {
           id: Date.now().toString() + Math.random(),
           char: e.key, startX: Math.random() * 80 + 10, startY: Math.random() * 60 + 10, rot: Math.random() * 90 - 45, floatDelay: Math.random() * -5
         }]);
-        triggerBounce();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -191,18 +161,12 @@ export default function Home() {
 
   return (
     <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }}>
-      <main className="relative bg-black font-sans select-none text-neutral-300 scanlines">
+      <main className="relative bg-neutral-950 font-sans select-none text-neutral-300">
         
         {/* --- LAYER 1: DEEP BACKGROUND (z-0) --- */}
-        <div className="fixed inset-0 z-0 bg-grid pointer-events-none" />
-        <div className="fixed inset-0 z-0 bg-cyber-radial pointer-events-none" />
-        
-        {/* Faint horizontal scan lines */}
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.02]"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(34, 211, 238, 0.15) 3px, rgba(34, 211, 238, 0.15) 4px)',
-          }}
-        />
+        <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" />
+        <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
         
         {/* The Vanta.js Style Debris Asteroids */}
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
@@ -226,7 +190,7 @@ export default function Home() {
               }}
               style={{
                 fontSize: '8rem',
-                filter: `blur(${item.scale < 0.6 ? 8 : 3}px)`
+                filter: `blur(${item.scale < 0.6 ? 8 : 3}px)` // Adds photographic depth-of-field
               }}
             >
               {item.char === ' ' ? "\u00A0" : item.char}
@@ -253,95 +217,47 @@ export default function Home() {
           })}
         </div>
 
-        {/* --- LAYER 2: 3D KEYBOARD SCENE (z-10) --- */}
-        {/* Keyboard positioned at bottom center with 3D isometric transform */}
-        <div className={`fixed bottom-0 left-0 right-0 z-10 pointer-events-none flex items-end justify-center h-[55vh] transition-all duration-700 ${isSettled ? 'opacity-100' : 'opacity-0'}`}>
-            <div className="w-full h-full">
-            <div className={`w-full h-full ${isBouncing ? 'keyboard-bounce' : ''}`}>
-              <Scene isSettled={isSettled} />
-            </div>
-          </div>
-        </div>
+        {/* --- LAYER 2: 3D SCENE (z-10) --- */}
+        <Scene isSettled={isSettled} />
         
         {/* --- LAYER 3: UI CONTENT (z-20 & z-50) --- */}
         <TopBar isSettled={isSettled} />
 
         <div className="relative z-20 flex flex-col w-full">
-          <section id="home" className="min-h-screen flex flex-col items-center justify-start pt-24 md:pt-32 pointer-events-none">
+          <section id="home" className="min-h-screen flex flex-col items-center justify-start pt-32 pointer-events-none">
             
-            {/* Hero text with 3D isometric perspective to match keyboard */}
-            <div className={`hero-3d-container w-full transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
-              <div className="hero-3d-text flex flex-col items-center text-center space-y-2">
-                
-                <div className="relative flex justify-center items-center mt-2 mb-6 w-full max-w-[90vw]">
-                  {/* Cyberpunk glow layer */}
-                  <motion.h1 
-                    className="absolute text-[7vw] md:text-6xl font-black text-cyan-400 blur-[30px] opacity-80 tracking-tighter uppercase select-none pointer-events-none mix-blend-screen"
-                    style={{ fontFamily: 'var(--font-orbitron), sans-serif' }}
-                    animate={{ opacity: isTypingName ? [0.4, 0.8, 0.4] : 0.8 }}
-                    transition={{ duration: 2, repeat: isTypingName ? Infinity : 0, ease: "easeInOut" }}
-                  >
-                    {typedName}
-                  </motion.h1>
-                  {/* Main cyberpunk text */}
-                  <motion.h1 
-                    className="relative text-[7vw] md:text-6xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)]"
-                    style={{ fontFamily: 'var(--font-orbitron), sans-serif' }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: isTypingName ? 0 : 1, scale: isTypingName ? 0.9 : 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {typedName}
-                    {isTypingName && (
-                      <motion.span 
-                        className="inline-block w-1 h-[0.6em] bg-cyan-400 ml-1 align-middle"
-                        animate={{ opacity: [1, 0] }}
-                        transition={{ duration: 0.5, repeat: Infinity }}
-                      />
-                    )}
-                  </motion.h1>
-                </div>
+            <div className={`text-center space-y-2 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
+              
+              <div className="relative flex justify-center items-center mt-4 mb-2 w-full max-w-[90vw]">
+                <h1 className="absolute text-[8vw] md:text-8xl font-black text-cyan-600 blur-[20px] opacity-60 tracking-tighter uppercase select-none pointer-events-none mix-blend-screen animate-pulse whitespace-nowrap">
+                  {resumeData.personalInfo.name}
+                </h1>
+                <h1 className="absolute top-[3px] left-[3px] md:top-[5px] md:left-[5px] text-[8vw] md:text-8xl font-black text-cyan-900/80 tracking-tighter uppercase select-none pointer-events-none whitespace-nowrap">
+                  {resumeData.personalInfo.name}
+                </h1>
+                <h1 className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-300 to-neutral-950/20 drop-shadow-2xl whitespace-nowrap">
+                  {resumeData.personalInfo.name}
+                </h1>
+              </div>
 
-                {/* Glitch accent line */}
-                <motion.div 
-                  className="w-64 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-6"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: isSettled ? 1 : 0 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                />
-                
-                <motion.p 
-                  initial={{ opacity: 0, letterSpacing: "0em", y: 10 }}
-                  animate={isSettled ? { opacity: 1, letterSpacing: "0.3em", y: 0 } : {}}
-                  transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
-                  className="text-sm md:text-lg text-cyan-400 uppercase font-medium tracking-[0.3em] text-center"
-                  style={{ fontFamily: 'var(--font-rajdhani), sans-serif', fontWeight: 600 }}
-                >
-                  {resumeData.personalInfo.title}
-                </motion.p>
-                
-                {/* Input field positioned above keyboard area */}
-                <motion.div 
-                  className="mt-16 md:mt-20 flex flex-col items-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: isSettled ? 1 : 0, y: isSettled ? 0 : 20 }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
-                >
-                  <p className={`text-xs tracking-[0.3em] uppercase mb-4 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-cyan-600/70'}`}
-                    style={{ fontFamily: 'var(--font-rajdhani), sans-serif' }}
-                  >
-                    {isError ? "ERROR: COMMAND NOT FOUND" : (inputValue || isAssembling ? "SYSTEM READY" : hintText)}
-                  </p>
-                  <motion.div 
-                    className={`w-80 md:w-96 h-14 border bg-black/90 backdrop-blur-xl rounded-lg flex items-center px-5 transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.4)]' : 'border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)]'}`}
-                    whileHover={{ boxShadow: '0 0 50px rgba(34,211,238,0.3)', borderColor: 'rgba(34,211,238,0.5)' }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <span className={`font-mono text-lg mr-3 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
-                    <span className={`font-mono text-base tracking-wider flex-1 ${isError ? 'text-red-400' : 'text-neutral-100'}`}>{inputValue}</span>
-                    <span className={`font-mono animate-pulse ml-1 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>▋</span>
-                  </motion.div>
-                </motion.div>
+              <motion.p 
+                initial={{ opacity: 0, letterSpacing: "0em" }}
+                animate={isSettled ? { opacity: 1, letterSpacing: "0.2em" } : {}}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                className="text-sm md:text-lg text-cyan-400 uppercase font-semibold"
+              >
+                {resumeData.personalInfo.title}
+              </motion.p>
+              
+              <div className="mt-16 flex flex-col items-center">
+                <p className={`text-xs tracking-[0.2em] uppercase mb-4 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}>
+                  {isError ? "Error: Invalid Command" : (inputValue || isAssembling ? "System Ready." : hintText)}
+                </p>
+                <div className={`w-96 h-12 border bg-neutral-900/80 backdrop-blur-md rounded-md flex items-center px-4 shadow-2xl transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-cyan-900/40 shadow-[0_0_20px_rgba(34,211,238,0.1)]'}`}>
+                  <span className={`font-mono mr-3 text-sm ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
+                  <span className={`font-mono text-sm tracking-wider ${isError ? 'text-red-400' : 'text-neutral-200'}`}>{inputValue}</span>
+                  <span className={`font-mono animate-blink ml-1 ${isError ? 'text-red-500' : 'text-cyan-600'}`}>_</span>
+                </div>
               </div>
             </div>
             
@@ -350,14 +266,8 @@ export default function Home() {
           <Sections />
         </div>
 
-        {/* Loading progress bar */}
-        <motion.div 
-          className="fixed bottom-0 left-0 h-[3px] bg-gradient-to-r from-cyan-900 via-cyan-400 to-cyan-600 z-50"
-          animate={{ opacity: isSettled ? 0 : 1 }}
-          transition={{ duration: 0.5 }}
-          style={{ width: `${loadProgress}%`, boxShadow: '0 0 20px rgba(34, 211, 238, 0.8)' }}
-        />
+        <div className={`fixed bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
       </main>
     </ReactLenis>
   );
-}
+} 
