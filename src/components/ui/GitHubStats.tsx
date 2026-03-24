@@ -331,10 +331,10 @@ export default function GitHubStats() {
       className="min-h-screen flex items-center justify-center px-4 md:px-24 py-24 relative overflow-hidden"
     >
       {/* Background watermark */}
-      <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+      <div className="absolute left-[-10%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
         <h2
-          className="text-[10rem] md:text-[16rem] font-black text-transparent bg-clip-text bg-gradient-to-l from-cyan-900/20 to-transparent tracking-tighter uppercase whitespace-nowrap"
-          style={{ WebkitTextStroke: '2px rgba(34,211,238,0.05)' }}
+          className="text-[8rem] md:text-[14rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/15 to-transparent tracking-tighter uppercase whitespace-nowrap"
+          style={{ WebkitTextStroke: '1px rgba(34,211,238,0.03)' }}
         >
           GITHUB
         </h2>
