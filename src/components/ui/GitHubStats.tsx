@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, Variants } from 'framer-motion';
+import ContributionCalendar from './ContributionCalendar';
 
 // ── Types ──
 interface StatData {
@@ -28,10 +29,10 @@ interface GitHubEvent {
   };
 }
 
-// ── Image URLs ──
-const STATS_IMG = 'https://github-readme-stats.vercel.app/api?username=2241812&theme=tokyonight&show_icons=true&hide_border=true';
-const STREAK_IMG = 'https://github-streak-stats.herokuapp.com/?user=2241812&theme=tokyo-night&hide_border=true';
-const ACTIVITY_GRAPH = 'https://github-readme-activity-graph.vercel.app/graph?username=2241812&theme=tokyo-night&hide_border=true';
+// ── Image URLs with fallbacks ──
+const STATS_IMG = 'https://github-readme-stats.vercel.app/api?username=2241812&theme=tokyonight&show_icons=true&hide_border=true&bg_color=0d1117';
+const STREAK_IMG = 'https://streak-stats.demolab.com/?user=2241812&theme=tokyo-night&hide_border=true&background=0d1117&ring=22d3ee&fire=22d3ee';
+const ACTIVITY_GRAPH = 'https://github-readme-activity-graph.vercel.app/graph?username=2241812&theme=tokyo-night&hide_border=true&bg_color=0d1117';
 
 // ── Helpers ──
 function getRelativeTime(dateString: string): string {
@@ -235,14 +236,31 @@ function ImageSkeleton({ className }: { className?: string }) {
 function EmbedImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [imgKey, setImgKey] = useState(0);
+
+  const handleRetry = () => {
+    setRetryCount((c) => c + 1);
+    setErrored(false);
+    setLoaded(false);
+    setImgKey((k) => k + 1); // force remount
+  };
 
   if (errored) {
     return (
-      <div className={`bg-neutral-900/60 border border-red-900/30 rounded-xl flex flex-col items-center justify-center p-6 ${className}`}>
-        <svg className="w-8 h-8 text-neutral-700 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <div className={`bg-neutral-900/60 border border-red-900/30 rounded-xl flex flex-col items-center justify-center p-6 gap-3 ${className}`}>
+        <svg className="w-8 h-8 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
         </svg>
         <span className="text-xs text-neutral-600 font-mono">{alt} unavailable</span>
+        {retryCount < 3 && (
+          <button
+            onClick={handleRetry}
+            className="px-3 py-1.5 text-[10px] font-mono text-cyan-400 border border-cyan-800/50 rounded-md hover:bg-cyan-900/20 hover:border-cyan-600/50 transition-all duration-300 cursor-pointer"
+          >
+            Retry
+          </button>
+        )}
       </div>
     );
   }
@@ -252,9 +270,12 @@ function EmbedImage({ src, alt, className }: { src: string; alt: string; classNa
       {!loaded && <ImageSkeleton className={className} />}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        key={imgKey}
+        src={retryCount > 0 ? `${src}&_t=${Date.now()}` : src}
         alt={alt}
         loading="lazy"
+        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
         onLoad={() => setLoaded(true)}
         onError={() => setErrored(true)}
         className={`transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'} ${className}`}
@@ -331,7 +352,7 @@ export default function GitHubStats() {
       className="min-h-screen flex items-center justify-center px-4 md:px-24 py-24 relative overflow-hidden"
     >
       {/* Background watermark */}
-      <div className="absolute left-[-10%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+      <div className="absolute left-[5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
         <h2
           className="text-[8rem] md:text-[14rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/15 to-transparent tracking-tighter uppercase whitespace-nowrap"
           style={{ WebkitTextStroke: '1px rgba(34,211,238,0.03)' }}
@@ -454,7 +475,7 @@ export default function GitHubStats() {
           </motion.div>
         </motion.div>
 
-        {/* ── Full-width Contribution Graph ── */}
+        {/* ── Contribution Calendar ── */}
         <motion.div
           variants={fadeInVariants}
           whileHover={{
@@ -469,11 +490,7 @@ export default function GitHubStats() {
             </svg>
             <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">Contribution Activity</h3>
           </div>
-          <EmbedImage
-            src={ACTIVITY_GRAPH}
-            alt="Contribution Activity Graph"
-            className="w-full rounded-lg"
-          />
+          <ContributionCalendar username="2241812" />
         </motion.div>
 
         {/* ── Recent Activity Feed ── */}
