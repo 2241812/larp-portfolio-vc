@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
 import Sections from '@/components/ui/Sections';
-import GitHubActivity from '@/components/ui/GitHubActivity';
 import GitHubStats from '@/components/ui/GitHubStats';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
@@ -19,6 +18,7 @@ const HINT_PHRASES = ["'about me'", "'python'", "'skills'", "'docker'", "'contac
 
 export default function Home() {
   const [isSettled, setIsSettled] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [loadProgress, setLoadProgress] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const [letters, setLetters] = useState<FloatingLetter[]>([]);
@@ -63,11 +63,25 @@ export default function Home() {
       setLoadProgress(progress);
       if (progress === 100) {
         clearInterval(interval);
-        setIsSettled(true);
+        // Small delay so the bar fills fully before revealing
+        setTimeout(() => {
+          setIsLoading(false);
+          setIsSettled(true);
+        }, 400);
       }
-    }, 16); 
+    }, 16);
     return () => clearInterval(interval);
   }, []);
+
+  // Lock body scroll while loading
+  useEffect(() => {
+    if (isLoading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isLoading]);
 
   useEffect(() => {
     if (inputValue.length > 0 || isAssembling || isError) {
@@ -195,6 +209,84 @@ export default function Home() {
   return (
     <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }}>
       <main className="relative bg-neutral-950 font-sans select-none text-neutral-300">
+
+        {/* ── FULL-SCREEN LOADING SCREEN ── */}
+        {isLoading && (
+          <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-neutral-950">
+            {/* Cyber grid behind */}
+            <div className="absolute inset-0 bg-grid opacity-30" />
+            {/* Radial glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-cyan-600/10 blur-[120px] rounded-full pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col items-center gap-8">
+              {/* Spinning hex loader */}
+              <div className="relative w-24 h-24">
+                {/* Outer ring */}
+                <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: '3s' }} viewBox="0 0 100 100">
+                  <polygon
+                    points="50,5 93,27.5 93,72.5 50,95 7,72.5 7,27.5"
+                    fill="none"
+                    stroke="rgba(34,211,238,0.15)"
+                    strokeWidth="1"
+                  />
+                </svg>
+                {/* Inner spinning ring */}
+                <svg className="absolute inset-2 w-20 h-20 animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }} viewBox="0 0 100 100">
+                  <polygon
+                    points="50,10 88,30 88,70 50,90 12,70 12,30"
+                    fill="none"
+                    stroke="rgba(34,211,238,0.3)"
+                    strokeWidth="1.5"
+                    strokeDasharray="20 10"
+                  />
+                </svg>
+                {/* Center dot */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)] animate-pulse" />
+                </div>
+              </div>
+
+              {/* LOADING text */}
+              <div className="flex flex-col items-center gap-3">
+                <h2
+                  className="text-lg tracking-[0.5em] text-cyan-400 uppercase font-bold"
+                  style={{ fontFamily: 'var(--font-orbitron)' }}
+                >
+                  {'LOADING'.split('').map((char, i) => (
+                    <span
+                      key={i}
+                      className="inline-block animate-pulse"
+                      style={{ animationDelay: `${i * 0.1}s` }}
+                    >
+                      {char}
+                    </span>
+                  ))}
+                  <span className="inline-block animate-pulse ml-1" style={{ animationDelay: '0.7s' }}>.</span>
+                  <span className="inline-block animate-pulse" style={{ animationDelay: '0.8s' }}>.</span>
+                  <span className="inline-block animate-pulse" style={{ animationDelay: '0.9s' }}>.</span>
+                </h2>
+
+                {/* Progress bar */}
+                <div className="w-64 h-[2px] bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-100 ease-out"
+                    style={{ width: `${loadProgress}%` }}
+                  />
+                </div>
+
+                <span className="text-[10px] font-mono text-neutral-600 tracking-widest">
+                  {Math.round(loadProgress)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Corner brackets */}
+            <div className="absolute top-6 left-6 w-12 h-12 border-t border-l border-cyan-800/40" />
+            <div className="absolute top-6 right-6 w-12 h-12 border-t border-r border-cyan-800/40" />
+            <div className="absolute bottom-6 left-6 w-12 h-12 border-b border-l border-cyan-800/40" />
+            <div className="absolute bottom-6 right-6 w-12 h-12 border-b border-r border-cyan-800/40" />
+          </div>
+        )}
         
         {/* --- LAYER 1: DEEP BACKGROUND (z-0) --- */}
         <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" />
@@ -325,7 +417,6 @@ export default function Home() {
             
           </section>
 
-          <GitHubActivity />
           <GitHubStats />
           <Sections />
         </div>
