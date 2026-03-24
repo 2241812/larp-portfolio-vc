@@ -50,7 +50,9 @@ export default function Home() {
       const currentPhrase = `Try typing ${HINT_PHRASES[hintIndex]}...`;
       if (!isDeletingHint) {
         setHintText(currentPhrase.substring(0, hintText.length + 1));
-        if (hintText === currentPhrase) setTimeout(() => setIsDeletingHint(true), 2000);
+        if (hintText.length === currentPhrase.length) {
+          setTimeout(() => setIsDeletingHint(true), 2500);
+        }
       } else {
         setHintText(currentPhrase.substring(0, hintText.length - 1));
         if (hintText === '') {
@@ -58,7 +60,7 @@ export default function Home() {
           setHintIndex((prev) => (prev + 1) % HINT_PHRASES.length);
         }
       }
-    }, isDeletingHint ? 30 : 80);
+    }, isDeletingHint ? 20 : 60);
     return () => clearTimeout(timeout);
   }, [hintText, isDeletingHint, hintIndex, inputValue, isAssembling, isError]);
 
@@ -229,25 +231,9 @@ export default function Home() {
             <div className={`text-center space-y-2 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
               
               <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
-                {/* Glitch effect layers */}
+                {/* Main name - single clean layer */}
                 <motion.h1 
-                  className="absolute text-[8vw] md:text-8xl font-black text-cyan-500/30 blur-[25px] tracking-tighter uppercase select-none pointer-events-none mix-blend-screen"
-                  animate={{ x: [0, -3, 3, 0], opacity: [0.6, 0.8, 0.4, 0.6] }}
-                  transition={{ duration: 0.3, repeat: Infinity, repeatDelay: 4 }}
-                  style={{ fontFamily: 'var(--font-orbitron)' }}
-                >
-                  {resumeData.personalInfo.name}
-                </motion.h1>
-                <motion.h1 
-                  className="absolute top-[2px] left-[2px] text-[8vw] md:text-8xl font-black text-cyan-800/40 tracking-tighter uppercase select-none pointer-events-none"
-                  animate={{ x: [0, 2, -2, 0] }}
-                  transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 5 }}
-                  style={{ fontFamily: 'var(--font-orbitron)' }}
-                >
-                  {resumeData.personalInfo.name}
-                </motion.h1>
-                <motion.h1 
-                  className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)]"
+                  className="relative text-[8vw] md:text-7xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap"
                   initial={{ opacity: 0, y: 20 }}
                   animate={isSettled ? { opacity: 1, y: 0 } : {}}
                   transition={{ duration: 0.8, ease: "easeOut" }}
@@ -259,7 +245,7 @@ export default function Home() {
 
               {/* Cyber accent line */}
               <motion.div 
-                className="w-64 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-6"
+                className="w-64 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-8"
                 initial={{ scaleX: 0, opacity: 0 }}
                 animate={isSettled ? { scaleX: 1, opacity: 1 } : {}}
                 transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
@@ -269,13 +255,13 @@ export default function Home() {
                 initial={{ opacity: 0, letterSpacing: "0em" }}
                 animate={isSettled ? { opacity: 1, letterSpacing: "0.4em" } : {}}
                 transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                className="text-sm md:text-lg text-cyan-400 uppercase font-medium tracking-[0.4em]"
+                className="text-sm md:text-lg text-cyan-400 uppercase font-medium tracking-[0.4em] mb-8"
                 style={{ fontFamily: 'var(--font-rajdhani)' }}
               >
                 {resumeData.personalInfo.title}
               </motion.p>
               
-              <div className="mt-20 flex flex-col items-center">
+              <div className="mt-16 flex flex-col items-center">
                 <motion.p 
                   className={`text-xs tracking-[0.3em] uppercase mb-6 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}
                   initial={{ opacity: 0 }}
