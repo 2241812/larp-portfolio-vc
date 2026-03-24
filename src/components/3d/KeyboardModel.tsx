@@ -12,11 +12,6 @@ export default function KeyboardModel({ isSettled }: any) {
   
   const pressedKeys = useRef<Set<string>>(new Set());
   const initialPositions = useRef<Record<string, number>>({});
-  
-  const keyboardBounce = useRef({ velocity: 0, displacement: 0, rotVelocity: 0, rotDisplacement: 0, lastKeyPressTime: 0 });
-  const BOUNCE_STIFFNESS = 400;
-  const BOUNCE_DAMPING = 15;
-  const BOUNCE_THRESHOLD = 100;
 
   const keyMap: Record<string, string> = {
     'Digit1': 'Object_104', 'Digit2': 'Object_106', 'Digit3': 'Object_108', 'Digit4': 'Object_110', 'Digit5': 'Object_112', 'Digit6': 'Object_114', 'Digit7': 'Object_116', 'Digit8': 'Object_118', 'Digit9': 'Object_120', 'Digit0': 'Object_122', 'Minus': 'Object_124', 'Backspace': 'Object_98', 'KeyQ': 'Object_74', 'KeyW': 'Object_166', 'KeyE': 'Object_168', 'KeyR': 'Object_170', 'KeyT': 'Object_172', 'KeyY': 'Object_174', 'KeyU': 'Object_176', 'KeyI': 'Object_178', 'KeyO': 'Object_180', 'KeyP': 'Object_182', 'KeyA': 'Object_68', 'KeyS': 'Object_128', 'KeyD': 'Object_130', 'KeyF': 'Object_132', 'KeyG': 'Object_134', 'KeyH': 'Object_136', 'KeyJ': 'Object_138', 'KeyK': 'Object_140', 'KeyL': 'Object_142', 'Enter': 'Object_100', 'KeyZ': 'Object_70', 'KeyX': 'Object_148', 'KeyC': 'Object_150', 'KeyV': 'Object_152', 'KeyB': 'Object_154', 'KeyN': 'Object_156', 'KeyM': 'Object_158', 'Comma': 'Object_160', 'Period': 'Object_162', 'Slash': 'Object_164', 'Space': 'Object_80'
@@ -66,12 +61,10 @@ export default function KeyboardModel({ isSettled }: any) {
     let finalRotY = targetRotY.current || 0;
 
     if (isSettled) {
-      const breath = Math.sin(state.clock.elapsedTime * 2) * 0.05;
-      
       const fadeOutFactor = Math.min(p * 5, 1); 
       
       targetScale = THREE.MathUtils.lerp(15.0, 0.1, fadeOutFactor);
-      targetPosY = THREE.MathUtils.lerp(0.45 + breath, -5.0, fadeOutFactor);
+      targetPosY = THREE.MathUtils.lerp(0.45, -5.0, fadeOutFactor);
       targetRotX = THREE.MathUtils.lerp(0.4, -2.0, fadeOutFactor);
       finalRotY += p * Math.PI * 8; 
     }
@@ -88,39 +81,16 @@ export default function KeyboardModel({ isSettled }: any) {
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, finalRotY, 0.08);
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.08);
 
-      if (p < 0.1) {
-        const now = Date.now();
-        if (pressedKeys.current.size > 0 && now - keyboardBounce.current.lastKeyPressTime > BOUNCE_THRESHOLD) {
-          keyboardBounce.current.velocity -= 0.06;
-          keyboardBounce.current.rotVelocity += 0.015;
-          keyboardBounce.current.lastKeyPressTime = now;
+      // Individual key movement when pressed
+      Object.entries(keyMap).forEach(([keyCode, nodeName]) => {
+        if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
+          const node = nodes[nodeName];
+          const basePosY = initialPositions.current[nodeName];
+          const isPressed = pressedKeys.current.has(keyCode);
+          const targetKeyY = isPressed ? basePosY - 0.02 : basePosY;
+          node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.3);
         }
-        
-        // Position bounce (Y axis)
-        const springForce = -BOUNCE_STIFFNESS * keyboardBounce.current.displacement;
-        const dampingForce = -BOUNCE_DAMPING * keyboardBounce.current.velocity;
-        keyboardBounce.current.velocity += (springForce + dampingForce) * delta;
-        keyboardBounce.current.displacement += keyboardBounce.current.velocity * delta;
-        
-        // Rotation bounce (X tilt)
-        const rotSpring = -BOUNCE_STIFFNESS * keyboardBounce.current.rotDisplacement;
-        const rotDamping = -BOUNCE_DAMPING * keyboardBounce.current.rotVelocity;
-        keyboardBounce.current.rotVelocity += (rotSpring + rotDamping) * delta;
-        keyboardBounce.current.rotDisplacement += keyboardBounce.current.rotVelocity * delta;
-        
-        // Snap to rest when movement is negligible
-        if (Math.abs(keyboardBounce.current.velocity) < 0.00005 && Math.abs(keyboardBounce.current.displacement) < 0.00005) {
-          keyboardBounce.current.displacement = 0;
-          keyboardBounce.current.velocity = 0;
-        }
-        if (Math.abs(keyboardBounce.current.rotVelocity) < 0.00005 && Math.abs(keyboardBounce.current.rotDisplacement) < 0.00005) {
-          keyboardBounce.current.rotDisplacement = 0;
-          keyboardBounce.current.rotVelocity = 0;
-        }
-        
-        groupRef.current.position.y += keyboardBounce.current.displacement;
-        groupRef.current.rotation.x += keyboardBounce.current.rotDisplacement;
-      }
+      });
     } else {
       const spinSpeed = 0.01 + (state.pointer.x * 0.08);
       groupRef.current.rotation.y += spinSpeed;
