@@ -12,6 +12,11 @@ export default function KeyboardModel({ isSettled }: any) {
   
   const pressedKeys = useRef<Set<string>>(new Set());
   const initialPositions = useRef<Record<string, number>>({});
+  const keySpringState = useRef<Record<string, { velocity: number; displacement: number }>>({});
+  
+  const SPRING_STIFFNESS = 600;
+  const SPRING_DAMPING = 18;
+  const PRESS_DEPTH = 0.025;
 
   const keyMap: Record<string, string> = {
     'Digit1': 'Object_104', 'Digit2': 'Object_106', 'Digit3': 'Object_108', 'Digit4': 'Object_110', 'Digit5': 'Object_112', 'Digit6': 'Object_114', 'Digit7': 'Object_116', 'Digit8': 'Object_118', 'Digit9': 'Object_120', 'Digit0': 'Object_122', 'Minus': 'Object_124', 'Backspace': 'Object_98', 'KeyQ': 'Object_74', 'KeyW': 'Object_166', 'KeyE': 'Object_168', 'KeyR': 'Object_170', 'KeyT': 'Object_172', 'KeyY': 'Object_174', 'KeyU': 'Object_176', 'KeyI': 'Object_178', 'KeyO': 'Object_180', 'KeyP': 'Object_182', 'KeyA': 'Object_68', 'KeyS': 'Object_128', 'KeyD': 'Object_130', 'KeyF': 'Object_132', 'KeyG': 'Object_134', 'KeyH': 'Object_136', 'KeyJ': 'Object_138', 'KeyK': 'Object_140', 'KeyL': 'Object_142', 'Enter': 'Object_100', 'KeyZ': 'Object_70', 'KeyX': 'Object_148', 'KeyC': 'Object_150', 'KeyV': 'Object_152', 'KeyB': 'Object_154', 'KeyN': 'Object_156', 'KeyM': 'Object_158', 'Comma': 'Object_160', 'Period': 'Object_162', 'Slash': 'Object_164', 'Space': 'Object_80'
@@ -89,8 +94,31 @@ export default function KeyboardModel({ isSettled }: any) {
             const node = nodes[nodeName];
             const basePosY = initialPositions.current[nodeName];
             const isPressed = pressedKeys.current.has(keyCode);
-            const targetKeyY = isPressed ? basePosY - 0.02 : basePosY;
-            node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.4);
+            
+            if (!keySpringState.current[nodeName]) {
+              keySpringState.current[nodeName] = { velocity: 0, displacement: 0 };
+            }
+            const spring = keySpringState.current[nodeName];
+            
+            const targetDisplacement = isPressed ? -PRESS_DEPTH : 0;
+            const springForce = -SPRING_STIFFNESS * (spring.displacement - targetDisplacement);
+            const dampingForce = -SPRING_DAMPING * spring.velocity;
+            const acceleration = springForce + dampingForce;
+            
+            spring.velocity += acceleration * delta;
+            spring.displacement += spring.velocity * delta;
+            
+            if (spring.displacement < -PRESS_DEPTH * 1.5) {
+              spring.displacement = -PRESS_DEPTH * 1.5;
+              spring.velocity *= -0.3;
+            }
+            
+            if (Math.abs(spring.velocity) < 0.0001 && Math.abs(spring.displacement) < 0.0001) {
+              spring.displacement = 0;
+              spring.velocity = 0;
+            }
+            
+            node.position.y = basePosY + spring.displacement;
           }
         });
       }
