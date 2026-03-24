@@ -73,18 +73,37 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Lock body scroll while loading
+  // Lock body scroll while loading — nuclear approach for all browsers/devices
   useEffect(() => {
     if (isLoading) {
+      // Capture current scroll position so position:fixed doesn't jump
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
     } else {
+      // Restore scroll position after removing position:fixed
+      const scrollY = parseInt(document.body.style.top || '0', 10);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
+      if (scrollY) window.scrollTo(0, Math.abs(scrollY));
     }
     return () => {
+      const scrollY = parseInt(document.body.style.top || '0', 10);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
+      if (scrollY) window.scrollTo(0, Math.abs(scrollY));
     };
   }, [isLoading]);
 
@@ -212,11 +231,10 @@ export default function Home() {
   }, [isSettled, isAssembling, isError, inputValue, playClick]);
 
   return (
-    <ReactLenis root options={{ lerp: 0.05, smoothWheel: true, duration: isLoading ? 0 : undefined }}>
+    <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }} enabled={!isLoading}>
       <main
-        className="relative bg-neutral-950 font-sans select-none text-neutral-300"
-        onWheel={isLoading ? (e) => e.preventDefault() : undefined}
-        onTouchMove={isLoading ? (e) => e.preventDefault() : undefined}
+        className="relative bg-neutral-950 font-sans select-none text-neutral-300 overflow-hidden"
+        style={isLoading ? { pointerEvents: 'none', overflow: 'hidden', height: '100vh' } : undefined}
       >
 
 
