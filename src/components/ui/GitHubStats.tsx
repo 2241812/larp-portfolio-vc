@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { motion, Variants } from 'framer-motion';
 import ContributionCalendar from './ContributionCalendar';
+import { useInView } from '@/hooks/useInView';
 
 // ── Types ──
 interface StatData {
@@ -29,10 +30,9 @@ interface GitHubEvent {
   };
 }
 
-// ── Image URLs with fallbacks ──
+// ── Image URLs ──
 const STATS_IMG = 'https://github-readme-stats.vercel.app/api?username=2241812&theme=tokyonight&show_icons=true&hide_border=true&bg_color=0d1117';
 const STREAK_IMG = 'https://streak-stats.demolab.com/?user=2241812&theme=tokyo-night&hide_border=true&background=0d1117&ring=22d3ee&fire=22d3ee';
-const ACTIVITY_GRAPH = 'https://github-readme-activity-graph.vercel.app/graph?username=2241812&theme=tokyo-night&hide_border=true&bg_color=0d1117';
 
 // ── Helpers ──
 function getRelativeTime(dateString: string): string {
@@ -221,7 +221,7 @@ const fadeInVariants: Variants = {
 };
 
 // ── Skeleton Loader ──
-function ImageSkeleton({ className }: { className?: string }) {
+const ImageSkeleton = memo(function ImageSkeleton({ className }: { className?: string }) {
   return (
     <div className={`animate-pulse bg-neutral-900/80 border border-cyan-900/20 rounded-xl flex items-center justify-center ${className}`}>
       <svg className="w-8 h-8 text-cyan-900/40 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -230,21 +230,21 @@ function ImageSkeleton({ className }: { className?: string }) {
       </svg>
     </div>
   );
-}
+});
 
 // ── Embed Image with loading/error states ──
-function EmbedImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+const EmbedImage = memo(function EmbedImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [imgKey, setImgKey] = useState(0);
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     setRetryCount((c) => c + 1);
     setErrored(false);
     setLoaded(false);
-    setImgKey((k) => k + 1); // force remount
-  };
+    setImgKey((k) => k + 1);
+  }, []);
 
   if (errored) {
     return (
@@ -282,10 +282,12 @@ function EmbedImage({ src, alt, className }: { src: string; alt: string; classNa
       />
     </div>
   );
-}
+});
 
 // ── Main Component ──
-export default function GitHubStats() {
+const GitHubStats = memo(function GitHubStats() {
+  const { ref: sectionRef, isInView } = useInView({ rootMargin: '200px', once: true });
+
   const [stats, setStats] = useState<StatData[]>([
     { label: 'Public Repos', value: '...', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
     { label: 'Followers', value: '...', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
@@ -298,12 +300,17 @@ export default function GitHubStats() {
   const [activityError, setActivityError] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Fetch user stats
+  // Lazy load data when in view
   useEffect(() => {
+    if (!isInView) return;
+
+    let cancelled = false;
+
     async function fetchGitHubStats() {
       try {
         const res = await fetch('https://api.github.com/users/2241812');
         const data = await res.json();
+        if (cancelled) return;
         const memberSince = new Date(data.created_at).getFullYear();
 
         setStats([
@@ -316,10 +323,12 @@ export default function GitHubStats() {
         console.error('Failed to fetch GitHub stats:', err);
       }
     }
-    fetchGitHubStats();
-  }, []);
 
-  // Fetch activity events
+    fetchGitHubStats();
+    return () => { cancelled = true; };
+  }, [isInView]);
+
+  // Fetch activity events - only when in view
   const fetchActivity = useCallback(async () => {
     try {
       setActivityError(false);
@@ -341,13 +350,16 @@ export default function GitHubStats() {
   }, []);
 
   useEffect(() => {
+    if (!isInView) return;
     fetchActivity();
-    const interval = setInterval(fetchActivity, 60_000);
+    // Reduce polling interval from 60s to 5 minutes for less CPU usage
+    const interval = setInterval(fetchActivity, 300_000);
     return () => clearInterval(interval);
-  }, [fetchActivity]);
+  }, [fetchActivity, isInView]);
 
   return (
     <section
+      ref={sectionRef}
       id="github"
       className="min-h-screen flex items-center justify-center px-4 md:px-24 py-24 relative overflow-hidden"
     >
@@ -375,8 +387,7 @@ export default function GitHubStats() {
         <motion.div variants={headingVariants} className="mb-10">
           <div className="flex items-center gap-3 mb-2">
             <div className="relative">
-              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-              <div className="absolute inset-0 w-2 h-2 rounded-full bg-cyan-400 animate-ping opacity-30" />
+              <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-cyan-400 tracking-wider uppercase"
               style={{ fontFamily: 'var(--font-orbitron)' }}
@@ -404,7 +415,6 @@ export default function GitHubStats() {
               transition={{ duration: 0.25 }}
               className="group relative bg-neutral-950/70 backdrop-blur-xl border border-cyan-900/30 rounded-xl p-5 flex flex-col items-center text-center cursor-default overflow-hidden"
             >
-              {/* Corner accent */}
               <div className="absolute top-0 right-0 w-8 h-8">
                 <div className="absolute top-0 right-0 w-full h-[2px] bg-gradient-to-l from-cyan-500/40 to-transparent" />
                 <div className="absolute top-0 right-0 h-full w-[2px] bg-gradient-to-b from-cyan-500/40 to-transparent" />
@@ -430,7 +440,6 @@ export default function GitHubStats() {
           variants={containerVariants}
           className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
         >
-          {/* GitHub Stats Card */}
           <motion.div
             variants={fadeInVariants}
             whileHover={{
@@ -452,7 +461,6 @@ export default function GitHubStats() {
             />
           </motion.div>
 
-          {/* GitHub Streak Card */}
           <motion.div
             variants={fadeInVariants}
             whileHover={{
@@ -498,15 +506,13 @@ export default function GitHubStats() {
           variants={containerVariants}
           className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-6 md:p-8"
         >
-          {/* Feed header */}
           <motion.div
             variants={headingVariants}
             className="flex items-center justify-between mb-6"
           >
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                <div className="absolute inset-0 w-2 h-2 rounded-full bg-cyan-400 animate-ping opacity-30" />
+                <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
               </div>
               <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest"
                 style={{ fontFamily: 'var(--font-orbitron)' }}
@@ -521,7 +527,6 @@ export default function GitHubStats() {
             )}
           </motion.div>
 
-          {/* Loading skeletons */}
           {activityLoading && (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
@@ -533,7 +538,6 @@ export default function GitHubStats() {
             </div>
           )}
 
-          {/* Error state */}
           {!activityLoading && activityError && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -553,7 +557,6 @@ export default function GitHubStats() {
             </motion.div>
           )}
 
-          {/* Event cards */}
           {!activityLoading && !activityError && events.length > 0 && (
             <motion.div variants={containerVariants} className="space-y-2">
               {events.map((event) => {
@@ -573,12 +576,10 @@ export default function GitHubStats() {
                     transition={{ duration: 0.2 }}
                     className="group flex items-center gap-3 p-3 md:p-4 rounded-xl bg-cyan-950/10 border border-cyan-900/30 hover:border-cyan-500/40 transition-colors duration-300 cursor-pointer no-underline"
                   >
-                    {/* Icon */}
                     <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-cyan-900/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-900/50 group-hover:shadow-[0_0_12px_rgba(34,211,238,0.2)] transition-all duration-300">
                       {info.icon}
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2 mb-0.5">
                         <span className="text-[10px] md:text-xs font-mono text-cyan-500 uppercase tracking-wider">
@@ -596,12 +597,10 @@ export default function GitHubStats() {
                       )}
                     </div>
 
-                    {/* Timestamp */}
                     <span className="flex-shrink-0 text-[10px] md:text-xs text-neutral-600 font-mono whitespace-nowrap">
                       {getRelativeTime(event.created_at)}
                     </span>
 
-                    {/* Arrow */}
                     <svg
                       className="w-3.5 h-3.5 text-neutral-700 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-300 flex-shrink-0"
                       fill="none"
@@ -617,7 +616,6 @@ export default function GitHubStats() {
             </motion.div>
           )}
 
-          {/* Empty state */}
           {!activityLoading && !activityError && events.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -629,7 +627,6 @@ export default function GitHubStats() {
           )}
         </motion.div>
 
-        {/* ── Footer link ── */}
         <motion.div variants={cardVariants} className="flex justify-end">
           <a
             href="https://github.com/2241812"
@@ -652,4 +649,6 @@ export default function GitHubStats() {
       </motion.div>
     </section>
   );
-}
+});
+
+export default GitHubStats;

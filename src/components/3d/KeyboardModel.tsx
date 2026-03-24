@@ -4,7 +4,7 @@ import { useGLTF, Center } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export default function KeyboardModel({ isSettled }: any) {
+export default React.memo(function KeyboardModel({ isSettled }: { isSettled: boolean }) {
   const { scene, nodes } = useGLTF('/models/keyboard.glb') as any;
   const groupRef = useRef<THREE.Group>(null);
   const targetRotY = useRef<number | null>(null);
@@ -17,11 +17,7 @@ export default function KeyboardModel({ isSettled }: any) {
   const TILT_STIFFNESS = 600;
   const TILT_DAMPING = 18;
   const MAX_TILT = 0.04;
-  
-  // keyCenterX: negative = left side, positive = right side
-  // This ensures tiltZ -= keyX * MAX_TILT produces:
-  //   - Positive tiltZ for left keys (left side goes down)
-  //   - Negative tiltZ for right keys (right side goes down)
+
   const keyCenterX: Record<string, number> = {
     'Digit1': -0.35, 'Digit2': -0.3, 'Digit3': -0.25, 'Digit4': -0.2, 'Digit5': -0.15, 'Digit6': -0.1, 'Digit7': -0.05, 'Digit8': 0, 'Digit9': 0.05, 'Digit0': 0.1,
     'KeyQ': -0.25, 'KeyW': -0.2, 'KeyE': -0.15, 'KeyR': -0.1, 'KeyT': -0.05, 'KeyY': 0, 'KeyU': 0.05, 'KeyI': 0.1, 'KeyO': 0.15, 'KeyP': 0.2,
@@ -44,9 +40,16 @@ export default function KeyboardModel({ isSettled }: any) {
     const handleKeyDown = (e: KeyboardEvent) => pressedKeys.current.add(e.code);
     const handleKeyUp = (e: KeyboardEvent) => pressedKeys.current.delete(e.code);
     
+    let scrollTicking = false;
     const handleScroll = () => {
-      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
-      scrollProgress.current = totalScroll > 0 ? window.scrollY / totalScroll : 0;
+      if (!scrollTicking) {
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+          scrollProgress.current = totalScroll > 0 ? window.scrollY / totalScroll : 0;
+          scrollTicking = false;
+        });
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -60,8 +63,15 @@ export default function KeyboardModel({ isSettled }: any) {
     };
   }, [nodes]);
 
+  // Throttle frame updates - skip frames for less CPU usage
+  const frameCount = useRef(0);
+
   useFrame((state, delta) => {
     if (!groupRef.current) return;
+
+    // Only update every other frame for 30fps feel
+    frameCount.current++;
+    if (frameCount.current % 2 !== 0) return;
 
     const p = scrollProgress.current;
     
@@ -98,11 +108,9 @@ export default function KeyboardModel({ isSettled }: any) {
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, finalRotY, 0.08);
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.08);
 
-      // Individual key movement when pressed
       let tiltX = 0;
       let tiltZ = 0;
       let keysPressed = 0;
-      let pressedKeyNames: string[] = [];
       
       Object.entries(keyMap).forEach(([keyCode, nodeName]) => {
         if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
@@ -112,7 +120,6 @@ export default function KeyboardModel({ isSettled }: any) {
           
           if (isPressed) {
             keysPressed++;
-            pressedKeyNames.push(keyCode);
             const keyX = keyCenterX[keyCode] || 0;
             tiltZ -= keyX * MAX_TILT;
             tiltX += MAX_TILT * 0.3;
@@ -122,12 +129,6 @@ export default function KeyboardModel({ isSettled }: any) {
           node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.3);
         }
       });
-      
-      if (keysPressed > 0) {
-        console.log('[KEYBOARD] Keys pressed:', pressedKeyNames.join(', '));
-        console.log('[KEYBOARD] tiltX target:', tiltX, 'tiltZ target:', tiltZ);
-        console.log('[KEYBOARD] Current rotX:', groupRef.current.rotation.x, 'rotZ:', groupRef.current.rotation.z);
-      }
       
       if (keysPressed > 0) {
         const targetTiltX = Math.min(tiltX, MAX_TILT);
@@ -171,6 +172,6 @@ export default function KeyboardModel({ isSettled }: any) {
       </Center>
     </group>
   );
-}
+});
 
 useGLTF.preload('/models/keyboard.glb');

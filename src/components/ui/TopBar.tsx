@@ -1,26 +1,26 @@
 "use client";
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import Image from 'next/image';
 
 interface TopBarProps {
   isSettled: boolean;
 }
 
-export default function TopBar({ isSettled }: TopBarProps) {
+const TopBar = memo(function TopBar({ isSettled }: TopBarProps) {
   const navItems = ['about me', 'experience', 'skills', 'projects', 'contact'];
 
-  const scrollToSection = (id: string) => {
+  const scrollToSection = useCallback((id: string) => {
     if (id === 'home') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     }
-  };
+  }, []);
 
   return (
     <header 
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-1000 ease-in-out px-6 md:px-12 ${
-        isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'
+        isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
       }`}
     >
       <div className="w-full h-20 border-b border-cyan-900/40 bg-neutral-950/80 backdrop-blur-md flex items-center justify-between">
@@ -55,4 +55,6 @@ export default function TopBar({ isSettled }: TopBarProps) {
       </div>
     </header>
   );
-}
+});
+
+export default TopBar;

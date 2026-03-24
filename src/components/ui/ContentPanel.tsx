@@ -1,12 +1,12 @@
 "use client";
-import React from 'react';
+import React, { memo } from 'react';
 import { resumeData } from '@/data/resumeData';
 
 interface ContentPanelProps {
   section: string;
 }
 
-export default function ContentPanel({ section }: ContentPanelProps) {
+const ContentPanel = memo(function ContentPanel({ section }: ContentPanelProps) {
   if (!section) return null;
 
   const renderContent = () => {
@@ -88,4 +88,6 @@ export default function ContentPanel({ section }: ContentPanelProps) {
       {renderContent()}
     </div>
   );
-}
+});
+
+export default ContentPanel;

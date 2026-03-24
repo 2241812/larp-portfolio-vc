@@ -1,80 +1,97 @@
 "use client";
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import { resumeData } from '@/data/resumeData';
 import { motion, Variants } from 'framer-motion';
 
 // ── Inline confetti burst (no dependency) ──
-function fireConfetti() {
-  const colors = ['#22d3ee', '#06b6d4', '#0891b2', '#ffffff', '#a5f3fc'];
-  const count = 40;
-  const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
-  document.body.appendChild(container);
+const fireConfetti = (() => {
+  let container: HTMLDivElement | null = null;
 
-  for (let i = 0; i < count; i++) {
-    const el = document.createElement('div');
-    const size = Math.random() * 8 + 4;
-    const x = Math.random() * 100;
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    const rotation = Math.random() * 360;
-    const delay = Math.random() * 0.3;
-    const duration = 1 + Math.random() * 1;
-    const drift = (Math.random() - 0.5) * 200;
+  return () => {
+    const colors = ['#22d3ee', '#06b6d4', '#0891b2', '#ffffff', '#a5f3fc'];
+    const count = 30; // Reduced from 40
 
-    el.style.cssText = `
-      position:absolute;
-      top:-20px;
-      left:${x}%;
-      width:${size}px;
-      height:${size * 0.6}px;
-      background:${color};
-      border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
-      transform:rotate(${rotation}deg);
-      opacity:1;
-    `;
-    container.appendChild(el);
+    // Clean up previous container
+    if (container) {
+      container.remove();
+    }
 
-    el.animate(
-      [
-        { transform: `translateY(0) translateX(0) rotate(${rotation}deg)`, opacity: 1 },
-        { transform: `translateY(${window.innerHeight + 50}px) translateX(${drift}px) rotate(${rotation + 720}deg)`, opacity: 0 },
-      ],
-      { duration: duration * 1000, delay: delay * 1000, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' }
-    );
-  }
+    container = document.createElement('div');
+    container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
+    document.body.appendChild(container);
 
-  setTimeout(() => container.remove(), 3000);
-}
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      const size = Math.random() * 8 + 4;
+      const x = Math.random() * 100;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const rotation = Math.random() * 360;
+      const delay = Math.random() * 0.3;
+      const duration = 1 + Math.random() * 1;
+      const drift = (Math.random() - 0.5) * 200;
 
-export default function Sections() {
-  // Container variant for staggered children
-  const containerVariants: Variants = {
-    hidden: {},
-    visible: {
-      transition: { staggerChildren: 0.12, delayChildren: 0.15 },
-    },
+      el.style.cssText = `
+        position:absolute;
+        top:-20px;
+        left:${x}%;
+        width:${size}px;
+        height:${size * 0.6}px;
+        background:${color};
+        border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+        transform:rotate(${rotation}deg);
+        opacity:1;
+      `;
+      container.appendChild(el);
+
+      el.animate(
+        [
+          { transform: `translateY(0) translateX(0) rotate(${rotation}deg)`, opacity: 1 },
+          { transform: `translateY(${window.innerHeight + 50}px) translateX(${drift}px) rotate(${rotation + 720}deg)`, opacity: 0 },
+        ],
+        { duration: duration * 1000, delay: delay * 1000, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' }
+      );
+    }
+
+    setTimeout(() => {
+      if (container) {
+        container.remove();
+        container = null;
+      }
+    }, 3000);
   };
+})();
 
-  // Individual card / child variant
-  const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 50, scale: 0.96 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-    },
-  };
+// ── Animations ──
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.12, delayChildren: 0.15 },
+  },
+};
 
-  // Simple reveal for the section heading text
-  const headingVariants: Variants = {
-    hidden: { opacity: 0, x: -30 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 50, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const headingVariants: Variants = {
+  hidden: { opacity: 0, x: -30 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+};
+
+const Sections = memo(function Sections() {
+  const handleConfettiClick = useCallback(() => {
+    fireConfetti();
+  }, []);
 
   return (
     <div className="relative z-10 flex flex-col w-full pointer-events-none [&>section]:pointer-events-auto">
@@ -236,7 +253,7 @@ export default function Sections() {
           <motion.h3 variants={headingVariants} className="text-3xl font-bold text-cyan-400 mb-4 tracking-wider uppercase">Initiate Protocol</motion.h3>
           <motion.p variants={cardVariants} className="text-neutral-500 text-sm font-mono mb-8">Establish a connection through any channel below.</motion.p>
 
-          {/* ── Social Buttons Grid ── */}
+          {/* Social Buttons Grid */}
           <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* GitHub */}
             <motion.a
@@ -244,13 +261,12 @@ export default function Sections() {
               href="https://github.com/2241812"
               target="_blank"
               rel="noreferrer"
-              onClick={() => fireConfetti()}
+              onClick={handleConfettiClick}
               whileHover={{ scale: 1.04, boxShadow: '0 0 30px rgba(34,211,238,0.2), inset 0 0 30px rgba(34,211,238,0.05)' }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.2 }}
               className="group relative flex items-center gap-4 p-5 rounded-xl bg-neutral-950/80 border border-cyan-900/30 hover:border-cyan-400/60 cursor-pointer overflow-hidden no-underline"
             >
-              {/* Animated gradient border glow */}
               <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-cyan-500/10 via-transparent to-cyan-500/10" />
               <div className="relative flex-shrink-0 w-12 h-12 rounded-lg bg-cyan-900/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-800/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_16px_rgba(34,211,238,0.3)] transition-all duration-300">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -272,7 +288,7 @@ export default function Sections() {
               href={resumeData.personalInfo.linkedin}
               target="_blank"
               rel="noreferrer"
-              onClick={() => fireConfetti()}
+              onClick={handleConfettiClick}
               whileHover={{ scale: 1.04, boxShadow: '0 0 30px rgba(34,211,238,0.2), inset 0 0 30px rgba(34,211,238,0.05)' }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.2 }}
@@ -355,4 +371,6 @@ export default function Sections() {
 
     </div>
   );
-}
+});
+
+export default Sections;

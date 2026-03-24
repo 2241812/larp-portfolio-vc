@@ -5,6 +5,46 @@
   --foreground: #ededed;
 }
 
+/* Hide scrollbar by default, show on hover */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Show scrollbar on hover */
+*:hover::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.3);
+}
+
+*:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.5);
+}
+
+/* Always hide for specific elements */
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
