@@ -6,6 +6,7 @@ import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
 import Sections from '@/components/ui/Sections';
 import GitHubActivity from '@/components/ui/GitHubActivity';
+import GitHubStats from '@/components/ui/GitHubStats';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
 import { resumeData } from '@/data/resumeData';
@@ -325,6 +326,7 @@ export default function Home() {
           </section>
 
           <GitHubActivity />
+          <GitHubStats />
           <Sections />
         </div>
 
