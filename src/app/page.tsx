@@ -1,10 +1,12 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ReactLenis } from '@studio-freight/react-lenis';
 import { motion } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
 import Sections from '@/components/ui/Sections';
+import MatrixRain from '@/components/ui/MatrixRain';
+import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
 import { resumeData } from '@/data/resumeData';
 
 type FloatingLetter = { id: string; char: string; startX: number; startY: number; rot: number; floatDelay: number; };
@@ -25,6 +27,30 @@ export default function Home() {
   const [hintText, setHintText] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isDeletingHint, setIsDeletingHint] = useState(false);
+
+  const burstRef = useRef<ParticleBurstRef>(null);
+
+  // ---- Typing sound via Web Audio API ----
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const playClick = useCallback(() => {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.value = 800 + Math.random() * 400; // slight pitch variation
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.06);
+    } catch { /* audio context may not be available */ }
+  }, []);
 
   useEffect(() => {
     const duration = 2500;
@@ -112,6 +138,7 @@ export default function Home() {
       
       if (targetSection) {
         setInputValue("");
+        burstRef.current?.burst();
         document.getElementById(targetSection)?.scrollIntoView({ behavior: 'smooth' });
       } else {
         setIsError(true);
@@ -139,6 +166,7 @@ export default function Home() {
       }
       
       if (e.key === 'Backspace') {
+        playClick();
         setInputValue(prev => prev.slice(0, -1));
         setLetters(prev => prev.slice(0, -1));
       } else if (e.key === 'Enter') {
@@ -148,8 +176,9 @@ export default function Home() {
         }
         executeCommand(inputValue);
       } else if (e.key.length === 1 && /[a-zA-Z0-9 ]/.test(e.key)) {
-        if (e.key === ' ') e.preventDefault(); 
-        
+        if (e.key === ' ') e.preventDefault();
+        playClick();
+
         setInputValue(prev => prev + e.key);
         setLetters(prev => [...prev, {
           id: Date.now().toString() + Math.random(),
@@ -159,7 +188,7 @@ export default function Home() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSettled, isAssembling, isError, inputValue]);
+  }, [isSettled, isAssembling, isError, inputValue, playClick]);
 
   return (
     <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }}>
@@ -169,6 +198,9 @@ export default function Home() {
         <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" />
         <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
+
+        {/* Matrix rain – sits above grid, below 3D scene */}
+        <MatrixRain />
         
         {/* The Vanta.js Style Debris Asteroids */}
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
@@ -295,6 +327,9 @@ export default function Home() {
         </div>
 
         <div className={`fixed bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
+
+        {/* Particle burst overlay */}
+        <ParticleBurst ref={burstRef} />
       </main>
     </ReactLenis>
   );
