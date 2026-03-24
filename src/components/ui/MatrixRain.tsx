@@ -44,16 +44,20 @@ export default function MatrixRain() {
         const x = i * fontSize;
         const y = drops[i] * fontSize;
 
-        // Head character is brighter
-        ctx.fillStyle = "rgba(0, 255, 180, 0.12)";
+        // Head character is brighter (cyan glow)
+        ctx.fillStyle = "rgba(34, 211, 238, 0.3)";
+        ctx.shadowColor = "rgba(34, 211, 238, 0.5)";
+        ctx.shadowBlur = 8;
         ctx.fillText(char, x, y);
 
         // Slightly dimmer trail character a few rows up
         if (drops[i] > 2) {
           const trailChar = CHARS[Math.floor(Math.random() * CHARS.length)];
-          ctx.fillStyle = "rgba(0, 255, 180, 0.06)";
+          ctx.fillStyle = "rgba(34, 211, 238, 0.15)";
+          ctx.shadowBlur = 4;
           ctx.fillText(trailChar, x, y - fontSize * 2);
         }
+        ctx.shadowBlur = 0;
 
         // Reset when off screen (with random restart delay)
         if (y > canvas.height && Math.random() > 0.975) {
@@ -77,8 +81,8 @@ export default function MatrixRain() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 z-[5] pointer-events-none"
-      style={{ opacity: 0.18 }}
+      className="fixed inset-0 z-[3] pointer-events-none"
+      style={{ opacity: 0.4 }}
     />
   );
 }
