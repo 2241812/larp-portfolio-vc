@@ -128,6 +128,9 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAssembling || isError) return;
       
+      // Prevent spacebar from scrolling the page
+      if (e.code === 'Space') e.preventDefault();
+      
       if (e.ctrlKey || e.metaKey) {
         if (e.key.toLowerCase() === 'a') e.preventDefault();
         return;

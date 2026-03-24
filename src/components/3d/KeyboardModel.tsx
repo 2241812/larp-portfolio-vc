@@ -13,10 +13,9 @@ export default function KeyboardModel({ isSettled }: any) {
   const pressedKeys = useRef<Set<string>>(new Set());
   const initialPositions = useRef<Record<string, number>>({});
   
-  const keyboardBounce = useRef({ velocity: 0, displacement: 0, lastKeyPressTime: 0 });
-  const BOUNCE_STIFFNESS = 800;
-  const BOUNCE_DAMPING = 20;
-  const BOUNCE_DEPTH = 0.015;
+  const keyboardBounce = useRef({ velocity: 0, displacement: 0, rotVelocity: 0, rotDisplacement: 0, lastKeyPressTime: 0 });
+  const BOUNCE_STIFFNESS = 400;
+  const BOUNCE_DAMPING = 15;
   const BOUNCE_THRESHOLD = 100;
 
   const keyMap: Record<string, string> = {
@@ -92,24 +91,35 @@ export default function KeyboardModel({ isSettled }: any) {
       if (p < 0.1) {
         const now = Date.now();
         if (pressedKeys.current.size > 0 && now - keyboardBounce.current.lastKeyPressTime > BOUNCE_THRESHOLD) {
-          keyboardBounce.current.velocity -= 0.003;
+          keyboardBounce.current.velocity -= 0.06;
+          keyboardBounce.current.rotVelocity += 0.015;
           keyboardBounce.current.lastKeyPressTime = now;
         }
         
-        const targetBounce = 0;
-        const springForce = -BOUNCE_STIFFNESS * (keyboardBounce.current.displacement - targetBounce);
+        // Position bounce (Y axis)
+        const springForce = -BOUNCE_STIFFNESS * keyboardBounce.current.displacement;
         const dampingForce = -BOUNCE_DAMPING * keyboardBounce.current.velocity;
-        const acceleration = springForce + dampingForce;
-        
-        keyboardBounce.current.velocity += acceleration * delta;
+        keyboardBounce.current.velocity += (springForce + dampingForce) * delta;
         keyboardBounce.current.displacement += keyboardBounce.current.velocity * delta;
         
+        // Rotation bounce (X tilt)
+        const rotSpring = -BOUNCE_STIFFNESS * keyboardBounce.current.rotDisplacement;
+        const rotDamping = -BOUNCE_DAMPING * keyboardBounce.current.rotVelocity;
+        keyboardBounce.current.rotVelocity += (rotSpring + rotDamping) * delta;
+        keyboardBounce.current.rotDisplacement += keyboardBounce.current.rotVelocity * delta;
+        
+        // Snap to rest when movement is negligible
         if (Math.abs(keyboardBounce.current.velocity) < 0.00005 && Math.abs(keyboardBounce.current.displacement) < 0.00005) {
           keyboardBounce.current.displacement = 0;
           keyboardBounce.current.velocity = 0;
         }
+        if (Math.abs(keyboardBounce.current.rotVelocity) < 0.00005 && Math.abs(keyboardBounce.current.rotDisplacement) < 0.00005) {
+          keyboardBounce.current.rotDisplacement = 0;
+          keyboardBounce.current.rotVelocity = 0;
+        }
         
         groupRef.current.position.y += keyboardBounce.current.displacement;
+        groupRef.current.rotation.x += keyboardBounce.current.rotDisplacement;
       }
     } else {
       const spinSpeed = 0.01 + (state.pointer.x * 0.08);
