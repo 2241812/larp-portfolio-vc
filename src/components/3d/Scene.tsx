@@ -1,5 +1,5 @@
 "use client";
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows, PerspectiveCamera } from '@react-three/drei';
 import KeyboardModel from './KeyboardModel';
@@ -17,6 +17,9 @@ const Scene = memo(function Scene({ isSettled }: SceneProps) {
           powerPreference: 'high-performance',
           antialias: false,
           alpha: true,
+        }}
+        onCreated={(state) => {
+          state.gl.setClearColor(0x000000, 0);
         }}
       >
         <PerspectiveCamera makeDefault position={[0, 1, 4]} fov={50} />

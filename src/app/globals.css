@@ -143,3 +143,9 @@ body {
 .pulse-glow {
   animation: pulseGlow 2s ease-in-out infinite;
 }
+
+/* Loading bar animation */
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

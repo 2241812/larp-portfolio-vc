@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, memo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from '@/hooks/useInView';
 
 interface ContributionDay {
@@ -9,11 +9,31 @@ interface ContributionDay {
   level: number;
 }
 
-const ContributionCalendar = memo(function ContributionCalendar({ username = '2241812' }: { username?: string }) {
+const ContributionCalendar = memo(function ContributionCalendar({ username = '2241812', onDataLoaded }: { username?: string; onDataLoaded?: (data: { date: string; count: number }[]) => void }) {
   const [contributions, setContributions] = useState<ContributionDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalContributions, setTotalContributions] = useState(0);
   const { ref, isInView } = useInView({ rootMargin: '300px', once: true });
+
+  // Game state
+  const [gameMode, setGameMode] = useState(false);
+  const [score, setScore] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [highScore, setHighScore] = useState(0);
+  const [brokenCells, setBrokenCells] = useState<Set<string>>(new Set());
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [gameSpeed, setGameSpeed] = useState(1);
+  const [gameOver, setGameOver] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [particles, setParticles] = useState<{ id: number; x: number; y: number; points: number }[]>([]);
+  const animFrameRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const CELL_SIZE = 14; // 11px cell + 3px gap
+  const VISIBLE_WIDTH = 500; // approximate visible area
+  const BASE_SPEED = 0.3; // pixels per frame at 60fps
+  const MAX_SPEED = 4;
 
   useEffect(() => {
     if (!isInView) return;
@@ -22,20 +42,32 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
 
     async function fetchContributions() {
       try {
-        const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}`);
+        const today = new Date();
+        const oneYearAgo = new Date();
+        oneYearAgo.setDate(today.getDate() - 364);
+        const toDate = today.toISOString().split('T')[0];
+        const fromDate = oneYearAgo.toISOString().split('T')[0];
+        
+        const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?from=${fromDate}&to=${toDate}`);
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
         
         if (cancelled) return;
 
-        const days: ContributionDay[] = data.contributions.map((c: any) => ({
-          date: c.date,
-          count: c.count,
-          level: c.count === 0 ? 0 : c.count <= 3 ? 1 : c.count <= 6 ? 2 : c.count <= 9 ? 3 : 4,
-        }));
+         interface ContributionData {
+           date: string;
+           count: number;
+         }
+         
+         const days: ContributionDay[] = data.contributions.map((c: ContributionData) => ({
+           date: c.date,
+           count: c.count,
+           level: c.count === 0 ? 0 : c.count <= 3 ? 1 : c.count <= 6 ? 2 : c.count <= 9 ? 3 : 4,
+         }));
 
-        setContributions(days);
-        setTotalContributions(days.reduce((sum, d) => sum + d.count, 0));
+         setContributions(days);
+         setTotalContributions(days.reduce((sum, d) => sum + d.count, 0));
+         onDataLoaded?.(days.map(d => ({ date: d.date, count: d.count })));
       } catch (err) {
         if (cancelled) return;
         console.error('Failed to fetch contributions:', err);
@@ -61,16 +93,125 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
     return () => { cancelled = true; };
   }, [username, isInView]);
 
-  const weeks: ContributionDay[][] = [];
-  let currentWeek: ContributionDay[] = [];
+  const contributionMap = new Map<string, number>();
+  contributions.forEach(c => contributionMap.set(c.date, c.count));
+
+  const today = new Date();
+  const fullDays: { date: string; count: number; level: number }[] = [];
+  for (let i = 364; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const count = contributionMap.get(dateStr) ?? 0;
+    fullDays.push({
+      date: dateStr,
+      count,
+      level: count === 0 ? 0 : count <= 3 ? 1 : count <= 6 ? 2 : count <= 9 ? 3 : 4,
+    });
+  }
+
+  const weeks: { date: string; count: number; level: number }[][] = [];
+  let currentWeek: { date: string; count: number; level: number }[] = [];
   
-  contributions.forEach((day, i) => {
+  fullDays.forEach((day) => {
     currentWeek.push(day);
-    if (currentWeek.length === 7 || i === contributions.length - 1) {
+    if (currentWeek.length === 7) {
       weeks.push(currentWeek);
       currentWeek = [];
     }
   });
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) {
+      currentWeek.push({ date: '', count: 0, level: 0 });
+    }
+    weeks.push(currentWeek);
+  }
+
+  const totalWidth = weeks.length * CELL_SIZE;
+
+  const levelPoints = [1, 3, 5, 10, 20];
+
+  // Game loop
+  useEffect(() => {
+    if (!gameMode || gameOver) return;
+
+    const gameLoop = (time: number) => {
+      if (!lastTimeRef.current) lastTimeRef.current = time;
+      const delta = time - lastTimeRef.current;
+      lastTimeRef.current = time;
+
+      const currentSpeed = Math.min(BASE_SPEED + (score / 500) * 0.5, MAX_SPEED);
+      setGameSpeed(currentSpeed);
+      setScrollOffset(prev => {
+        const next = prev + currentSpeed * (delta / 16);
+        if (next >= totalWidth) {
+          setGameOver(true);
+          return totalWidth;
+        }
+        return next;
+      });
+
+      animFrameRef.current = requestAnimationFrame(gameLoop);
+    };
+
+    lastTimeRef.current = 0;
+    animFrameRef.current = requestAnimationFrame(gameLoop);
+
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [gameMode, gameOver, score, totalWidth]);
+
+  // Show hint after entering game mode
+  useEffect(() => {
+    if (gameMode) {
+      setShowHint(true);
+      const t = setTimeout(() => setShowHint(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [gameMode]);
+
+  const handleCellBreak = useCallback((day: { date: string; count: number; level: number }, weekIdx: number, dayIdx: number) => {
+    if (!gameMode || gameOver) return;
+    if (!day.date) return;
+    if (brokenCells.has(day.date)) return;
+
+    const points = levelPoints[day.level] * (1 + Math.floor(combo / 5));
+    setScore(prev => prev + points);
+    setCombo(prev => prev + 1);
+    setBrokenCells(prev => new Set([...prev, day.date]));
+
+    // Spawn particles
+    const particleId = Date.now() + Math.random();
+    const screenX = weekIdx * CELL_SIZE - scrollOffset + 50;
+    const screenY = dayIdx * CELL_SIZE + 30;
+    setParticles(prev => [...prev, { id: particleId, x: screenX, y: screenY, points }]);
+    setTimeout(() => {
+      setParticles(prev => prev.filter(p => p.id !== particleId));
+    }, 800);
+  }, [gameMode, gameOver, brokenCells, combo, scrollOffset]);
+
+  const startGame = useCallback(() => {
+    if (score > highScore) setHighScore(score);
+    setScore(0);
+    setCombo(0);
+    setBrokenCells(new Set());
+    setScrollOffset(0);
+    setGameSpeed(1);
+    setGameOver(false);
+    setGameMode(true);
+  }, [score, highScore]);
+
+  const exitGame = useCallback(() => {
+    if (score > highScore) setHighScore(score);
+    setGameMode(false);
+    setGameOver(false);
+    setScore(0);
+    setCombo(0);
+    setBrokenCells(new Set());
+    setScrollOffset(0);
+    setGameSpeed(1);
+  }, [score, highScore]);
 
   const levelColors = [
     'bg-neutral-800/50',
@@ -101,42 +242,175 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs text-neutral-500 font-mono">
-              {totalContributions} contributions in the last year
-            </span>
-          </div>
-
-          <div className="overflow-x-auto pb-2">
-            <div className="flex gap-[3px] min-w-fit">
-              {weeks.map((week, weekIdx) => (
-                <div key={weekIdx} className="flex flex-col gap-[3px]">
-                  {week.map((day, dayIdx) => (
-                    <motion.div
-                      key={day.date}
+          {/* Header row: stats on left */}
+          <div className="flex items-center justify-between mb-3 gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              {!gameMode && (
+                <span className="text-xs text-neutral-500 font-mono truncate">
+                  {totalContributions} contributions
+                </span>
+              )}
+              {gameMode && (
+                <div className="flex items-center gap-3">
+                  <motion.span
+                    className="text-sm font-bold text-cyan-400 whitespace-nowrap"
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 0.5, repeat: combo > 0 ? Infinity : 0 }}
+                    style={{ fontFamily: 'var(--font-orbitron)' }}
+                  >
+                    {score.toLocaleString()}
+                  </motion.span>
+                  {combo > 2 && (
+                    <motion.span
+                      className="text-[10px] font-mono text-orange-400 whitespace-nowrap"
                       initial={{ opacity: 0, scale: 0.5 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: weekIdx * 0.01, duration: 0.2 }}
-                      className={`w-[11px] h-[11px] rounded-sm ${levelColors[day.level]} ${levelGlows[day.level]} transition-all duration-200 cursor-default`}
-                      title={`${day.date}: ${day.count} contributions`}
-                      whileHover={{ scale: 1.5 }}
-                    />
-                  ))}
+                      animate={{ opacity: 1, scale: 1 }}
+                      key={combo}
+                    >
+                      {combo}x
+                    </motion.span>
+                  )}
+                  <span className="text-[10px] text-neutral-600 font-mono whitespace-nowrap">
+                    {gameSpeed.toFixed(1)}x
+                  </span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 mt-3">
-            <span className="text-[10px] text-neutral-600 font-mono">Less</span>
-            {levelColors.map((color, i) => (
-              <div
-                key={i}
-                className={`w-[11px] h-[11px] rounded-sm ${color} ${levelGlows[i]}`}
-              />
-            ))}
-            <span className="text-[10px] text-neutral-600 font-mono">More</span>
+          {/* Grid container: holds both the grid and the right-aligned controls */}
+          <div className="relative">
+            {/* Right-aligned controls: button + legend + progress */}
+            <div className="absolute -right-1 top-0 flex flex-col items-end gap-1.5 z-10">
+              {!gameMode ? (
+                <motion.button
+                  onClick={startGame}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 py-1.5 text-xs font-mono uppercase tracking-wider rounded-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-900/20 transition-all duration-300 cursor-pointer"
+                >
+                  BREAK
+                </motion.button>
+              ) : (
+                <motion.button
+                  onClick={exitGame}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{ scale: 1.08 }}
+                  className="px-4 py-1.5 text-xs font-mono uppercase tracking-wider rounded-lg border border-red-500/50 text-red-400 hover:bg-red-900/20 transition-all duration-300 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+                >
+                  EXIT
+                </motion.button>
+              )}
+
+              {/* Legend */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-neutral-600 font-mono">Less</span>
+                {levelColors.map((color, i) => (
+                  <div key={i} className={`w-[11px] h-[11px] rounded-sm ${color} ${levelGlows[i]}`} />
+                ))}
+                <span className="text-[10px] text-neutral-600 font-mono">More</span>
+              </div>
+
+              {/* Progress bar (game mode only) */}
+              {gameMode && (
+                <div className="flex items-center gap-2">
+                  <div className="w-16 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full"
+                      style={{ width: `${Math.min((scrollOffset / totalWidth) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-neutral-600 font-mono">
+                    {brokenCells.size}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Contribution grid with scrolling */}
+            <div
+              ref={containerRef}
+              className="overflow-hidden rounded-lg relative pr-[140px]"
+              style={{ height: `${7 * CELL_SIZE + 12}px` }}
+            >
+              {/* Scroll indicator line */}
+              {gameMode && !gameOver && (
+                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-cyan-400 via-cyan-500 to-cyan-400 z-10 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+              )}
+
+              <motion.div
+                className="flex gap-[3px]"
+                style={{
+                  transform: `translateX(${-scrollOffset}px)`,
+                  transition: gameMode ? 'none' : 'transform 0.3s ease',
+                }}
+              >
+                {weeks.map((week, weekIdx) => (
+                  <div key={weekIdx} className="flex flex-col gap-[3px]">
+                    {week.map((day, dayIdx) => {
+                      const isBroken = brokenCells.has(day.date);
+                      const hasData = !!day.date;
+                      
+                      return (
+                        <motion.div
+                          key={day.date || `empty-${weekIdx}-${dayIdx}`}
+                          className={`w-[11px] h-[11px] rounded-sm transition-all duration-150 ${
+                            gameMode && hasData && !isBroken && !gameOver
+                              ? `${levelColors[day.level]} ${levelGlows[day.level]} cursor-crosshair hover:scale-[2] hover:brightness-150`
+                              : isBroken
+                              ? 'bg-transparent scale-0'
+                              : `${levelColors[day.level]} ${levelGlows[day.level]} cursor-default`
+                          }`}
+                          title={hasData ? `${day.date}: ${day.count} contributions${gameMode ? ` (${levelPoints[day.level]}pts)` : ''}` : ''}
+                          whileHover={gameMode && hasData && !isBroken && !gameOver ? { scale: 2 } : { scale: 1.3 }}
+                          onClick={() => handleCellBreak(day, weekIdx, dayIdx)}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </motion.div>
+
+              {/* Break particles */}
+              <AnimatePresence>
+                {particles.map((particle) => (
+                  <div
+                    key={particle.id}
+                    className="absolute pointer-events-none z-20"
+                    style={{
+                      left: `${particle.x}px`,
+                      top: `${particle.y}px`,
+                    }}
+                  >
+                    {/* Points popup */}
+                    <motion.div
+                      className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-cyan-400 whitespace-nowrap"
+                      initial={{ opacity: 1, y: 0 }}
+                      animate={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      +{particle.points}
+                    </motion.div>
+                    {/* Explosion particles */}
+                    {[...Array(6)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-1.5 h-1.5 rounded-full bg-cyan-400"
+                        initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                        animate={{
+                          x: (Math.random() - 0.5) * 30,
+                          y: (Math.random() - 0.5) * 30,
+                          opacity: 0,
+                          scale: 0,
+                        }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
         </>
       )}

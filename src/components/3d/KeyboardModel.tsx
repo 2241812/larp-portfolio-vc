@@ -1,11 +1,23 @@
 "use client";
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect, memo } from 'react';
 import { useGLTF, Center } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export default React.memo(function KeyboardModel({ isSettled }: { isSettled: boolean }) {
-  const { scene, nodes } = useGLTF('/models/keyboard.glb') as any;
+const KEY_CENTER_X: Record<string, number> = {
+  'Digit1': -0.35, 'Digit2': -0.3, 'Digit3': -0.25, 'Digit4': -0.2, 'Digit5': -0.15, 'Digit6': -0.1, 'Digit7': -0.05, 'Digit8': 0, 'Digit9': 0.05, 'Digit0': 0.1,
+  'KeyQ': -0.25, 'KeyW': -0.2, 'KeyE': -0.15, 'KeyR': -0.1, 'KeyT': -0.05, 'KeyY': 0, 'KeyU': 0.05, 'KeyI': 0.1, 'KeyO': 0.15, 'KeyP': 0.2,
+  'KeyA': -0.2, 'KeyS': -0.15, 'KeyD': -0.1, 'KeyF': -0.05, 'KeyG': 0, 'KeyH': 0.05, 'KeyJ': 0.1, 'KeyK': 0.15, 'KeyL': 0.2,
+  'KeyZ': -0.15, 'KeyX': -0.1, 'KeyC': -0.05, 'KeyV': 0, 'KeyB': 0.05, 'KeyN': 0.1, 'KeyM': 0.15,
+  'Space': 0,
+};
+
+const KEY_MAP: Record<string, string> = {
+  'Digit1': 'Object_104', 'Digit2': 'Object_106', 'Digit3': 'Object_108', 'Digit4': 'Object_110', 'Digit5': 'Object_112', 'Digit6': 'Object_114', 'Digit7': 'Object_116', 'Digit8': 'Object_118', 'Digit9': 'Object_120', 'Digit0': 'Object_122', 'Minus': 'Object_124', 'Backspace': 'Object_98', 'KeyQ': 'Object_74', 'KeyW': 'Object_166', 'KeyE': 'Object_168', 'KeyR': 'Object_170', 'KeyT': 'Object_172', 'KeyY': 'Object_174', 'KeyU': 'Object_176', 'KeyI': 'Object_178', 'KeyO': 'Object_180', 'KeyP': 'Object_182', 'KeyA': 'Object_68', 'KeyS': 'Object_128', 'KeyD': 'Object_130', 'KeyF': 'Object_132', 'KeyG': 'Object_134', 'KeyH': 'Object_136', 'KeyJ': 'Object_138', 'KeyK': 'Object_140', 'KeyL': 'Object_142', 'Enter': 'Object_100', 'KeyZ': 'Object_70', 'KeyX': 'Object_148', 'KeyC': 'Object_150', 'KeyV': 'Object_152', 'KeyB': 'Object_154', 'KeyN': 'Object_156', 'KeyM': 'Object_158', 'Comma': 'Object_160', 'Period': 'Object_162', 'Slash': 'Object_164', 'Space': 'Object_80'
+};
+
+const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: boolean }) {
+   const { scene, nodes } = useGLTF('/models/keyboard.glb');
   const groupRef = useRef<THREE.Group>(null);
   const targetRotY = useRef<number | null>(null);
   const scrollProgress = useRef(0);
@@ -18,68 +30,58 @@ export default React.memo(function KeyboardModel({ isSettled }: { isSettled: boo
   const TILT_DAMPING = 18;
   const MAX_TILT = 0.04;
 
-  const keyCenterX: Record<string, number> = {
-    'Digit1': -0.35, 'Digit2': -0.3, 'Digit3': -0.25, 'Digit4': -0.2, 'Digit5': -0.15, 'Digit6': -0.1, 'Digit7': -0.05, 'Digit8': 0, 'Digit9': 0.05, 'Digit0': 0.1,
-    'KeyQ': -0.25, 'KeyW': -0.2, 'KeyE': -0.15, 'KeyR': -0.1, 'KeyT': -0.05, 'KeyY': 0, 'KeyU': 0.05, 'KeyI': 0.1, 'KeyO': 0.15, 'KeyP': 0.2,
-    'KeyA': -0.2, 'KeyS': -0.15, 'KeyD': -0.1, 'KeyF': -0.05, 'KeyG': 0, 'KeyH': 0.05, 'KeyJ': 0.1, 'KeyK': 0.15, 'KeyL': 0.2,
-    'KeyZ': -0.15, 'KeyX': -0.1, 'KeyC': -0.05, 'KeyV': 0, 'KeyB': 0.05, 'KeyN': 0.1, 'KeyM': 0.15,
-    'Space': 0,
-  };
-
-  const keyMap: Record<string, string> = {
-    'Digit1': 'Object_104', 'Digit2': 'Object_106', 'Digit3': 'Object_108', 'Digit4': 'Object_110', 'Digit5': 'Object_112', 'Digit6': 'Object_114', 'Digit7': 'Object_116', 'Digit8': 'Object_118', 'Digit9': 'Object_120', 'Digit0': 'Object_122', 'Minus': 'Object_124', 'Backspace': 'Object_98', 'KeyQ': 'Object_74', 'KeyW': 'Object_166', 'KeyE': 'Object_168', 'KeyR': 'Object_170', 'KeyT': 'Object_172', 'KeyY': 'Object_174', 'KeyU': 'Object_176', 'KeyI': 'Object_178', 'KeyO': 'Object_180', 'KeyP': 'Object_182', 'KeyA': 'Object_68', 'KeyS': 'Object_128', 'KeyD': 'Object_130', 'KeyF': 'Object_132', 'KeyG': 'Object_134', 'KeyH': 'Object_136', 'KeyJ': 'Object_138', 'KeyK': 'Object_140', 'KeyL': 'Object_142', 'Enter': 'Object_100', 'KeyZ': 'Object_70', 'KeyX': 'Object_148', 'KeyC': 'Object_150', 'KeyV': 'Object_152', 'KeyB': 'Object_154', 'KeyN': 'Object_156', 'KeyM': 'Object_158', 'Comma': 'Object_160', 'Period': 'Object_162', 'Slash': 'Object_164', 'Space': 'Object_80'
-  };
-
   useEffect(() => {
-    Object.values(keyMap).forEach((nodeName) => {
-      if (nodeName && nodes[nodeName]) {
-        initialPositions.current[nodeName] = nodes[nodeName].position.y;
-      }
-    });
+     Object.values(KEY_MAP).forEach((nodeName) => {
+       if (nodeName && nodes[nodeName]) {
+         const node = nodes[nodeName] as THREE.Object3D;
+         initialPositions.current[nodeName] = node.position.y;
+       }
+     });
 
-    const handleKeyDown = (e: KeyboardEvent) => pressedKeys.current.add(e.code);
-    const handleKeyUp = (e: KeyboardEvent) => pressedKeys.current.delete(e.code);
-    
-    let scrollTicking = false;
-    const handleScroll = () => {
-      if (!scrollTicking) {
-        scrollTicking = true;
-        requestAnimationFrame(() => {
-          const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
-          scrollProgress.current = totalScroll > 0 ? window.scrollY / totalScroll : 0;
-          scrollTicking = false;
-        });
-      }
-    };
+     const handleKeyDown = (e: KeyboardEvent) => pressedKeys.current.add(e.code);
+     const handleKeyUp = (e: KeyboardEvent) => pressedKeys.current.delete(e.code);
+     
+     let scrollTicking = false;
+     const handleScroll = () => {
+       if (!scrollTicking) {
+         scrollTicking = true;
+         requestAnimationFrame(() => {
+           const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+           scrollProgress.current = totalScroll > 0 ? window.scrollY / totalScroll : 0;
+           scrollTicking = false;
+         });
+       }
+     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('scroll', handleScroll, { passive: true });
+     window.addEventListener('keydown', handleKeyDown);
+     window.addEventListener('keyup', handleKeyUp);
+     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [nodes]);
-
-  // Throttle frame updates - skip frames for less CPU usage
-  const frameCount = useRef(0);
+     return () => {
+       window.removeEventListener('keydown', handleKeyDown);
+       window.removeEventListener('keyup', handleKeyUp);
+       window.removeEventListener('scroll', handleScroll);
+     };
+   }, [nodes]);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    // Only update every other frame for 30fps feel
-    frameCount.current++;
-    if (frameCount.current % 2 !== 0) return;
-
     const p = scrollProgress.current;
+    const vw = window.innerWidth;
     
-    let targetScale = isSettled ? 15.0 : 9.75;
-    let targetPosX = 0;
+    // Adaptive scale based on viewport width
+    let baseScale: number;
+    if (vw < 640) baseScale = 6.5;
+    else if (vw < 1024) baseScale = 8.0;
+    else if (vw < 1536) baseScale = 9.75;
+    else baseScale = 11.5;
+    
+    let targetScale = isSettled ? 15.0 : baseScale;
+    const targetPosX = 0;
     let targetPosY = isSettled ? 0.45 : 1.0;
     let targetRotX = 0.4;
-    
+   
     if (isSettled && targetRotY.current === null) {
       const currentY = groupRef.current.rotation.y;
       targetRotY.current = Math.ceil(currentY / (Math.PI * 2)) * (Math.PI * 2);
@@ -112,24 +114,25 @@ export default React.memo(function KeyboardModel({ isSettled }: { isSettled: boo
       let tiltZ = 0;
       let keysPressed = 0;
       
-      Object.entries(keyMap).forEach(([keyCode, nodeName]) => {
+      Object.entries(KEY_MAP).forEach(([keyCode, nodeName]) => {
         if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
-          const node = nodes[nodeName];
+          const node = nodes[nodeName] as THREE.Object3D;
           const basePosY = initialPositions.current[nodeName];
           const isPressed = pressedKeys.current.has(keyCode);
           
-          if (isPressed) {
-            keysPressed++;
-            const keyX = keyCenterX[keyCode] || 0;
-            tiltZ -= keyX * MAX_TILT;
-            tiltX += MAX_TILT * 0.3;
-          }
+           if (isPressed) {
+             keysPressed++;
+             const keyX = KEY_CENTER_X[keyCode] || 0;
+             tiltZ -= keyX * MAX_TILT;
+             tiltX += MAX_TILT * 0.3;
+           }
           
           const targetKeyY = isPressed ? basePosY - 0.008 : basePosY;
           node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.3);
         }
       });
       
+      // Only apply tilt when keys are pressed, reset smoothly when not
       if (keysPressed > 0) {
         const targetTiltX = Math.min(tiltX, MAX_TILT);
         const targetTiltZ = THREE.MathUtils.clamp(tiltZ, -MAX_TILT, MAX_TILT);
@@ -144,6 +147,7 @@ export default React.memo(function KeyboardModel({ isSettled }: { isSettled: boo
         keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
         keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
       } else {
+        // Smoothly return tilt to zero
         const springX = -TILT_STIFFNESS * keyboardTilt.current.rotX;
         const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
         keyboardTilt.current.rotXVel += (springX + dampX) * delta;
@@ -155,6 +159,7 @@ export default React.memo(function KeyboardModel({ isSettled }: { isSettled: boo
         keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
       }
       
+      // Apply tilt additively to the base rotation
       groupRef.current.rotation.x += keyboardTilt.current.rotX;
       groupRef.current.rotation.z += keyboardTilt.current.rotZ;
     } else {
@@ -173,5 +178,7 @@ export default React.memo(function KeyboardModel({ isSettled }: { isSettled: boo
     </group>
   );
 });
+
+export default KeyboardModel;
 
 useGLTF.preload('/models/keyboard.glb');

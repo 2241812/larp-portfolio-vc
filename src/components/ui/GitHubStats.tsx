@@ -1,14 +1,18 @@
 "use client";
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { motion, Variants } from 'framer-motion';
 import ContributionCalendar from './ContributionCalendar';
 import { useInView } from '@/hooks/useInView';
 
 // ── Types ──
-interface StatData {
-  label: string;
-  value: string;
-  icon: string;
+interface GitHubUser {
+  public_repos: number;
+  followers: number;
+  following: number;
+  created_at: string;
+  avatar_url: string;
+  name: string;
+  bio: string;
 }
 
 interface GitHubEvent {
@@ -30,9 +34,11 @@ interface GitHubEvent {
   };
 }
 
-// ── Image URLs ──
-const STATS_IMG = 'https://github-readme-stats.vercel.app/api?username=2241812&theme=tokyonight&show_icons=true&hide_border=true&bg_color=0d1117';
-const STREAK_IMG = 'https://streak-stats.demolab.com/?user=2241812&theme=tokyo-night&hide_border=true&background=0d1117&ring=22d3ee&fire=22d3ee';
+interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  totalContributions: number;
+}
 
 // ── Helpers ──
 function getRelativeTime(dateString: string): string {
@@ -174,6 +180,43 @@ function getEventInfo(event: GitHubEvent): { label: string; icon: React.ReactNod
   }
 }
 
+// Calculate streak from contribution data
+function calculateStreak(contributions: { date: string; count: number }[]): StreakData {
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let tempStreak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const sorted = [...contributions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Current streak: count backwards from today
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const d = new Date(sorted[i].date);
+    d.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 1 && sorted[i].count > 0) {
+      currentStreak++;
+    } else if (diffDays > 1) {
+      break;
+    }
+  }
+
+  // Longest streak
+  for (const day of sorted) {
+    if (day.count > 0) {
+      tempStreak++;
+      longestStreak = Math.max(longestStreak, tempStreak);
+    } else {
+      tempStreak = 0;
+    }
+  }
+
+  const totalContributions = contributions.reduce((sum, d) => sum + d.count, 0);
+
+  return { currentStreak, longestStreak, totalContributions };
+}
+
 // ── Animations ──
 const containerVariants: Variants = {
   hidden: {},
@@ -221,66 +264,130 @@ const fadeInVariants: Variants = {
 };
 
 // ── Skeleton Loader ──
-const ImageSkeleton = memo(function ImageSkeleton({ className }: { className?: string }) {
+const StatCardSkeleton = memo(function StatCardSkeleton() {
   return (
-    <div className={`animate-pulse bg-neutral-900/80 border border-cyan-900/20 rounded-xl flex items-center justify-center ${className}`}>
-      <svg className="w-8 h-8 text-cyan-900/40 animate-spin" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-      </svg>
+    <div className="group relative bg-neutral-950/70 backdrop-blur-xl border border-cyan-900/30 rounded-xl p-5 flex flex-col items-center text-center cursor-default overflow-hidden">
+      <div className="w-10 h-10 rounded-lg bg-cyan-900/20 animate-pulse mb-3" />
+      <div className="h-8 w-16 bg-neutral-800 rounded animate-pulse mb-1" />
+      <div className="h-3 w-20 bg-neutral-800/60 rounded animate-pulse" />
     </div>
   );
 });
 
-// ── Embed Image with loading/error states ──
-const EmbedImage = memo(function EmbedImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
-  const [loaded, setLoaded] = useState(false);
-  const [errored, setErrored] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [imgKey, setImgKey] = useState(0);
+// ── Streak Card (interactive, no external images) ──
+const StreakCard = memo(function StreakCard({ streak, loading }: { streak: StreakData | null; loading: boolean }) {
+  const [hoveredStat, setHoveredStat] = useState<string | null>(null);
 
-  const handleRetry = useCallback(() => {
-    setRetryCount((c) => c + 1);
-    setErrored(false);
-    setLoaded(false);
-    setImgKey((k) => k + 1);
-  }, []);
-
-  if (errored) {
+  if (loading) {
     return (
-      <div className={`bg-neutral-900/60 border border-red-900/30 rounded-xl flex flex-col items-center justify-center p-6 gap-3 ${className}`}>
-        <svg className="w-8 h-8 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-        </svg>
-        <span className="text-xs text-neutral-600 font-mono">{alt} unavailable</span>
-        {retryCount < 3 && (
-          <button
-            onClick={handleRetry}
-            className="px-3 py-1.5 text-[10px] font-mono text-cyan-400 border border-cyan-800/50 rounded-md hover:bg-cyan-900/20 hover:border-cyan-600/50 transition-all duration-300 cursor-pointer"
-          >
-            Retry
-          </button>
-        )}
-      </div>
+      <motion.div
+        variants={fadeInVariants}
+        className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-5 flex flex-col"
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+          </svg>
+          <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">Streak</h3>
+        </div>
+        <div className="flex flex-col items-center gap-4 py-6">
+          <div className="h-16 w-24 bg-neutral-800 rounded animate-pulse" />
+          <div className="h-4 w-32 bg-neutral-800/60 rounded animate-pulse" />
+        </div>
+      </motion.div>
     );
   }
 
+  const stats = [
+    { key: 'current', label: 'Current Streak', value: streak?.currentStreak ?? 0, icon: 'M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z' },
+    { key: 'longest', label: 'Longest Streak', value: streak?.longestStreak ?? 0, icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+    { key: 'total', label: 'Total Contributions', value: streak?.totalContributions ?? 0, icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+  ];
+
   return (
-    <div className="relative">
-      {!loaded && <ImageSkeleton className={className} />}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        key={imgKey}
-        src={retryCount > 0 ? `${src}&_t=${Date.now()}` : src}
-        alt={alt}
-        loading="lazy"
-        crossOrigin="anonymous"
-        referrerPolicy="no-referrer"
-        onLoad={() => setLoaded(true)}
-        onError={() => setErrored(true)}
-        className={`transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'} ${className}`}
-      />
-    </div>
+    <motion.div
+      variants={fadeInVariants}
+      whileHover={{
+        borderColor: '#22d3ee66',
+        boxShadow: '0 0 40px rgba(34,211,238,0.08)',
+      }}
+      className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-5 flex flex-col"
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+        </svg>
+        <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">Streak</h3>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {stats.map((stat) => (
+          <motion.div
+            key={stat.key}
+            className="relative rounded-xl p-4 cursor-default overflow-hidden"
+            style={{
+              background: hoveredStat === stat.key ? 'rgba(34,211,238,0.05)' : 'rgba(6,182,212,0.03)',
+              border: `1px solid ${hoveredStat === stat.key ? 'rgba(34,211,238,0.2)' : 'rgba(34,211,238,0.08)'}`,
+            }}
+            whileHover={{
+              scale: 1.02,
+              background: 'rgba(34,211,238,0.08)',
+              borderColor: '#22d3ee40',
+            }}
+            onHoverStart={() => setHoveredStat(stat.key)}
+            onHoverEnd={() => setHoveredStat(null)}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Hover glow effect */}
+            {hoveredStat === stat.key && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  background: 'radial-gradient(circle at center, rgba(34,211,238,0.1) 0%, transparent 70%)',
+                }}
+              />
+            )}
+
+            <div className="relative flex items-center gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-cyan-900/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className="text-[10px] text-neutral-500 font-mono uppercase tracking-widest mb-0.5">
+                  {stat.label}
+                </div>
+                <motion.div
+                  className="text-2xl font-black text-cyan-400"
+                  style={{ fontFamily: 'var(--font-orbitron)' }}
+                  animate={{
+                    scale: hoveredStat === stat.key ? 1.05 : 1,
+                    textShadow: hoveredStat === stat.key ? '0 0 20px rgba(34,211,238,0.4)' : 'none',
+                  }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {stat.value.toLocaleString()}
+                </motion.div>
+              </div>
+              {hoveredStat === stat.key && (
+                <motion.div
+                  className="flex-shrink-0"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                >
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
   );
 });
 
@@ -288,47 +395,41 @@ const EmbedImage = memo(function EmbedImage({ src, alt, className }: { src: stri
 const GitHubStats = memo(function GitHubStats() {
   const { ref: sectionRef, isInView } = useInView({ rootMargin: '200px', once: true });
 
-  const [stats, setStats] = useState<StatData[]>([
-    { label: 'Public Repos', value: '...', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
-    { label: 'Followers', value: '...', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
-    { label: 'Following', value: '...', icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' },
-    { label: 'Member Since', value: '...', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-  ]);
-
+  const [userData, setUserData] = useState<GitHubUser | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [events, setEvents] = useState<GitHubEvent[]>([]);
   const [activityLoading, setActivityLoading] = useState(true);
   const [activityError, setActivityError] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [streak, setStreak] = useState<StreakData | null>(null);
+  const [streakLoading, setStreakLoading] = useState(true);
+  const contributionDataRef = useRef<{ date: string; count: number }[]>([]);
 
-  // Lazy load data when in view
+  // Fetch user data from GitHub REST API
   useEffect(() => {
     if (!isInView) return;
 
     let cancelled = false;
 
-    async function fetchGitHubStats() {
+    async function fetchUserData() {
       try {
         const res = await fetch('https://api.github.com/users/2241812');
-        const data = await res.json();
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data: GitHubUser = await res.json();
         if (cancelled) return;
-        const memberSince = new Date(data.created_at).getFullYear();
-
-        setStats([
-          { label: 'Public Repos', value: String(data.public_repos || 0), icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
-          { label: 'Followers', value: String(data.followers || 0), icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
-          { label: 'Following', value: String(data.following || 0), icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' },
-          { label: 'Member Since', value: String(memberSince), icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-        ]);
+        setUserData(data);
       } catch (err) {
-        console.error('Failed to fetch GitHub stats:', err);
+        console.error('Failed to fetch GitHub user:', err);
+      } finally {
+        if (!cancelled) setStatsLoading(false);
       }
     }
 
-    fetchGitHubStats();
+    fetchUserData();
     return () => { cancelled = true; };
   }, [isInView]);
 
-  // Fetch activity events - only when in view
+  // Fetch activity events
   const fetchActivity = useCallback(async () => {
     try {
       setActivityError(false);
@@ -352,10 +453,17 @@ const GitHubStats = memo(function GitHubStats() {
   useEffect(() => {
     if (!isInView) return;
     fetchActivity();
-    // Reduce polling interval from 60s to 5 minutes for less CPU usage
     const interval = setInterval(fetchActivity, 300_000);
     return () => clearInterval(interval);
   }, [fetchActivity, isInView]);
+
+  // Calculate streak from contribution calendar data
+  const onContributionDataLoaded = useCallback((data: { date: string; count: number }[]) => {
+    contributionDataRef.current = data;
+    const streakData = calculateStreak(data);
+    setStreak(streakData);
+    setStreakLoading(false);
+  }, []);
 
   return (
     <section
@@ -389,7 +497,7 @@ const GitHubStats = memo(function GitHubStats() {
             <div className="relative">
               <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-cyan-400 tracking-wider uppercase"
+            <h2 className="text-4xl md:text-5xl font-bold text-cyan-400 tracking-wider uppercase"
               style={{ fontFamily: 'var(--font-orbitron)' }}
             >
               GitHub Overview
@@ -398,88 +506,133 @@ const GitHubStats = memo(function GitHubStats() {
           <div className="w-32 h-[2px] bg-gradient-to-r from-cyan-500 to-transparent" />
         </motion.div>
 
-        {/* ── Stat Cards Row ── */}
+        {/* ── Unified Profile Card (profile + stats + streak merged) ── */}
         <motion.div
           variants={containerVariants}
-          className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10"
-        >
-          {stats.map((stat) => (
-            <motion.div
-              key={stat.label}
-              variants={cardVariants}
-              whileHover={{
-                scale: 1.05,
-                borderColor: 'rgba(34,211,238,0.5)',
-                boxShadow: '0 0 30px rgba(34,211,238,0.15)',
-              }}
-              transition={{ duration: 0.25 }}
-              className="group relative bg-neutral-950/70 backdrop-blur-xl border border-cyan-900/30 rounded-xl p-5 flex flex-col items-center text-center cursor-default overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 w-8 h-8">
-                <div className="absolute top-0 right-0 w-full h-[2px] bg-gradient-to-l from-cyan-500/40 to-transparent" />
-                <div className="absolute top-0 right-0 h-full w-[2px] bg-gradient-to-b from-cyan-500/40 to-transparent" />
-              </div>
-
-              <div className="w-10 h-10 rounded-lg bg-cyan-900/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400 mb-3 group-hover:shadow-[0_0_12px_rgba(34,211,238,0.2)] transition-all duration-300">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
-                </svg>
-              </div>
-              <span className="text-2xl md:text-3xl font-black text-neutral-100 tracking-tight" style={{ fontFamily: 'var(--font-orbitron)' }}>
-                {stat.value}
-              </span>
-              <span className="text-[10px] md:text-xs text-neutral-500 font-mono uppercase tracking-widest mt-1">
-                {stat.label}
-              </span>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* ── Two-column layout: Stats + Streak ── */}
-        <motion.div
-          variants={containerVariants}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
+          className="mb-8"
         >
           <motion.div
             variants={fadeInVariants}
             whileHover={{
-              borderColor: 'rgba(34,211,238,0.4)',
+              borderColor: '#22d3ee66',
               boxShadow: '0 0 40px rgba(34,211,238,0.08)',
             }}
             className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-5 flex flex-col"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <svg className="w-4 h-4 text-cyan-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-              </svg>
-              <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">Stats</h3>
-            </div>
-            <EmbedImage
-              src={STATS_IMG}
-              alt="GitHub Stats"
-              className="w-full rounded-lg"
-            />
-          </motion.div>
+            {statsLoading ? (
+              <div className="flex flex-col items-center gap-4 py-6">
+                <div className="w-16 h-16 rounded-full bg-neutral-800 animate-pulse" />
+                <div className="h-5 w-32 bg-neutral-800 rounded animate-pulse" />
+                <div className="h-3 w-48 bg-neutral-800/60 rounded animate-pulse" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full mt-4">
+                  {[...Array(7)].map((_, i) => (
+                    <div key={i} className="h-16 bg-neutral-800/50 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            ) : userData ? (
+              <div className="flex flex-col gap-4">
+                {/* Centered profile image + name + bio */}
+                <div className="flex flex-col items-center gap-2">
+                  <img
+                    src={userData.avatar_url}
+                    alt={userData.name || 'GitHub avatar'}
+                    className="w-16 h-16 rounded-full border-2 border-cyan-900/40 shadow-[0_0_20px_rgba(34,211,238,0.15)]"
+                  />
+                  <div className="text-lg font-bold text-neutral-100" style={{ fontFamily: 'var(--font-orbitron)' }}>
+                    {userData.name || '2241812'}
+                  </div>
+                  {userData.bio && (
+                    <p className="text-sm text-neutral-400 text-center max-w-xs">
+                      {userData.bio}
+                    </p>
+                  )}
+                </div>
 
-          <motion.div
-            variants={fadeInVariants}
-            whileHover={{
-              borderColor: 'rgba(34,211,238,0.4)',
-              boxShadow: '0 0 40px rgba(34,211,238,0.08)',
-            }}
-            className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-5 flex flex-col"
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-              </svg>
-              <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">Streak</h3>
-            </div>
-            <EmbedImage
-              src={STREAK_IMG}
-              alt="GitHub Streak"
-              className="w-full rounded-lg"
-            />
+                {/* Horizontal divider */}
+                <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-900/40 to-transparent" />
+
+                {/* Two 2x2 grids side by side */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Profile stats 2x2 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'Repos', value: userData.public_repos.toLocaleString(), icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
+                      { label: 'Followers', value: userData.followers.toLocaleString(), icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+                      { label: 'Following', value: userData.following.toLocaleString(), icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' },
+                      { label: 'Joined', value: new Date(userData.created_at).getFullYear().toString(), icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+                    ].map((stat) => (
+                      <motion.div
+                        key={stat.label}
+                        className="relative rounded-lg p-3 flex flex-col items-center text-center bg-cyan-950/20 border border-cyan-900/30 cursor-default overflow-hidden"
+                        whileHover={{
+                          scale: 1.04,
+                          borderColor: '#22d3ee66',
+                          boxShadow: '0 0 15px rgba(34,211,238,0.12)',
+                        }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="w-7 h-7 rounded-md bg-cyan-900/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400 mb-1.5">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
+                          </svg>
+                        </div>
+                        <motion.span
+                          className="text-lg font-black text-neutral-100 tracking-tight"
+                          style={{ fontFamily: 'var(--font-orbitron)' }}
+                          whileHover={{ color: '#22d3ee' }}
+                        >
+                          {stat.value}
+                        </motion.span>
+                        <span className="text-[9px] text-neutral-500 font-mono uppercase tracking-widest mt-0.5">
+                          {stat.label}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Streak stats 2x2 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'Streak', value: `${streakLoading ? '...' : streak?.currentStreak ?? 0}`, icon: 'M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z' },
+                      { label: 'Longest', value: `${streakLoading ? '...' : streak?.longestStreak ?? 0}`, icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+                      { label: 'Total', value: `${streakLoading ? '...' : (streak?.totalContributions ?? 0).toLocaleString()}`, icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+                      { label: 'Avg/Day', value: streakLoading ? '...' : `${streak ? (streak.totalContributions / 365).toFixed(1) : '0'}`, icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
+                    ].map((stat) => (
+                      <motion.div
+                        key={stat.label}
+                        className="relative rounded-lg p-3 flex flex-col items-center text-center bg-cyan-900/10 border border-cyan-700/30 cursor-default overflow-hidden"
+                        whileHover={{
+                          scale: 1.04,
+                          borderColor: '#22d3ee80',
+                          boxShadow: '0 0 15px rgba(34,211,238,0.18)',
+                        }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="w-7 h-7 rounded-md bg-cyan-800/40 border border-cyan-600/40 flex items-center justify-center text-cyan-300 mb-1.5">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
+                          </svg>
+                        </div>
+                        <motion.span
+                          className="text-lg font-black text-cyan-300 tracking-tight"
+                          style={{ fontFamily: 'var(--font-orbitron)' }}
+                          whileHover={{
+                            color: '#67e8f9',
+                            textShadow: '0 0 12px rgba(34,211,238,0.5)',
+                          }}
+                        >
+                          {stat.value}
+                        </motion.span>
+                        <span className="text-[9px] text-cyan-600 font-mono uppercase tracking-widest mt-0.5">
+                          {stat.label}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </motion.div>
         </motion.div>
 
@@ -487,7 +640,7 @@ const GitHubStats = memo(function GitHubStats() {
         <motion.div
           variants={fadeInVariants}
           whileHover={{
-            borderColor: 'rgba(34,211,238,0.4)',
+            borderColor: '#22d3ee66',
             boxShadow: '0 0 40px rgba(34,211,238,0.08)',
           }}
           className="bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/30 rounded-2xl p-6 mb-8"
@@ -498,7 +651,7 @@ const GitHubStats = memo(function GitHubStats() {
             </svg>
             <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">Contribution Activity</h3>
           </div>
-          <ContributionCalendar username="2241812" />
+          <ContributionCalendar username="2241812" onDataLoaded={onContributionDataLoaded} />
         </motion.div>
 
         {/* ── Recent Activity Feed ── */}
@@ -570,7 +723,7 @@ const GitHubStats = memo(function GitHubStats() {
                     variants={slideInVariants}
                     whileHover={{
                       scale: 1.01,
-                      borderColor: 'rgba(34,211,238,0.4)',
+                      borderColor: '#22d3ee66',
                       boxShadow: '0 0 24px rgba(34,211,238,0.08)',
                     }}
                     transition={{ duration: 0.2 }}

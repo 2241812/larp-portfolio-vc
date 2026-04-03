@@ -108,12 +108,12 @@ const Sections = memo(function Sections() {
           viewport={{ once: true, amount: 0.25 }}
           className="w-full max-w-2xl bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/40 rounded-2xl p-8 md:p-12 relative z-10 shadow-[0_0_40px_rgba(34,211,238,0.05)]"
         >
-          <motion.h3 variants={headingVariants} className="text-3xl font-bold text-cyan-400 mb-6 tracking-wider uppercase">About Me</motion.h3>
-          <motion.p variants={cardVariants} className="text-lg leading-relaxed mb-4">
+          <motion.h3 variants={headingVariants} className="text-4xl font-bold text-cyan-400 mb-6 tracking-wider uppercase">About Me</motion.h3>
+          <motion.p variants={cardVariants} className="text-xl leading-relaxed mb-4">
             I am a {resumeData.personalInfo.title} currently studying at {resumeData.education.university}.
             With a GPA of {resumeData.education.gpa}, I am part of the class of {resumeData.education.classOf}.
           </motion.p>
-          <motion.p variants={cardVariants} className="text-lg leading-relaxed">
+          <motion.p variants={cardVariants} className="text-xl leading-relaxed">
             I focus on automation and scalable software solutions. I have a demonstrated ability to manage end-to-end technical projects, from AI-integrated tools to multi-service architectures.
           </motion.p>
         </motion.div>
@@ -131,7 +131,7 @@ const Sections = memo(function Sections() {
           viewport={{ once: true, amount: 0.2 }}
           className="w-full max-w-3xl bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/40 rounded-2xl p-8 md:p-12 relative z-10 shadow-[0_0_40px_rgba(34,211,238,0.05)]"
         >
-          <motion.h3 variants={headingVariants} className="text-3xl font-bold text-cyan-400 mb-8 tracking-wider uppercase">Experience & Roles</motion.h3>
+          <motion.h3 variants={headingVariants} className="text-4xl font-bold text-cyan-400 mb-8 tracking-wider uppercase">Experience & Roles</motion.h3>
           <div className="space-y-8">
             {resumeData.projects.slice(0, 2).map((proj, idx) => (
               <motion.div
@@ -139,9 +139,9 @@ const Sections = memo(function Sections() {
                 variants={cardVariants}
                 className="border-l-2 border-cyan-800 pl-6 hover:border-cyan-400 transition-colors"
               >
-                <h4 className="text-xl font-bold text-neutral-100">{proj.title}</h4>
-                <p className="text-cyan-500 font-mono text-sm mt-1 mb-3">{proj.role}</p>
-                <p className="text-base leading-relaxed text-neutral-400">{proj.description}</p>
+                <h4 className="text-2xl font-bold text-neutral-100">{proj.title}</h4>
+                <p className="text-cyan-500 font-mono text-base mt-1 mb-3">{proj.role}</p>
+                <p className="text-lg leading-relaxed text-neutral-400">{proj.description}</p>
               </motion.div>
             ))}
           </div>
@@ -160,10 +160,10 @@ const Sections = memo(function Sections() {
           viewport={{ once: true, amount: 0.25 }}
           className="w-full max-w-2xl bg-neutral-950/60 backdrop-blur-xl border border-cyan-900/40 rounded-2xl p-8 md:p-12 relative z-10 shadow-[0_0_40px_rgba(34,211,238,0.05)]"
         >
-          <motion.h3 variants={headingVariants} className="text-3xl font-bold text-cyan-400 mb-8 tracking-wider uppercase">Technical Skills</motion.h3>
+          <motion.h3 variants={headingVariants} className="text-4xl font-bold text-cyan-400 mb-8 tracking-wider uppercase">Technical Skills</motion.h3>
 
           <motion.div variants={cardVariants} className="mb-8">
-            <h4 className="text-lg font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">Programming & Web</h4>
+            <h4 className="text-xl font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">Programming & Web</h4>
             <div className="flex flex-wrap gap-3">
               {resumeData.skills.programming.map((skill, i) => (
                 <motion.span
@@ -172,7 +172,7 @@ const Sections = memo(function Sections() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.04, duration: 0.35 }}
-                  className="px-3 py-1 bg-cyan-900/30 text-cyan-300 border border-cyan-800/50 rounded-md text-sm font-mono"
+                  className="px-4 py-1.5 bg-cyan-900/30 text-cyan-300 border border-cyan-800/50 rounded-md text-base font-mono"
                 >
                   {skill}
                 </motion.span>
@@ -181,7 +181,7 @@ const Sections = memo(function Sections() {
           </motion.div>
 
           <motion.div variants={cardVariants}>
-            <h4 className="text-lg font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">Frameworks & Tools</h4>
+            <h4 className="text-xl font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">Frameworks & Tools</h4>
             <div className="flex flex-wrap gap-3">
               {resumeData.skills.frameworks.map((skill, i) => (
                 <motion.span
@@ -190,7 +190,7 @@ const Sections = memo(function Sections() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.04, duration: 0.35 }}
-                  className="px-3 py-1 bg-cyan-900/30 text-cyan-300 border border-cyan-800/50 rounded-md text-sm font-mono"
+                  className="px-4 py-1.5 bg-cyan-900/30 text-cyan-300 border border-cyan-800/50 rounded-md text-base font-mono"
                 >
                   {skill}
                 </motion.span>
@@ -218,7 +218,7 @@ const Sections = memo(function Sections() {
               <motion.div
                 key={idx}
                 variants={cardVariants}
-                whileHover={{ scale: 1.03, borderColor: "rgba(34,211,238,0.5)" }}
+                whileHover={{ scale: 1.03, borderColor: "#22d3ee80" }}
                 transition={{ duration: 0.25 }}
                 className="p-6 bg-cyan-950/20 border border-cyan-800/30 rounded-xl hover:border-cyan-500/50 transition-colors flex flex-col justify-between"
               >

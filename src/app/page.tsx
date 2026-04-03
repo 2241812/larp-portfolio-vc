@@ -18,7 +18,6 @@ const HINT_PHRASES = ["'about me'", "'python'", "'skills'", "'docker'", "'contac
 
 const MAX_DEBRIS = 30;
 
-// Memoized debris letter component
 const DebrisLetterItem = memo(function DebrisLetterItem({ item }: { item: DebrisLetterData }) {
   return (
     <motion.div
@@ -48,7 +47,6 @@ const DebrisLetterItem = memo(function DebrisLetterItem({ item }: { item: Debris
   );
 });
 
-// Memoized floating letter component
 const FloatingLetter = memo(function FloatingLetter({ 
   letter, 
   index, 
@@ -97,14 +95,13 @@ const FloatingLetter = memo(function FloatingLetter({
 
 export default function Home() {
   const [isSettled, setIsSettled] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadProgress, setLoadProgress] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const [letters, setLetters] = useState<FloatingLetter[]>([]);
   const [debris, setDebris] = useState<DebrisLetterData[]>([]);
   const [isAssembling, setIsAssembling] = useState(false);
   const [isError, setIsError] = useState(false);
-  
+  const [loadProgress, setLoadProgress] = useState(0);
+   
   const [hintText, setHintText] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isDeletingHint, setIsDeletingHint] = useState(false);
@@ -113,17 +110,50 @@ export default function Home() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const lettersRef = useRef<FloatingLetter[]>([]);
 
-  // Keep letters ref in sync
   useEffect(() => {
     lettersRef.current = letters;
   }, [letters]);
 
-  const playClick = useCallback(() => {
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
+  useEffect(() => {
+    if (isSettled) {
+      setLoadProgress(100);
+      return;
+    }
+    const interval = setInterval(() => {
+      setLoadProgress(prev => {
+        if (prev >= 95) return 95;
+        return prev + Math.random() * 15 + 5;
+      });
+    }, 300);
+    return () => clearInterval(interval);
+  }, [isSettled]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsSettled(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Block body scroll during loading, restore after
+  useEffect(() => {
+    if (!isSettled) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSettled]);
+
+   const playClick = useCallback(() => {
+     try {
+       if (!audioCtxRef.current) {
+         const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: AudioContext }).webkitAudioContext;
+         audioCtxRef.current = new AudioContext();
+       }
+       const ctx = audioCtxRef.current;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "square";
@@ -137,99 +167,61 @@ export default function Home() {
     } catch { /* audio context may not be available */ }
   }, []);
 
-  // Loading progress - optimize with RAF instead of setInterval
-  useEffect(() => {
-    const duration = 2500;
-    const startTime = Date.now();
-    let animId: number;
-
-    const updateProgress = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min((elapsed / duration) * 100, 100);
-      setLoadProgress(progress);
-      if (progress < 100) {
-        animId = requestAnimationFrame(updateProgress);
-      } else {
-        setTimeout(() => {
-          setIsLoading(false);
-          setIsSettled(true);
-        }, 400);
-      }
-    };
-
-    animId = requestAnimationFrame(updateProgress);
-    return () => cancelAnimationFrame(animId);
-  }, []);
-
-  // Lock body scroll while loading
-  useEffect(() => {
-    if (isLoading) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      const scrollY = parseInt(document.body.style.top || '0', 10);
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      if (scrollY) window.scrollTo(0, Math.abs(scrollY));
-    }
-    return () => {
-      const scrollY = parseInt(document.body.style.top || '0', 10);
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      if (scrollY) window.scrollTo(0, Math.abs(scrollY));
-    };
-  }, [isLoading]);
-
-  // Hint text typing animation
-  useEffect(() => {
-    if (inputValue.length > 0 || isAssembling || isError) {
-      setHintText("");
-      return;
-    }
-    const timeout = setTimeout(() => {
-      const currentPhrase = `Try typing ${HINT_PHRASES[hintIndex]}...`;
-      if (!isDeletingHint) {
-        setHintText(currentPhrase.substring(0, hintText.length + 1));
-        if (hintText.length === currentPhrase.length) {
-          setTimeout(() => setIsDeletingHint(true), 2500);
+    useEffect(() => {
+      const timeout = setTimeout(() => {
+        if (inputValue.length > 0 || isAssembling || isError) {
+          setHintText("");
+          return;
         }
-      } else {
-        setHintText(currentPhrase.substring(0, hintText.length - 1));
-        if (hintText === '') {
-          setIsDeletingHint(false);
-          setHintIndex((prev) => (prev + 1) % HINT_PHRASES.length);
+        const currentPhrase = `Try typing ${HINT_PHRASES[hintIndex]}...`;
+        if (!isDeletingHint) {
+          setHintText(prev => {
+            const newText = currentPhrase.substring(0, prev.length + 1);
+            if (newText.length === currentPhrase.length) {
+              setTimeout(() => setIsDeletingHint(true), 2500);
+            }
+            return newText;
+          });
+        } else {
+          setHintText(prev => {
+            const newText = currentPhrase.substring(0, prev.length - 1);
+            if (newText === '') {
+              setIsDeletingHint(false);
+              setHintIndex(prev => (prev + 1) % HINT_PHRASES.length);
+            }
+            return newText;
+          });
         }
-      }
-    }, isDeletingHint ? 20 : 60);
-    return () => clearTimeout(timeout);
-  }, [hintText, isDeletingHint, hintIndex, inputValue, isAssembling, isError]);
+      }, isDeletingHint ? 20 : 60);
+      return () => clearTimeout(timeout);
+    }, [hintText, isDeletingHint, hintIndex, inputValue, isAssembling, isError]);
 
   const findSectionForKeyword = useCallback((keyword: string): string | null => {
     const lowerKw = keyword.toLowerCase().trim();
     if (!lowerKw) return null;
     if (VALID_COMMANDS.includes(lowerKw)) return lowerKw;
 
-    const inProgramming = resumeData.skills.programming.some(s => s.toLowerCase().includes(lowerKw));
-    const inFrameworks = resumeData.skills.frameworks.some(s => s.toLowerCase().includes(lowerKw));
-    if (inProgramming || inFrameworks) return 'skills';
+    // Contact keywords
+    const contactKeywords = ['contact', 'email', 'phone', 'linkedin', 'reach', 'message', 'connect'];
+    if (contactKeywords.some(k => lowerKw.includes(k))) return 'contact';
 
-    const inProjects = resumeData.projects.some(p => p.title.toLowerCase().includes(lowerKw) || p.description.toLowerCase().includes(lowerKw) || p.role.toLowerCase().includes(lowerKw));
-    if (inProjects) return 'projects';
+    // Skills - check exact or partial match against skill names
+    const allSkills = [...resumeData.skills.programming, ...resumeData.skills.frameworks];
+    if (allSkills.some(s => s.toLowerCase().includes(lowerKw) || lowerKw.includes(s.toLowerCase().split('/')[0].toLowerCase()))) return 'skills';
 
-    if (resumeData.personalInfo.title.toLowerCase().includes(lowerKw)) return 'about me';
+    // Projects - check against project titles, roles, descriptions
+    if (resumeData.projects.some(p => 
+      p.title.toLowerCase().includes(lowerKw) || 
+      p.description.toLowerCase().includes(lowerKw) || 
+      p.role.toLowerCase().includes(lowerKw)
+    )) return 'projects';
+
+    // About me - only match specific personal keywords
+    const aboutKeywords = ['about', 'bio', 'who', 'background', 'education', 'university', 'student', 'study', 'school', 'gpa', 'class'];
+    if (aboutKeywords.some(k => lowerKw.includes(k))) return 'about me';
+
+    // Also check if keyword matches the person's name
+    if (resumeData.personalInfo.name.toLowerCase().includes(lowerKw)) return 'about me';
 
     return null; 
   }, []);
@@ -277,7 +269,6 @@ export default function Home() {
     }, 2000);
   }, [findSectionForKeyword]);
 
-  // Keyboard handler with proper cleanup
   useEffect(() => {
     if (!isSettled) return;
 
@@ -316,7 +307,6 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isSettled, isAssembling, isError, inputValue, playClick, executeCommand]);
 
-  // Memoize debris list to prevent re-renders
   const debrisElements = useMemo(() => 
     debris.map((item) => (
       <DebrisLetterItem key={item.id} item={item} />
@@ -324,7 +314,6 @@ export default function Home() {
     [debris]
   );
 
-  // Memoize floating letters
   const letterElements = useMemo(() =>
     letters.map((letter, index) => (
       <FloatingLetter 
@@ -339,107 +328,128 @@ export default function Home() {
     [letters, isAssembling, isError]
   );
 
-  return (
-    <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }} enabled={!isLoading}>
-      <main
-        className="relative bg-neutral-950 font-sans select-none text-neutral-300 overflow-hidden"
-        style={isLoading ? { pointerEvents: 'none', overflow: 'hidden', height: '100vh' } : undefined}
-      >
-        {/* Background layers */}
-        <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" />
-        <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
+   return (
+     <>
+       {/* Loading phase - NO Lenis, scroll blocked */}
+       {!isSettled && (
+         <main
+           className="relative bg-neutral-950 font-sans select-none text-neutral-300 overflow-hidden"
+           style={{ height: '100vh', width: '100vw' }}
+         >
+           <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" />
+           <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
+           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
 
-        <MatrixRain />
-        
-        {/* Debris particles - limited count */}
-        {debris.length > 0 && (
-          <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
-            {debrisElements}
-          </div>
-        )}
+           <MatrixRain />
+           <Scene isSettled={isSettled} />
 
-        {/* Floating typing letters */}
-        {letters.length > 0 && (
-          <div className="fixed inset-0 z-0 pointer-events-none">
-            {letterElements}
-          </div>
-        )}
+           <div className="fixed inset-0 z-[100] pointer-events-auto">
+             <div className="absolute bottom-0 left-0 right-0 h-1 bg-neutral-800">
+               <div
+                 className="h-full bg-gradient-to-r from-cyan-600 via-cyan-400 to-cyan-300"
+                 style={{ width: `${loadProgress}%`, transition: 'width 0.3s ease' }}
+               />
+             </div>
+           </div>
+         </main>
+       )}
 
-        {/* 3D Scene */}
-        <Scene isSettled={isSettled} />
-        
-        {/* UI */}
-        <TopBar isSettled={isSettled} />
+       {/* Portfolio phase - WITH Lenis smooth scroll */}
+       {isSettled && (
+         <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }} autoRaf={true}>
+           <main
+             className="relative bg-neutral-950 font-sans select-none text-neutral-300"
+           >
+             <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" />
+             <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
+             <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
 
-        <div className="relative z-20 flex flex-col w-full">
-          <section id="home" className="min-h-screen flex flex-col items-center justify-start pt-32 pointer-events-none">
-            
-            <div className={`text-center space-y-2 transition-all duration-1000 pointer-events-auto ${isSettled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-12'}`}>
-              
-              <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
-                <motion.h1 
-                  className="relative text-[8vw] md:text-8xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={isSettled ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  style={{ fontFamily: 'var(--font-orbitron)' }}
-                >
-                  {resumeData.personalInfo.name}
-                </motion.h1>
-              </div>
+             <MatrixRain />
+             <Scene isSettled={isSettled} />
 
-              <motion.div 
-                className="w-64 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-8"
-                initial={{ scaleX: 0, opacity: 0 }}
-                animate={isSettled ? { scaleX: 1, opacity: 1 } : {}}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-              />
+             {debris.length > 0 && (
+               <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
+                 {debrisElements}
+               </div>
+             )}
 
-              <motion.p 
-                initial={{ opacity: 0, letterSpacing: "0em" }}
-                animate={isSettled ? { opacity: 1, letterSpacing: "0.4em" } : {}}
-                transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                className="text-sm md:text-lg text-cyan-400 uppercase font-medium tracking-[0.4em] mb-8"
-                style={{ fontFamily: 'var(--font-rajdhani)' }}
-              >
-                {resumeData.personalInfo.title}
-              </motion.p>
-              
-              <div className="mt-16 flex flex-col items-center">
-                <motion.p 
-                  className={`text-xs tracking-[0.3em] uppercase mb-6 h-5 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}
-                  initial={{ opacity: 0 }}
-                  animate={isSettled ? { opacity: 1 } : {}}
-                  transition={{ delay: 0.8 }}
-                  style={{ fontFamily: 'var(--font-rajdhani)' }}
-                >
-                  {isError ? "ERROR: COMMAND NOT FOUND" : (inputValue || isAssembling ? "SYSTEM READY" : hintText)}
-                </motion.p>
-                <div 
-                  className={`w-80 md:w-96 h-14 border bg-neutral-950/90 backdrop-blur-xl rounded-lg flex items-center px-5 transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.3)]' : 'border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)]'}`}
-                >
-                  <span className={`font-mono text-lg mr-4 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
-                  <span className={`font-mono text-base tracking-wider flex-1 ${isError ? 'text-red-400' : 'text-neutral-100'}`}>{inputValue}</span>
-                  <span 
-                    className={`font-mono ml-2 ${isError ? 'text-red-500' : 'text-cyan-400'}`}
-                  >
-                    ▋
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-          </section>
+             {letters.length > 0 && (
+               <div className="fixed inset-0 z-0 pointer-events-none">
+                 {letterElements}
+               </div>
+             )}
+             
+             <TopBar isSettled={isSettled} />
 
-          <GitHubStats />
-          <Sections />
-        </div>
+              <div className="relative z-20 flex flex-col w-full">
+                <section id="home" className="min-h-screen flex flex-col items-center justify-between py-12 pointer-events-none">
+                  
+                  {/* Top: name and title */}
+                  <div className="text-center space-y-3 pointer-events-auto pt-16">
+                    
+                    <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
+                      <motion.h1 
+                        className="relative text-[10vw] md:text-[7rem] font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        style={{ fontFamily: 'var(--font-orbitron)' }}
+                       >
+                         {resumeData.personalInfo.name}
+                       </motion.h1>
+                     </div>
 
-        <div className={`fixed bottom-0 left-0 h-1 bg-cyan-500 transition-opacity duration-1000 z-50 ${isSettled ? 'opacity-0' : 'opacity-100'}`} style={{ width: `${loadProgress}%` }} />
+                    <motion.div 
+                      className="w-80 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-8"
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                    />
 
-        <ParticleBurst ref={burstRef} />
-      </main>
-    </ReactLenis>
-  );
+                    <motion.p 
+                      initial={{ opacity: 0, letterSpacing: "0em" }}
+                      animate={{ opacity: 1, letterSpacing: "0.4em" }}
+                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                      className="text-base md:text-2xl text-cyan-400 uppercase font-medium tracking-[0.4em]"
+                      style={{ fontFamily: 'var(--font-rajdhani)' }}
+                    >
+                      {resumeData.personalInfo.title}
+                    </motion.p>
+                  </div>
+                  
+                  {/* Bottom: command input field */}
+                  <div className="pointer-events-auto flex flex-col items-center pb-16">
+                    <motion.p 
+                      className={`text-sm tracking-[0.3em] uppercase mb-6 h-6 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8 }}
+                      style={{ fontFamily: 'var(--font-rajdhani)' }}
+                    >
+                      {isError ? "ERROR: COMMAND NOT FOUND" : (inputValue || isAssembling ? "SYSTEM READY" : hintText)}
+                    </motion.p>
+                    <div 
+                      className={`w-80 md:w-[30rem] h-16 border bg-neutral-950/90 backdrop-blur-xl rounded-lg flex items-center px-5 transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.3)]' : 'border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)]'}`}
+                    >
+                      <span className={`font-mono text-xl mr-4 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
+                      <span className={`font-mono text-lg tracking-wider flex-1 ${isError ? 'text-red-400' : 'text-neutral-100'}`}>{inputValue}</span>
+                      <span 
+                        className={`font-mono ml-2 text-lg ${isError ? 'text-red-500' : 'text-cyan-400'}`}
+                      >
+                        ▋
+                      </span>
+                    </div>
+                  </div>
+                </section>
+
+               <GitHubStats />
+               <Sections />
+             </div>
+
+             <ParticleBurst ref={burstRef} />
+           </main>
+         </ReactLenis>
+       )}
+     </>
+   );
 }
