@@ -1,0 +1,284 @@
+"use client";
+import React, { memo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { resumeData } from '@/data/resumeData';
+import {
+  containerVariants,
+  cardVariants,
+  headingVariants,
+  langColors,
+  SKILL_KEYWORD_MAP,
+  type PinnedRepo,
+  type UnifiedProject,
+} from './shared';
+
+// ── Skills List Component ──
+const SkillsList = memo(function SkillsList({
+  activeSkill,
+  setActiveSkill,
+}: {
+  activeSkill: string | null;
+  setActiveSkill: (skill: string | null) => void;
+}) {
+  const categoryMap: Record<string, string[]> = {
+    'Programming & Web': resumeData.skills.programming,
+    ...(resumeData.skills.infrastructure ? { 'Infrastructure & Tooling': resumeData.skills.infrastructure } : {}),
+    'Frameworks & Libraries': resumeData.skills.frameworks,
+    ...(resumeData.skills.coreCompetencies ? { 'Core Competencies': resumeData.skills.coreCompetencies } : {}),
+  };
+
+  return (
+    <div className="space-y-6">
+      {Object.entries(categoryMap).map(([category, skills]) => (
+        <div key={category}>
+          <h4 className="text-sm font-bold text-neutral-400 mb-3 uppercase tracking-widest border-b border-cyan-900/50 pb-2">
+            {category}
+          </h4>
+          <div className="flex flex-wrap gap-2" role="group" aria-label={`${category} skills`}>
+            {skills.map((skill, i) => {
+              const isActive = activeSkill === skill;
+              return (
+                <motion.button
+                  key={skill}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.02, duration: 0.3 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveSkill(isActive ? null : skill)}
+                  aria-pressed={isActive}
+                  className={`px-3 py-1.5 text-sm font-mono rounded-md border transition-all duration-300 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-neutral-950 ${
+                    isActive
+                      ? 'bg-cyan-500/10 text-cyan-400 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                      : 'bg-neutral-900/50 text-neutral-400 border-neutral-800 hover:border-cyan-500/50 hover:text-cyan-300'
+                  }`}
+                >
+                  {skill}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+});
+
+// ── Project Result Card ──
+const ProjectResultCard = memo(function ProjectResultCard({
+  project,
+  index,
+}: {
+  project: UnifiedProject;
+  index: number;
+}) {
+  const content = (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="text-sm font-bold text-neutral-100 font-mono group-hover:text-cyan-300 transition-colors">
+          {project.title}
+        </h4>
+        <span
+          className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
+            project.source === 'github' ? 'bg-cyan-900/30 text-cyan-400' : 'bg-neutral-800 text-neutral-400'
+          }`}
+        >
+          {project.source === 'github' ? 'GH' : 'LOCAL'}
+        </span>
+      </div>
+      <p className="text-xs text-neutral-400 mt-1.5 line-clamp-2 leading-relaxed">{project.description}</p>
+      <div className="flex items-center gap-3 mt-3 text-[10px] font-mono text-neutral-500">
+        {project.language && (
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: langColors[project.language] || '#22d3ee' }}
+              aria-hidden="true"
+            />
+            {project.language}
+          </span>
+        )}
+        {project.stars !== undefined && (
+          <span className="flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+              />
+            </svg>
+            <span className="sr-only">Stars:</span>
+            {project.stars}
+          </span>
+        )}
+      </div>
+    </>
+  );
+
+  if (project.url) {
+    return (
+      <motion.a
+        href={project.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        whileHover={{ scale: 1.01, borderColor: '#22d3ee60' }}
+        className="group block p-4 bg-neutral-950/60 border border-cyan-900/20 rounded-lg hover:border-cyan-500/40 transition-all duration-300 no-underline focus:outline-none focus:ring-2 focus:ring-cyan-400"
+      >
+        {content}
+      </motion.a>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      whileHover={{ scale: 1.01, borderColor: '#22d3ee60' }}
+      className="group block p-4 bg-neutral-950/60 border border-cyan-900/20 rounded-lg hover:border-cyan-500/40 transition-all duration-300"
+    >
+      {content}
+    </motion.div>
+  );
+});
+
+// ── Related Projects Panel Component ──
+const RelatedProjectsPanel = memo(function RelatedProjectsPanel({
+  activeSkill,
+  allProjects,
+  pinnedRepos,
+}: {
+  activeSkill: string | null;
+  allProjects: UnifiedProject[];
+  pinnedRepos: PinnedRepo[];
+}) {
+  const relatedProjects = activeSkill
+    ? (() => {
+        const keywords = SKILL_KEYWORD_MAP[activeSkill] || [activeSkill.toLowerCase()];
+        const matches = allProjects.filter((project) => {
+          const searchable = `${project.title} ${project.description} ${project.language || ''} ${project.role || ''}`.toLowerCase();
+          return keywords.some((kw) => searchable.includes(kw.toLowerCase()));
+        });
+
+        if (matches.length > 0) return matches;
+
+        return pinnedRepos
+          .filter((repo) => {
+            const searchable = `${repo.name} ${repo.description} ${repo.language || ''}`.toLowerCase();
+            return keywords.some((kw) => searchable.includes(kw.toLowerCase()));
+          })
+          .map((repo) => ({
+            title: repo.name,
+            description: repo.description,
+            language: repo.language,
+            url: repo.url,
+            stars: repo.stars,
+            forks: repo.forks,
+            source: 'github' as const,
+          }));
+      })()
+    : [];
+
+  return (
+    <div className="relative min-h-[400px] bg-neutral-900/30 border border-cyan-900/20 rounded-xl p-6 overflow-hidden">
+      {/* Terminal header */}
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-cyan-900/20">
+        <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.6)]" aria-hidden="true" />
+        <span className="text-xs font-mono text-neutral-500">
+          {activeSkill ? `query_results — ${activeSkill}` : 'awaiting_selection'}
+        </span>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {!activeSkill ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center justify-center h-64"
+          >
+            <motion.p
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-xs font-mono text-neutral-600 text-center"
+            >
+              [ SELECT A DATABANK TO VIEW RELATED PROTOCOLS ]
+            </motion.p>
+          </motion.div>
+        ) : relatedProjects.length === 0 ? (
+          <motion.div
+            key="no-match"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center justify-center h-64"
+          >
+            <p className="text-xs font-mono text-neutral-600 text-center">
+              [ NO RELATED PROTOCOLS FOUND FOR &quot;{activeSkill}&quot; ]
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key={activeSkill}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4 max-h-[400px] overflow-y-auto pr-2"
+            style={{ scrollbarWidth: 'thin' }}
+          >
+            {relatedProjects.map((project, idx) => (
+              <ProjectResultCard key={project.title + idx} project={project} index={idx} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+});
+
+// ── Main Skills Section ──
+interface SkillsSectionProps {
+  allProjects: UnifiedProject[];
+  pinnedRepos: PinnedRepo[];
+}
+
+const SkillsSection = memo(function SkillsSection({ allProjects, pinnedRepos }: SkillsSectionProps) {
+  const [activeSkill, setActiveSkill] = useState<string | null>(null);
+
+  return (
+    <section id="skills" className="min-h-screen flex items-center justify-start px-8 md:px-12 relative">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+        className="w-full max-w-5xl relative z-10 py-12"
+      >
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+          <motion.div variants={headingVariants} className="flex items-center gap-4">
+            <div className="w-8 h-[1px] bg-cyan-500/50" aria-hidden="true" />
+            <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">03. Skills</h2>
+          </motion.div>
+          <motion.p variants={cardVariants} className="text-xs font-mono text-neutral-500">
+            [ SELECT SKILL TO FILTER PROJECTS ]
+          </motion.p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8">
+          <SkillsList activeSkill={activeSkill} setActiveSkill={setActiveSkill} />
+          <RelatedProjectsPanel activeSkill={activeSkill} allProjects={allProjects} pinnedRepos={pinnedRepos} />
+        </div>
+      </motion.div>
+    </section>
+  );
+});
+
+export default SkillsSection;

@@ -1,10 +1,11 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { ReactLenis } from '@studio-freight/react-lenis';
+import { ReactLenis } from 'lenis/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import Sections from '@/components/ui/Sections';
 import GitHubStats from '@/components/ui/GitHubStats';
 import MatrixRain from '@/components/ui/MatrixRain';
@@ -16,6 +17,16 @@ export default function Home() {
   const [loadingPhase, setLoadingPhase] = useState<'typing' | 'finished' | 'settled'>('typing');
   const [loadProgress, setLoadProgress] = useState(0);
   const burstRef = useRef<ParticleBurstRef>(null);
+
+  // Check for reduced motion preference
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (loadingPhase !== 'typing') {
@@ -63,14 +74,25 @@ export default function Home() {
 
   return (
     <>
-      <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" />
-      <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
+      {/* Skip to main content link for keyboard users */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyan-500 focus:text-neutral-950 focus:rounded-md focus:font-mono focus:text-sm focus:font-bold"
+      >
+        Skip to main content
+      </a>
       
-      <MatrixRain />
+      <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" aria-hidden="true" />
+      <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" aria-hidden="true" />
+      
+      {/* Matrix rain effect - hidden from screen readers and respects reduced motion */}
+      {!prefersReducedMotion && <MatrixRain />}
       
       {loadingPhase !== 'settled' && (
-        <div className="fixed inset-0 z-30 pointer-events-none">
-          <Scene isSettled={false} />
+        <div className="fixed inset-0 z-30 pointer-events-none" aria-hidden="true">
+          <ErrorBoundary fallback={<div className="w-full h-full bg-neutral-950" />}>
+            <Scene isSettled={false} />
+          </ErrorBoundary>
         </div>
       )}
 
@@ -122,11 +144,11 @@ export default function Home() {
             transition={{ duration: 1, delay: 0.4 }}
             className="relative font-sans text-neutral-300 min-h-screen z-10"
           >
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[600px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[600px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" aria-hidden="true" />
             
             <TopBar isSettled={true} />
 
-            <div className="relative z-20 flex flex-col w-full">
+            <main id="main-content" className="relative z-20 flex flex-col w-full" role="main">
               <section id="home" className="min-h-[100vh] flex flex-col items-center justify-center py-32 pointer-events-none">
                 <div className="pointer-events-auto w-full max-w-5xl flex flex-col items-center gap-24 px-6 mt-20">
                   
@@ -183,7 +205,7 @@ export default function Home() {
 
               <GitHubStats />
               <Sections />
-            </div>
+            </main>
             <ParticleBurst ref={burstRef} />
           </motion.div>
         </ReactLenis>
