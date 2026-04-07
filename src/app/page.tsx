@@ -10,6 +10,7 @@ import GitHubStats from '@/components/ui/GitHubStats';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
 import { resumeData } from '@/data/resumeData';
+import profilePhoto from '../../assets/c__Users_UZNIR_AppData_Roaming_Cursor_User_workspaceStorage_empty-window_images_Gemini_Generated_Image_jrlzyijrlzyijrlz-09de930c-5ad5-4e2a-bf4b-627f8f260b7b.png';
 
 type FloatingLetter = { id: string; char: string; startX: number; startY: number; rot: number; floatDelay: number; };
 type DebrisLetterData = FloatingLetter & { startLeft: string; driftX: number; driftY: number; driftRot: number; scale: number; duration: number; };
@@ -457,7 +458,7 @@ export default function Home() {
                       className="relative w-40 h-40 md:w-48 md:h-48 rounded-3xl overflow-hidden border border-cyan-500/40 shadow-[0_0_40px_rgba(34,211,238,0.25)] bg-neutral-900/60 flex-shrink-0"
                     >
                       <Image
-                        src="/profile.png"
+                        src={profilePhoto}
                         alt={resumeData.personalInfo.name}
                         fill
                         sizes="192px"
