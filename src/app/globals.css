@@ -1,8 +1,37 @@
 @import "tailwindcss";
 
 :root {
+  /* Core colors */
   --background: #000000;
   --foreground: #ededed;
+  
+  /* Primary accent (cyan) */
+  --primary: #22d3ee;
+  --primary-foreground: #000000;
+  --primary-muted: rgba(34, 211, 238, 0.2);
+  
+  /* Secondary/neutral colors */
+  --muted: #a3a3a3;
+  --muted-foreground: #737373;
+  
+  /* Cards and surfaces */
+  --card: rgba(10, 10, 10, 0.8);
+  --card-foreground: #ededed;
+  --card-border: rgba(34, 211, 238, 0.2);
+  
+  /* Borders */
+  --border: rgba(34, 211, 238, 0.3);
+  --border-muted: rgba(163, 163, 163, 0.2);
+  
+  /* Status colors */
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  
+  /* Radius */
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
 }
 
 /* Hide scrollbar by default, show on hover */
@@ -46,12 +75,33 @@
 }
 
 @theme inline {
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-muted: var(--primary-muted);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-border: var(--card-border);
+  --color-border: var(--border);
+  --color-border-muted: var(--border-muted);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
+  
+  /* Typography */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-orbitron: var(--font-orbitron);
   --font-rajdhani: var(--font-rajdhani);
+  
+  /* Spacing/Radius */
+  --radius-sm: var(--radius);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
 body {
@@ -148,4 +198,38 @@ body {
 @keyframes loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Reduced motion support for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .bg-grid {
+    animation: none;
+  }
+  
+  .animate-float-bob {
+    animation: none;
+  }
+  
+  .pulse-glow {
+    animation: none;
+  }
+  
+  .glitch-text {
+    animation: none;
+  }
+}
+
+/* Focus visible styles for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
 }
