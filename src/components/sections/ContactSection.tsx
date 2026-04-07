@@ -1,192 +1,59 @@
-"use client";
-import React, { memo, useState, useCallback } from 'react';
+﻿"use client";
+import React, { memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { resumeData } from '@/data/resumeData';
 import { containerVariants, cardVariants, headingVariants, fireConfetti } from './shared';
+import { GlitchSocialLink, CopyableField } from '@/components/ui/cards/ContactFields';
 
-// ── Glitch Social Link ──
-const GlitchSocialLink = memo(function GlitchSocialLink({
-  href,
-  icon,
-  label,
-  value,
-  onClick,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  onClick?: () => void;
-}) {
-  const [isGlitching, setIsGlitching] = useState(false);
+/**
+ * ContactSection - Main contact section with stats, social links, and contact details
+ * All reusable components (StatCard, GlitchSocialLink, CopyableField, AnimatedCounter)
+ * have been extracted to separate files for better maintainability and reusability.
+ */
 
-  return (
-    <motion.a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      onClick={onClick}
-      onHoverStart={() => setIsGlitching(true)}
-      onHoverEnd={() => setIsGlitching(false)}
-      whileHover={{ scale: 1.04, boxShadow: '0 0 30px rgba(34,211,238,0.2), inset 0 0 30px rgba(34,211,238,0.05)' }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ duration: 0.2 }}
-      className="group relative flex items-center gap-4 p-5 rounded-xl bg-neutral-950/80 border border-cyan-900/30 hover:border-cyan-400/60 cursor-pointer overflow-hidden no-underline focus:outline-none focus:ring-2 focus:ring-cyan-400"
-    >
-      {/* Matrix rain overlay on hover */}
-      <div className="absolute inset-0 overflow-hidden rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" aria-hidden="true">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-cyan-500/5" />
-        {isGlitching && (
-          <>
-            <motion.div
-              className="absolute top-0 left-0 w-full h-full bg-cyan-400/5"
-              animate={{ y: [0, -10, 5, 0] }}
-              transition={{ duration: 0.2, repeat: Infinity }}
-            />
-            <motion.div
-              className="absolute top-0 left-0 w-full h-full bg-cyan-400/3"
-              animate={{ y: [0, 8, -3, 0] }}
-              transition={{ duration: 0.15, repeat: Infinity }}
-            />
-          </>
-        )}
-      </div>
-
-      <div className="relative flex-shrink-0 w-12 h-12 rounded-lg bg-cyan-900/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-800/50 group-hover:text-cyan-300 group-hover:shadow-[0_0_16px_rgba(34,211,238,0.3)] transition-all duration-300">
-        {icon}
-      </div>
-      <div className="relative text-left">
-        <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">{label}</span>
-        <motion.span
-          className="text-sm font-semibold text-neutral-200 group-hover:text-cyan-300 transition-colors duration-300 block"
-          animate={isGlitching ? { x: [0, -2, 2, -1, 0] } : { x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {value}
-        </motion.span>
-      </div>
-      <svg
-        className="relative ml-auto w-4 h-4 text-neutral-700 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-300 flex-shrink-0"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-        aria-hidden="true"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-      </svg>
-    </motion.a>
-  );
-});
-
-// ── Copyable Terminal Field ──
-const CopyableField = memo(function CopyableField({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = value;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className={`group relative flex items-center gap-4 p-5 rounded-xl bg-neutral-950/80 border transition-all duration-300 cursor-pointer overflow-hidden ${
-        copied ? 'border-green-400/60 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'border-cyan-900/30 hover:border-cyan-400/60'
-      }`}
-    >
-      <div
-        className={`relative flex-shrink-0 w-12 h-12 rounded-lg border flex items-center justify-center transition-all duration-300 ${
-          copied
-            ? 'bg-green-900/30 border-green-800/40 text-green-400'
-            : 'bg-cyan-900/30 border-cyan-800/40 text-cyan-400 group-hover:bg-cyan-800/50 group-hover:text-cyan-300'
-        }`}
-      >
-        {icon}
-      </div>
-      <div className="relative text-left flex-1 min-w-0">
-        <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest block">{label}</span>
-        <span
-          className={`text-sm font-semibold transition-colors duration-300 block truncate ${
-            copied ? 'text-green-400' : 'text-neutral-200 group-hover:text-cyan-300'
-          }`}
-        >
-          {copied ? 'COPIED!' : value}
-        </span>
-      </div>
-      <motion.button
-        onClick={handleCopy}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        aria-label={copied ? 'Copied' : `Copy ${label}`}
-        className={`relative flex-shrink-0 w-8 h-8 rounded-md border flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
-          copied
-            ? 'border-green-400/40 text-green-400 bg-green-900/20'
-            : 'border-cyan-800/40 text-cyan-600 hover:text-cyan-400 hover:border-cyan-600/60 hover:bg-cyan-900/20'
-        }`}
-      >
-        {copied ? (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        ) : (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-            />
-          </svg>
-        )}
-      </motion.button>
-    </motion.div>
-  );
-});
-
-// ── Main Contact Section ──
+// ── Contact Section Component ──
 const ContactSection = memo(function ContactSection() {
   const handleConfettiClick = useCallback(() => {
     fireConfetti();
   }, []);
 
   return (
-    <section id="contact" className="min-h-screen flex items-center justify-center px-8 md:px-12 relative">
+    <section id="contact" className="min-h-screen flex flex-col items-center justify-center px-8 md:px-12 relative py-20">
+      {/* Floating Stats Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+        <motion.div
+          className="absolute top-10 right-10 w-32 h-32 rounded-full border border-cyan-500/20"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div
+          className="absolute bottom-20 left-10 w-40 h-40 rounded-full border border-cyan-500/10"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+
       <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
-        className="w-full max-w-xl relative z-10"
+        className="w-full max-w-4xl relative z-10"
       >
-        {/* Terminal Window Frame */}
+        {/* Main Contact Terminal */}
         <div className="bg-neutral-950/90 backdrop-blur-xl border border-cyan-900/40 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.05)]">
           {/* Terminal Title Bar */}
           <div className="flex items-center gap-2 px-4 py-3 bg-neutral-900/60 border-b border-cyan-900/30">
             <div className="w-3 h-3 rounded-full bg-red-500/60 hover:bg-red-500/80 transition-colors" aria-hidden="true" />
             <div className="w-3 h-3 rounded-full bg-yellow-500/60 hover:bg-yellow-500/80 transition-colors" aria-hidden="true" />
             <div className="w-3 h-3 rounded-full bg-green-500/60 hover:bg-green-500/80 transition-colors" aria-hidden="true" />
-            <span className="ml-3 text-xs font-mono text-neutral-500">contact_protocol.sh — bash</span>
+            <span className="ml-3 text-xs font-mono text-neutral-500">contact_protocol.sh â€” bash</span>
           </div>
 
           {/* Terminal Content */}
           <div className="p-8 md:p-10">
             <motion.h2 variants={headingVariants} className="text-2xl font-bold text-cyan-400 mb-2 tracking-wider uppercase font-mono">
-              <span className="text-neutral-600" aria-hidden="true">$</span> initiate_protocol
+              <span className="text-neutral-600" aria-hidden="true">$</span> 06. initiate_protocol
             </motion.h2>
             <motion.p variants={cardVariants} className="text-neutral-500 text-xs font-mono mb-8">
               Establish a connection through any channel below.
@@ -258,9 +125,72 @@ const ContactSection = memo(function ContactSection() {
             </motion.div>
           </div>
         </div>
+
+        {/* Let's Connect CTA Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          viewport={{ once: true, amount: 0.3 }}
+          className="mt-12 bg-gradient-to-r from-cyan-900/20 to-cyan-900/5 border border-cyan-900/40 rounded-xl p-8 text-center"
+        >
+          <h3 className="text-lg font-bold text-cyan-400 mb-2 font-mono">Ready to Connect?</h3>
+          <p className="text-neutral-400 text-sm mb-6">
+            Let's collaborate on innovative projects. Download my resume or reach out directly.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <motion.a
+              href="/Javier, Narciso III C._Resume_.pdf"
+              download
+              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(34,211,238,0.3)' }}
+              whileTap={{ scale: 0.95 }}
+              className="px-5 py-2 rounded-lg bg-cyan-600/80 hover:bg-cyan-500 text-neutral-950 font-semibold transition-all duration-300 font-mono text-sm flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Resume
+            </motion.a>
+            <motion.a
+              href={resumeData.personalInfo.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleConfettiClick}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(34,211,238,0.2)' }}
+              whileTap={{ scale: 0.95 }}
+              className="px-5 py-2 rounded-lg border border-cyan-400/60 text-cyan-400 hover:text-cyan-300 hover:border-cyan-300/80 font-semibold transition-all duration-300 font-mono text-sm flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+              </svg>
+              Connect
+            </motion.a>
+          </div>
+        </motion.div>
+
+        {/* Connection Status Indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          viewport={{ once: true }}
+          className="mt-8 text-center"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900/40 border border-green-900/30">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-2 h-2 rounded-full bg-green-500"
+              aria-hidden="true"
+            />
+            <span className="text-xs text-green-400 font-mono">Online & Ready to Connect</span>
+          </div>
+        </motion.div>
       </motion.div>
     </section>
   );
 });
 
 export default ContactSection;
+
+

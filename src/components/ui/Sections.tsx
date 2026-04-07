@@ -2,12 +2,14 @@
 import React, { memo, useMemo } from 'react';
 import { resumeData } from '@/data/resumeData';
 import { usePinnedRepos } from '@/hooks/useGitHubData';
+import GitHubStats from '@/components/ui/GitHubStats';
 import {
   AboutSection,
   ExperienceSection,
   SkillsSection,
   ProjectsSection,
   ContactSection,
+  FooterSection,
   type UnifiedProject,
 } from '@/components/sections';
 
@@ -40,13 +42,19 @@ const Sections = memo(function Sections() {
   );
 
   return (
-    <div className="relative z-10 flex flex-col w-full pointer-events-none [&>section]:pointer-events-auto max-w-5xl mx-auto">
-      <AboutSection />
-      <ExperienceSection />
-      <SkillsSection allProjects={allProjects} pinnedRepos={pinnedRepos} />
-      <ProjectsSection pinnedRepos={pinnedRepos} reposLoading={isLoading} reposError={isError} onRetry={retry} />
-      <ContactSection />
-    </div>
+    <>
+      <div className="relative z-10 flex flex-col w-full pointer-events-none [&>section]:pointer-events-auto max-w-5xl mx-auto">
+        <AboutSection />
+        <GitHubStats />
+        <ProjectsSection pinnedRepos={pinnedRepos} reposLoading={isLoading} reposError={isError} onRetry={retry} />
+        <SkillsSection allProjects={allProjects} pinnedRepos={pinnedRepos} />
+        <ExperienceSection />
+        <ContactSection />
+      </div>
+      <div className="w-full pointer-events-none [&>footer]:pointer-events-auto">
+        <FooterSection />
+      </div>
+    </>
   );
 });
 

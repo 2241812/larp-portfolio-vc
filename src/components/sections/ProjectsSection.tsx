@@ -118,7 +118,7 @@ const ProjectsSection = memo(function ProjectsSection({ pinnedRepos, reposLoadin
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <motion.div variants={headingVariants} className="flex items-center gap-4">
             <div className="w-8 h-[1px] bg-cyan-500/50" aria-hidden="true" />
-            <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">04. Featured Output</h2>
+            <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">03. Featured Output</h2>
           </motion.div>
           <motion.p variants={cardVariants} className="text-xs font-mono text-neutral-500">
             [ LIVE REPOSITORIES ]

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, memo, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from '@/hooks/useInView';
 
@@ -9,11 +9,11 @@ interface ContributionDay {
   level: number;
 }
 
-const ContributionCalendar = memo(function ContributionCalendar({ username = '2241812', onDataLoaded }: { username?: string; onDataLoaded?: (data: { date: string; count: number }[]) => void }) {
+const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ username = '2241812', onDataLoaded }: { username?: string; onDataLoaded?: (data: { date: string; count: number }[]) => void }, ref) {
   const [contributions, setContributions] = useState<ContributionDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalContributions, setTotalContributions] = useState(0);
-  const { ref, isInView } = useInView({ rootMargin: '300px', once: true });
+  const { ref: sectionRef, isInView } = useInView({ rootMargin: '300px', once: true });
 
   // Game state
   const [gameMode, setGameMode] = useState(false);
@@ -218,6 +218,10 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
     setGameSpeed(1);
   }, [score, highScore]);
 
+  useImperativeHandle(ref, () => ({
+    startGame,
+  }), [startGame]);
+
   const levelColors = [
     'bg-neutral-800/50',
     'bg-cyan-900/60',
@@ -235,7 +239,7 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
   ];
 
   return (
-    <div ref={ref} className="w-full">
+    <div ref={sectionRef} className="w-full">
       {loading && !isInView ? (
         <div className="w-full h-32 bg-neutral-900/50 rounded-lg" />
       ) : loading ? (
@@ -285,52 +289,28 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
 
           {/* Grid container: holds both the grid and the right-aligned controls */}
           <div className="relative">
-            {/* Right-aligned controls: button + legend + progress */}
-            <div className="absolute -right-1 top-0 flex flex-col items-end gap-1.5 z-10">
-              {!gameMode ? (
-                <motion.button
-                  onClick={startGame}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-4 py-1.5 text-xs font-mono uppercase tracking-wider rounded-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-900/20 transition-all duration-300 cursor-pointer"
-                >
-                  BREAK
-                </motion.button>
-              ) : (
-                <motion.button
-                  onClick={exitGame}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={{ scale: 1.08 }}
-                  className="px-4 py-1.5 text-xs font-mono uppercase tracking-wider rounded-lg border border-red-500/50 text-red-400 hover:bg-red-900/20 transition-all duration-300 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.15)]"
-                >
-                  EXIT
-                </motion.button>
-              )}
-
-              {/* Legend */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-neutral-600 font-mono">Less</span>
-                {levelColors.map((color, i) => (
-                  <div key={i} className={`w-[11px] h-[11px] rounded-sm ${color} ${levelGlows[i]}`} />
-                ))}
-                <span className="text-[10px] text-neutral-600 font-mono">More</span>
-              </div>
-
-              {/* Progress bar (game mode only) */}
-              {gameMode && (
-                <div className="flex items-center gap-2">
-                  <div className="w-16 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full"
-                      style={{ width: `${Math.min((scrollOffset / totalWidth) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-neutral-600 font-mono">
-                    {brokenCells.size}
-                  </span>
+            {/* Right-aligned controls: progress bar only (button moved to GitHubStats) */}
+            {gameMode && (
+              <div className="absolute -right-1 top-0 flex items-center gap-2 z-10">
+                <div className="w-16 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full"
+                    style={{ width: `${Math.min((scrollOffset / totalWidth) * 100, 100)}%` }}
+                  />
                 </div>
-              )}
+                <span className="text-[10px] text-neutral-600 font-mono">
+                  {brokenCells.size}
+                </span>
+              </div>
+            )}
+
+            {/* Legend - moved to bottom-left with padding */}
+            <div className="absolute -left-4 -bottom-6 flex items-center gap-1.5 z-10">
+              <span className="text-[10px] text-neutral-600 font-mono">Less</span>
+              {levelColors.map((color, i) => (
+                <div key={i} className={`w-[11px] h-[11px] rounded-sm ${color} ${levelGlows[i]}`} />
+              ))}
+              <span className="text-[10px] text-neutral-600 font-mono">More</span>
             </div>
 
             {/* Contribution grid with scrolling */}
@@ -421,6 +401,6 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
       )}
     </div>
   );
-});
+}));
 
 export default ContributionCalendar;

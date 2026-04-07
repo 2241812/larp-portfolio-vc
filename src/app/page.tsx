@@ -1,17 +1,14 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import LenisProvider from '@/components/ui/LenisProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import Sections from '@/components/ui/Sections';
-import GitHubStats from '@/components/ui/GitHubStats';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
 import { resumeData } from '@/data/resumeData';
-import profilePhoto from '../../assets/placeholder.png';
 
 export default function Home() {
   const [loadingPhase, setLoadingPhase] = useState<'typing' | 'finished' | 'settled'>('typing');
@@ -325,37 +322,10 @@ export default function Home() {
                       {resumeData.personalInfo.title}
                     </motion.p>
                   </div>
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, ease: "easeOut", delay: 1.2 }}
-                    className="flex flex-col md:flex-row items-center justify-center gap-12 max-w-4xl"
-                  >
-                    <div className="relative w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden border-2 border-cyan-500/20 shadow-[0_0_60px_rgba(34,211,238,0.1)] bg-neutral-900/40 flex-shrink-0">
-                      <Image
-                        src={profilePhoto}
-                        alt={resumeData.personalInfo.name}
-                        fill
-                        sizes="256px"
-                        priority
-                        className="object-cover"
-                      />
-                    </div>
-
-                    <div className="flex-1 text-center md:text-left space-y-6">
-                      <p className="text-lg md:text-xl text-neutral-300 leading-relaxed font-light">
-                        Computer Science student at Saint Louis University focusing on scalable system architecture,
-                        containerization, and AI workflow automation. I enjoy building reproducible AI development environments
-                        and multi-service applications that feel reliable and easy to extend.
-                      </p>
-                    </div>
-                  </motion.div>
                   
                 </div>
               </section>
 
-              <GitHubStats />
               <Sections />
             </main>
             <ParticleBurst ref={burstRef} />

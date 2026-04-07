@@ -187,7 +187,7 @@ const RelatedProjectsPanel = memo(function RelatedProjectsPanel({
     <div className="relative min-h-[400px] bg-neutral-900/30 border border-cyan-900/20 rounded-xl p-6 overflow-hidden">
       {/* Terminal header */}
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-cyan-900/20">
-        <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.6)]" aria-hidden="true" />
+        <span className="text-cyan-400 text-lg leading-none">—</span>
         <span className="text-xs font-mono text-neutral-500">
           {activeSkill ? `query_results — ${activeSkill}` : 'awaiting_selection'}
         </span>
@@ -264,7 +264,7 @@ const SkillsSection = memo(function SkillsSection({ allProjects, pinnedRepos }: 
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <motion.div variants={headingVariants} className="flex items-center gap-4">
             <div className="w-8 h-[1px] bg-cyan-500/50" aria-hidden="true" />
-            <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">03. Skills</h2>
+            <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">04. Skills & Expertise</h2>
           </motion.div>
           <motion.p variants={cardVariants} className="text-xs font-mono text-neutral-500">
             [ SELECT SKILL TO FILTER PROJECTS ]

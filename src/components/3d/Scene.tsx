@@ -59,19 +59,17 @@ const Scene = memo(function Scene({ isSettled }: SceneProps) {
         
         <Environment preset="city" />
         
-        {!isSettled && (
-          <>
-            <KeyboardModel isSettled={isSettled} />
-            <ContactShadows 
-              position={[0, -0.5, 0]} 
-              opacity={0.8} 
-              scale={20} 
-              blur={2} 
-              far={5}
-              color="#22d3ee"
-            />
-          </>
-        )}
+        <>
+          <KeyboardModel isSettled={isSettled} />
+          <ContactShadows 
+            position={[0, -0.5, 0]} 
+            opacity={0.8} 
+            scale={20} 
+            blur={2} 
+            far={5}
+            color="#22d3ee"
+          />
+        </>
       </Canvas>
     </div>
   );
