@@ -110,11 +110,11 @@ const Sections = memo(function Sections() {
         >
           <motion.h3 variants={headingVariants} className="text-4xl font-bold text-cyan-400 mb-6 tracking-wider uppercase">About Me</motion.h3>
           <motion.p variants={cardVariants} className="text-xl leading-relaxed mb-4">
-            I am a {resumeData.personalInfo.title} currently studying at {resumeData.education.university}.
+            I am a {resumeData.personalInfo.title} at {resumeData.education.university}, pursuing a {resumeData.education.degree}.
             With a GPA of {resumeData.education.gpa}, I am part of the class of {resumeData.education.classOf}.
           </motion.p>
           <motion.p variants={cardVariants} className="text-xl leading-relaxed">
-            I focus on automation and scalable software solutions. I have a demonstrated ability to manage end-to-end technical projects, from AI-integrated tools to multi-service architectures.
+            My work focuses on scalable system architecture, containerization, and AI workflow automation—building reproducible AI development environments and multi-service web applications that are reliable and easy to extend.
           </motion.p>
         </motion.div>
       </section>
@@ -133,17 +133,51 @@ const Sections = memo(function Sections() {
         >
           <motion.h3 variants={headingVariants} className="text-4xl font-bold text-cyan-400 mb-8 tracking-wider uppercase">Experience & Roles</motion.h3>
           <div className="space-y-8">
-            {resumeData.projects.slice(0, 2).map((proj, idx) => (
-              <motion.div
-                key={idx}
-                variants={cardVariants}
-                className="border-l-2 border-cyan-800 pl-6 hover:border-cyan-400 transition-colors"
-              >
-                <h4 className="text-2xl font-bold text-neutral-100">{proj.title}</h4>
-                <p className="text-cyan-500 font-mono text-base mt-1 mb-3">{proj.role}</p>
-                <p className="text-lg leading-relaxed text-neutral-400">{proj.description}</p>
-              </motion.div>
-            ))}
+            <motion.div
+              variants={cardVariants}
+              className="border-l-2 border-cyan-800 pl-6 hover:border-cyan-400 transition-colors"
+            >
+              <h4 className="text-2xl font-bold text-neutral-100">OpenCode-VSCode-Setup</h4>
+              <p className="text-cyan-500 font-mono text-base mt-1 mb-1">Environment Architect · Mar. 2026 – Present</p>
+              <p className="text-sm text-neutral-500 font-mono mb-3">
+                Saint Louis University · OpenCode AI development environment
+              </p>
+              <p className="text-lg leading-relaxed text-neutral-400">
+                Engineered a Docker-based VSCode Remote Containers setup that runs an OpenCode AI development environment
+                directly inside the terminal, with a hardened non-root container, pre-configured volumes, and .env-based API key management.
+              </p>
+            </motion.div>
+
+            <motion.div
+              variants={cardVariants}
+              className="border-l-2 border-cyan-800 pl-6 hover:border-cyan-400 transition-colors"
+            >
+              <h4 className="text-2xl font-bold text-neutral-100">MultiTask_ContextSwitch</h4>
+              <p className="text-cyan-500 font-mono text-base mt-1 mb-1">Python Developer · Feb. 2026 – Present</p>
+              <p className="text-sm text-neutral-500 font-mono mb-3">
+                Saint Louis University · PyQt6 workflow automation
+              </p>
+              <p className="text-lg leading-relaxed text-neutral-400">
+                Developed a Python-based workflow automator that monitors web-based AI generation and uses a PyQt6 engine
+                to manage real-time window focus and UI states between browser and local tools, with robust error handling to keep long-running automations stable.
+              </p>
+            </motion.div>
+
+            <motion.div
+              variants={cardVariants}
+              className="border-l-2 border-cyan-800 pl-6 hover:border-cyan-400 transition-colors"
+            >
+              <h4 className="text-2xl font-bold text-neutral-100">WebDev_Campus-Navigator_CS312</h4>
+              <p className="text-cyan-500 font-mono text-base mt-1 mb-1">Full-Stack Developer · Dec. 2025</p>
+              <p className="text-sm text-neutral-500 font-mono mb-3">
+                Saint Louis University · Campus navigation microservices app
+              </p>
+              <p className="text-lg leading-relaxed text-neutral-400">
+                Designed a containerized microservices web application using Docker, Go, Node.js, and PHP to serve scalable
+                campus navigation requests, integrating Dijkstra&apos;s algorithm as the routing engine and managing a CI/CD pipeline
+                for consistent deployments.
+              </p>
+            </motion.div>
           </div>
         </motion.div>
       </section>
@@ -197,6 +231,50 @@ const Sections = memo(function Sections() {
               ))}
             </div>
           </motion.div>
+
+          {resumeData.skills.infrastructure && (
+            <motion.div variants={cardVariants} className="mt-8">
+              <h4 className="text-xl font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">
+                Infrastructure & Tooling
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                {resumeData.skills.infrastructure.map((skill, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.04, duration: 0.35 }}
+                    className="px-4 py-1.5 bg-cyan-900/30 text-cyan-300 border border-cyan-800/50 rounded-md text-base font-mono"
+                  >
+                    {skill}
+                  </motion.span>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {resumeData.skills.coreCompetencies && (
+            <motion.div variants={cardVariants} className="mt-8">
+              <h4 className="text-xl font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">
+                Core Competencies
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                {resumeData.skills.coreCompetencies.map((item, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.04, duration: 0.35 }}
+                    className="px-4 py-1.5 bg-cyan-900/30 text-cyan-300 border border-cyan-800/50 rounded-md text-base font-mono"
+                  >
+                    {item}
+                  </motion.span>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </section>
 

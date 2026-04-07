@@ -228,6 +228,8 @@ export default function Home() {
 
   const executeCommand = useCallback((cmd: string) => {
     if (!cmd) return;
+    if (isSettled) return; // Only allow searching when keyboard is visible (during loading)
+    
     setIsAssembling(true);
     
     const targetSection = findSectionForKeyword(cmd);
@@ -257,7 +259,11 @@ export default function Home() {
       if (targetSection) {
         setInputValue("");
         burstRef.current?.burst();
-        document.getElementById(targetSection)?.scrollIntoView({ behavior: 'smooth' });
+        setIsSettled(true);
+        document.body.style.overflow = '';
+        setTimeout(() => {
+          document.getElementById(targetSection)?.scrollIntoView({ behavior: 'smooth' });
+        }, 500);
       } else {
         setIsError(true);
         setInputValue("COMMAND NOT FOUND");
@@ -267,13 +273,12 @@ export default function Home() {
         }, 1500);
       }
     }, 2000);
-  }, [findSectionForKeyword]);
+  }, [findSectionForKeyword, isSettled]);
 
   useEffect(() => {
-    if (!isSettled) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAssembling || isError) return;
+      if (isSettled) return; // Only allow typing when keyboard is visible
       
       if (e.code === 'Space') e.preventDefault();
       
@@ -330,7 +335,7 @@ export default function Home() {
 
    return (
      <>
-       {/* Loading phase - NO Lenis, scroll blocked */}
+       {/* Loading phase - NO Lenis, scroll blocked, keyboard visible */}
        {!isSettled && (
          <main
            className="relative bg-neutral-950 font-sans select-none text-neutral-300 overflow-hidden"
@@ -343,6 +348,38 @@ export default function Home() {
            <MatrixRain />
            <Scene isSettled={isSettled} />
 
+           {/* Floating typing letters - above keyboard */}
+           {letters.length > 0 && (
+             <div className="fixed inset-0 z-30 pointer-events-none">
+               {letterElements}
+             </div>
+           )}
+
+           {/* Hint text - above keyboard, below letters */}
+           {!inputValue && !isAssembling && (
+             <motion.p 
+               className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 text-xs tracking-[0.3em] uppercase text-neutral-500 pointer-events-none"
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               transition={{ delay: 0.8 }}
+               style={{ fontFamily: 'var(--font-rajdhani)' }}
+             >
+               {hintText}
+             </motion.p>
+           )}
+
+           {/* Command input field - above keyboard */}
+           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+             <div 
+               className={`w-80 md:w-[30rem] h-14 border bg-neutral-950/90 backdrop-blur-xl rounded-lg flex items-center px-5 transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.3)]' : 'border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)]'}`}
+             >
+               <span className={`font-mono text-lg mr-4 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
+               <span className={`font-mono text-base tracking-wider flex-1 ${isError ? 'text-red-400' : 'text-neutral-100'}`}>{inputValue}</span>
+               <span className={`font-mono ml-2 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>▋</span>
+             </div>
+           </div>
+
+           {/* Loading bar at bottom */}
            <div className="fixed inset-0 z-[100] pointer-events-auto">
              <div className="absolute bottom-0 left-0 right-0 h-1 bg-neutral-800">
                <div
@@ -372,75 +409,46 @@ export default function Home() {
                  {debrisElements}
                </div>
              )}
-
-             {letters.length > 0 && (
-               <div className="fixed inset-0 z-0 pointer-events-none">
-                 {letterElements}
-               </div>
-             )}
              
              <TopBar isSettled={isSettled} />
 
-              <div className="relative z-20 flex flex-col w-full">
-                <section id="home" className="min-h-screen flex flex-col items-center justify-between py-12 pointer-events-none">
-                  
-                  {/* Top: name and title */}
-                  <div className="text-center space-y-3 pointer-events-auto pt-16">
-                    
-                    <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
-                      <motion.h1 
-                        className="relative text-[10vw] md:text-[7rem] font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        style={{ fontFamily: 'var(--font-orbitron)' }}
-                       >
-                         {resumeData.personalInfo.name}
-                       </motion.h1>
-                     </div>
-
-                    <motion.div 
-                      className="w-80 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-8"
-                      initial={{ scaleX: 0, opacity: 0 }}
-                      animate={{ scaleX: 1, opacity: 1 }}
-                      transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                    />
-
-                    <motion.p 
-                      initial={{ opacity: 0, letterSpacing: "0em" }}
-                      animate={{ opacity: 1, letterSpacing: "0.4em" }}
-                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                      className="text-base md:text-2xl text-cyan-400 uppercase font-medium tracking-[0.4em]"
-                      style={{ fontFamily: 'var(--font-rajdhani)' }}
-                    >
-                      {resumeData.personalInfo.title}
-                    </motion.p>
-                  </div>
-                  
-                  {/* Bottom: command input field */}
-                  <div className="pointer-events-auto flex flex-col items-center pb-16">
-                    <motion.p 
-                      className={`text-sm tracking-[0.3em] uppercase mb-6 h-6 transition-colors duration-300 ${isError ? 'text-red-500' : 'text-neutral-500'}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.8 }}
-                      style={{ fontFamily: 'var(--font-rajdhani)' }}
-                    >
-                      {isError ? "ERROR: COMMAND NOT FOUND" : (inputValue || isAssembling ? "SYSTEM READY" : hintText)}
-                    </motion.p>
-                    <div 
-                      className={`w-80 md:w-[30rem] h-16 border bg-neutral-950/90 backdrop-blur-xl rounded-lg flex items-center px-5 transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.3)]' : 'border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)]'}`}
-                    >
-                      <span className={`font-mono text-xl mr-4 ${isError ? 'text-red-500' : 'text-cyan-400'}`}>{">"}</span>
-                      <span className={`font-mono text-lg tracking-wider flex-1 ${isError ? 'text-red-400' : 'text-neutral-100'}`}>{inputValue}</span>
-                      <span 
-                        className={`font-mono ml-2 text-lg ${isError ? 'text-red-500' : 'text-cyan-400'}`}
+             <div className="relative z-20 flex flex-col w-full">
+               <section id="home" className="min-h-screen flex flex-col items-center justify-between py-12 pointer-events-none">
+                 
+                 {/* Top: name and title */}
+                 <div className="text-center space-y-3 pointer-events-auto pt-16">
+                   
+                   <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
+                     <motion.h1 
+                       className="relative text-[10vw] md:text-[7rem] font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap"
+                       initial={{ opacity: 0, y: 20 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       transition={{ duration: 0.8, ease: "easeOut" }}
+                       style={{ fontFamily: 'var(--font-orbitron)' }}
                       >
-                        ▋
-                      </span>
+                        {resumeData.personalInfo.name}
+                      </motion.h1>
                     </div>
-                  </div>
-                </section>
+
+                   <motion.div 
+                     className="w-80 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-8"
+                     initial={{ scaleX: 0, opacity: 0 }}
+                     animate={{ scaleX: 1, opacity: 1 }}
+                     transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                   />
+
+                   <motion.p 
+                     initial={{ opacity: 0, letterSpacing: "0em" }}
+                     animate={{ opacity: 1, letterSpacing: "0.4em" }}
+                     transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                     className="text-base md:text-2xl text-cyan-400 uppercase font-medium tracking-[0.4em]"
+                     style={{ fontFamily: 'var(--font-rajdhani)' }}
+                   >
+                     {resumeData.personalInfo.title}
+                   </motion.p>
+                 </div>
+                 
+               </section>
 
                <GitHubStats />
                <Sections />

@@ -1,7 +1,7 @@
 export const resumeData = {
   personalInfo: {
     name: "Narciso III Javier",
-    title: "Computer Science Major",
+    title: "Computer Science Student · AI Development Intern",
     location: "Baguio City, Benguet",
     phone: "+63-927-872-0192",
     email: "renzoj156@gmail.com",
@@ -14,14 +14,52 @@ export const resumeData = {
     classOf: "2027"
   },
   skills: {
-    programming: ["HTML5", "CSS3", "JavaScript (ES6+)", "Java", "Python", "C#", "XML", "JSON"],
-    frameworks: ["Apache Ant", "Maven", "Unity 3D", "AR Foundation", "Git/GitHub", "AI Frameworks"],
+    programming: [
+      "Python",
+      "Go",
+      "JavaScript (ES6+)",
+      "Node.js",
+      "PHP",
+      "C++",
+      "C#",
+      "Java",
+      "HTML",
+      "CSS"
+    ],
+    frameworks: [
+      "PyQt6",
+      "Unity 3D",
+      "AR Foundation",
+      "AI Frameworks",
+      "OpenCode"
+    ],
+    infrastructure: [
+      "Docker",
+      "Docker Compose",
+      "VSCode Remote Containers",
+      "CI/CD Pipelines",
+      "Git/GitHub"
+    ],
+    coreCompetencies: [
+      "Microservices Architecture",
+      "Containerization",
+      "Environment Isolation",
+      "System Automation",
+      "AI Workflow Integration"
+    ],
   },
   projects: [
     {
-      title: "AI Monitor (ContextSwitch) Project",
+      title: "OpenCode-VSCode-Setup",
+      role: "Environment Architect",
+      description:
+        "Engineered a quick setup guide and containerized configuration for running an OpenCode AI development environment directly inside a VSCode terminal, using Docker and VSCode Remote Containers for isolated, reproducible sandboxes.",
+    },
+    {
+      title: "MultiTask_ContextSwitch",
       role: "Python Developer",
-      description: "Developed a multi-threaded PyQt desktop application to automate cross-application monitoring between web browsers and local software.",
+      description:
+        "Developed a Python-based workflow automator that monitors web-based AI generation statuses, with a PyQt6 focus-switching engine and robust process monitoring to manage real-time window focus and UI states.",
       link: "https://github.com/2241812/MultiTask_ContextSwitch"
     },
     {
@@ -31,9 +69,10 @@ export const resumeData = {
       link: "https://colab.research.google.com/drive/1JtmdmGKfQzO4xnSUnl4rRVXulx5v6TJG?usp=sharing"
     },
     {
-      title: "Campus Navigator Project",
+      title: "WebDev_Campus-Navigator_CS312",
       role: "Full-Stack Developer",
-      description: "Designed a multi-service containerized system using Docker, Go, and Node.js to handle scalable navigation requests.",
+      description:
+        "Designed a containerized microservices web application using Docker, Go, Node.js, and PHP to handle scalable campus navigation requests powered by Dijkstra’s algorithm.",
       link: "https://github.com/2241812/WebDev_Campus-Navigator_CS312"
     },
     {
