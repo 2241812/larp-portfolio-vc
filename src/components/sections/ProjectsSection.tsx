@@ -11,11 +11,9 @@ const TerminalProjectCard = memo(function TerminalProjectCard({ repo, index }: {
       target="_blank"
       rel="noopener noreferrer"
       variants={cardVariants}
-      initial={{ borderColor: 'rgba(21, 94, 117, 0.3)' }}
-      animate={{ borderColor: 'rgba(21, 94, 117, 0.3)' }}
-      whileHover={{ scale: 1.02, borderColor: 'rgba(34, 211, 238, 0.5)' }}
+      whileHover={{ scale: 1.02, borderColor: '#22d3ee80' }}
       transition={{ duration: 0.25 }}
-      className="group relative block p-0 bg-neutral-950/80 border rounded-xl transition-all duration-300 overflow-hidden no-underline focus:outline-none focus:ring-2 focus:ring-cyan-400"
+      className="group relative block p-0 bg-neutral-950/80 border border-cyan-800/30 rounded-xl hover:border-cyan-500/50 transition-all duration-300 overflow-hidden no-underline focus:outline-none focus:ring-2 focus:ring-cyan-400"
     >
       {/* Terminal header bar */}
       <div className="flex items-center gap-2 px-4 py-2 bg-neutral-900/60 border-b border-cyan-900/30">
