@@ -89,11 +89,20 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: bo
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    let targetScale = isSettled ? 15.0 : 18.0;
+    // During loading: larger, more centered, subtle floating animation
+    // When settled: smaller, positioned for hero section
+    const time = state.clock.elapsedTime;
+    
+    let targetScale = isSettled ? 15.0 : 22.0;
     const targetPosX = 0;
-    let targetPosY = isSettled ? 0.45 : 1.2;
-    let targetRotX = isSettled ? 0.4 : 0.6;
-    let finalRotY = isSettled ? (targetRotY.current || 0) : 0;
+    // Subtle floating effect during loading
+    const floatOffset = isSettled ? 0 : Math.sin(time * 0.8) * 0.05;
+    let targetPosY = isSettled ? 0.45 : 0.8 + floatOffset;
+    // Angled view during loading for better visibility
+    let targetRotX = isSettled ? 0.4 : 0.5;
+    // Gentle rotation during loading
+    const rotateOffset = isSettled ? 0 : Math.sin(time * 0.3) * 0.08;
+    let finalRotY = isSettled ? (targetRotY.current || 0) : rotateOffset;
 
     groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.08);
     groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, targetScale, 0.08);

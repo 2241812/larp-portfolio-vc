@@ -88,30 +88,90 @@ export default function Home() {
       {/* Matrix rain effect - hidden from screen readers and respects reduced motion */}
       {!prefersReducedMotion && <MatrixRain />}
       
-      {loadingPhase !== 'settled' && (
-        <div className="fixed inset-0 z-30 pointer-events-none" aria-hidden="true">
-          <ErrorBoundary fallback={<div className="w-full h-full bg-neutral-950" />}>
-            <Scene isSettled={false} />
-          </ErrorBoundary>
-        </div>
-      )}
-
       <AnimatePresence>
         {loadingPhase !== 'settled' && (
-          <>
+          <motion.div 
+            key="loading-container"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.6, ease: "easeInOut" } }}
+            className="fixed inset-0 z-40 flex flex-col items-center justify-center overflow-hidden"
+          >
+            {/* 3D Scene - positioned in the center showcase area */}
+            <div className="absolute inset-0 z-20" aria-hidden="true">
+              <ErrorBoundary fallback={<div className="w-full h-full bg-neutral-950" />}>
+                <Scene isSettled={false} />
+              </ErrorBoundary>
+            </div>
+            {/* Top section with title */}
             <motion.div 
               key="loading-top"
-              initial={{ y: 0 }}
-              exit={{ y: '-100vh', transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] } }}
-              className="fixed top-0 left-0 w-full h-1/2 bg-neutral-950/80 backdrop-blur-md z-40 flex items-end justify-center pb-8 border-b border-cyan-500/20"
-            />
+              initial={{ y: 0, opacity: 1 }}
+              exit={{ y: '-100%', opacity: 0, transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] } }}
+              className="absolute top-0 left-0 w-full h-[15%] bg-gradient-to-b from-neutral-950 via-neutral-950 to-transparent z-10 flex items-center justify-center"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="text-center"
+              >
+                <div className="font-mono text-xs md:text-sm tracking-[0.5em] text-cyan-500/60 uppercase mb-2">
+                  Initializing System
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Central keyboard showcase area - clear view with pointer events */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="relative w-full h-[55%] flex items-center justify-center pointer-events-none z-30"
+            >
+              {/* Decorative frame around keyboard */}
+              <div className="absolute inset-x-8 md:inset-x-24 inset-y-4 border border-cyan-500/20 rounded-lg">
+                {/* Corner accents */}
+                <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
+                <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+              </div>
+
+              {/* Scan line effect */}
+              <motion.div
+                className="absolute inset-x-8 md:inset-x-24 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none"
+                initial={{ top: '10%' }}
+                animate={{ top: ['10%', '90%', '10%'] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              />
+
+              {/* Side labels */}
+              <div className="absolute left-2 md:left-12 top-1/2 -translate-y-1/2 -rotate-90 origin-center">
+                <span className="font-mono text-[10px] md:text-xs tracking-[0.3em] text-cyan-500/40 uppercase whitespace-nowrap">
+                  3D Model Preview
+                </span>
+              </div>
+              <div className="absolute right-2 md:right-12 top-1/2 -translate-y-1/2 rotate-90 origin-center">
+                <span className="font-mono text-[10px] md:text-xs tracking-[0.3em] text-cyan-500/40 uppercase whitespace-nowrap">
+                  Interactive Keyboard
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Bottom section with loading progress */}
             <motion.div 
               key="loading-bottom"
-              initial={{ y: 0 }}
-              exit={{ y: '100vh', transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] } }}
-              className="fixed bottom-0 left-0 w-full h-1/2 bg-neutral-950/80 backdrop-blur-md z-40 flex items-start justify-center pt-8 border-t border-cyan-500/20"
+              initial={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0, transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] } }}
+              className="absolute bottom-0 left-0 w-full h-[30%] bg-gradient-to-t from-neutral-950 via-neutral-950 to-transparent z-10 flex flex-col items-center justify-center gap-6"
             >
-              <div className="flex flex-col items-center gap-4 mt-24">
+              {/* Loading text that syncs with keyboard typing */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="flex flex-col items-center gap-4"
+              >
                 <div className="relative font-mono text-3xl md:text-5xl font-black tracking-widest text-neutral-800">
                   LOADING...
                   <div 
@@ -121,18 +181,42 @@ export default function Home() {
                     LOADING...
                   </div>
                 </div>
-                {loadingPhase === 'finished' && (
+
+                {/* Progress bar */}
+                <div className="w-64 md:w-80 h-1 bg-neutral-800 rounded-full overflow-hidden">
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-cyan-300 font-mono text-sm tracking-[0.5em] uppercase font-bold"
-                  >
-                    LOADING FINISHED
-                  </motion.div>
-                )}
-              </div>
+                    className="h-full bg-gradient-to-r from-cyan-500 to-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.8)]"
+                    style={{ width: `${loadProgress}%` }}
+                  />
+                </div>
+
+                {/* Status text */}
+                <div className="font-mono text-xs text-neutral-500 tracking-wider">
+                  {loadingPhase === 'finished' ? (
+                    <motion.span 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-cyan-400"
+                    >
+                      SYSTEM READY
+                    </motion.span>
+                  ) : (
+                    <span>LOADING ASSETS... {Math.round(loadProgress)}%</span>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Keyboard instruction hint */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+                className="font-mono text-[10px] md:text-xs text-cyan-500/40 tracking-wider"
+              >
+                TRY PRESSING KEYS ON YOUR KEYBOARD
+              </motion.div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
