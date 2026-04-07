@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useEffect, memo } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import { useGLTF, Center } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -9,7 +9,7 @@ const KEY_CENTER_X: Record<string, number> = {
   'KeyQ': -0.25, 'KeyW': -0.2, 'KeyE': -0.15, 'KeyR': -0.1, 'KeyT': -0.05, 'KeyY': 0, 'KeyU': 0.05, 'KeyI': 0.1, 'KeyO': 0.15, 'KeyP': 0.2,
   'KeyA': -0.2, 'KeyS': -0.15, 'KeyD': -0.1, 'KeyF': -0.05, 'KeyG': 0, 'KeyH': 0.05, 'KeyJ': 0.1, 'KeyK': 0.15, 'KeyL': 0.2,
   'KeyZ': -0.15, 'KeyX': -0.1, 'KeyC': -0.05, 'KeyV': 0, 'KeyB': 0.05, 'KeyN': 0.1, 'KeyM': 0.15,
-  'Space': 0,
+  'Space': 0, 'Enter': 0.25
 };
 
 const KEY_MAP: Record<string, string> = {
@@ -17,10 +17,9 @@ const KEY_MAP: Record<string, string> = {
 };
 
 const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: boolean }) {
-   const { scene, nodes } = useGLTF('/models/keyboard.glb');
+  const { scene, nodes } = useGLTF('/models/keyboard.glb') as any;
   const groupRef = useRef<THREE.Group>(null);
   const targetRotY = useRef<number | null>(null);
-  const scrollProgress = useRef(0);
   
   const pressedKeys = useRef<Set<string>>(new Set());
   const initialPositions = useRef<Record<string, number>>({});
@@ -31,72 +30,70 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: bo
   const MAX_TILT = 0.04;
 
   useEffect(() => {
-     Object.values(KEY_MAP).forEach((nodeName) => {
-       if (nodeName && nodes[nodeName]) {
-         const node = nodes[nodeName] as THREE.Object3D;
-         initialPositions.current[nodeName] = node.position.y;
-       }
-     });
+    Object.values(KEY_MAP).forEach((nodeName) => {
+      if (nodeName && nodes[nodeName]) {
+        initialPositions.current[nodeName] = nodes[nodeName].position.y;
+      }
+    });
 
-     const handleKeyDown = (e: KeyboardEvent) => pressedKeys.current.add(e.code);
-     const handleKeyUp = (e: KeyboardEvent) => pressedKeys.current.delete(e.code);
-     
-     let scrollTicking = false;
-     const handleScroll = () => {
-       if (!scrollTicking) {
-         scrollTicking = true;
-         requestAnimationFrame(() => {
-           const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
-           scrollProgress.current = totalScroll > 0 ? window.scrollY / totalScroll : 0;
-           scrollTicking = false;
-         });
-       }
-     };
+    const handleKeyDown = (e: KeyboardEvent) => pressedKeys.current.add(e.code);
+    const handleKeyUp = (e: KeyboardEvent) => pressedKeys.current.delete(e.code);
 
-     window.addEventListener('keydown', handleKeyDown);
-     window.addEventListener('keyup', handleKeyUp);
-     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
-     return () => {
-       window.removeEventListener('keydown', handleKeyDown);
-       window.removeEventListener('keyup', handleKeyUp);
-       window.removeEventListener('scroll', handleScroll);
-     };
-   }, [nodes]);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [nodes]);
+
+  useEffect(() => {
+    if (isSettled) {
+      pressedKeys.current.clear();
+      return;
+    }
+
+    const typingSequence = [
+      'KeyL', 'KeyO', 'KeyA', 'KeyD', 'KeyI', 'KeyN', 'KeyG',
+      'Period', 'Period', 'Period', 'Enter'
+    ];
+
+    let currentIndex = 0;
+    let typingInterval: NodeJS.Timeout;
+
+    const typeNextKey = () => {
+      if (currentIndex >= typingSequence.length) {
+        clearInterval(typingInterval);
+        return;
+      }
+
+      const keyToPress = typingSequence[currentIndex];
+      pressedKeys.current.add(keyToPress);
+
+      setTimeout(() => {
+        pressedKeys.current.delete(keyToPress);
+      }, 150);
+
+      currentIndex++;
+    };
+
+    typingInterval = setInterval(typeNextKey, 300);
+
+    return () => {
+      clearInterval(typingInterval);
+      pressedKeys.current.clear();
+    };
+  }, [isSettled]);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    const p = scrollProgress.current;
-    const vw = window.innerWidth;
-    
-    // Adaptive scale based on viewport width
-    let baseScale: number;
-    if (vw < 640) baseScale = 6.5;
-    else if (vw < 1024) baseScale = 8.0;
-    else if (vw < 1536) baseScale = 9.75;
-    else baseScale = 11.5;
-    
-    let targetScale = isSettled ? 15.0 : baseScale;
+    let targetScale = isSettled ? 15.0 : 18.0;
     const targetPosX = 0;
-    let targetPosY = isSettled ? 0.45 : 1.0;
-    let targetRotX = 0.4;
-   
-    if (isSettled && targetRotY.current === null) {
-      const currentY = groupRef.current.rotation.y;
-      targetRotY.current = Math.ceil(currentY / (Math.PI * 2)) * (Math.PI * 2);
-    }
-
-    let finalRotY = targetRotY.current || 0;
-
-    if (isSettled) {
-      const fadeOutFactor = Math.min(p * 5, 1); 
-      
-      targetScale = THREE.MathUtils.lerp(15.0, 0.1, fadeOutFactor);
-      targetPosY = THREE.MathUtils.lerp(0.45, -5.0, fadeOutFactor);
-      targetRotX = THREE.MathUtils.lerp(0.4, -2.0, fadeOutFactor);
-      finalRotY += p * Math.PI * 8; 
-    }
+    let targetPosY = isSettled ? 0.45 : 1.2;
+    let targetRotX = isSettled ? 0.4 : 0.6;
+    let finalRotY = isSettled ? (targetRotY.current || 0) : 0;
 
     groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.08);
     groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, targetScale, 0.08);
@@ -105,69 +102,71 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: bo
     groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetPosX, 0.08);
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetPosY, 0.08);
 
-    if (isSettled) {
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.08);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, finalRotY, 0.08);
-      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.08);
+    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.08);
+    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, finalRotY, 0.08);
+    groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.08);
 
-      let tiltX = 0;
-      let tiltZ = 0;
-      let keysPressed = 0;
-      
-      Object.entries(KEY_MAP).forEach(([keyCode, nodeName]) => {
-        if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
-          const node = nodes[nodeName] as THREE.Object3D;
-          const basePosY = initialPositions.current[nodeName];
-          const isPressed = pressedKeys.current.has(keyCode);
+    let tiltX = 0;
+    let tiltZ = 0;
+    let keysPressed = 0;
+    
+    Object.entries(KEY_MAP).forEach(([keyCode, nodeName]) => {
+      if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
+        const node = nodes[nodeName] as THREE.Object3D;
+        const basePosY = initialPositions.current[nodeName];
+        const isPressed = pressedKeys.current.has(keyCode);
+        
+        if (isPressed) {
+          keysPressed++;
+          const keyX = KEY_CENTER_X[keyCode] || 0;
+          tiltZ -= keyX * MAX_TILT;
+          tiltX += MAX_TILT * 0.3;
           
-           if (isPressed) {
-             keysPressed++;
-             const keyX = KEY_CENTER_X[keyCode] || 0;
-             tiltZ -= keyX * MAX_TILT;
-             tiltX += MAX_TILT * 0.3;
-           }
-          
-          const targetKeyY = isPressed ? basePosY - 0.008 : basePosY;
-          node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.3);
+          if ((node as any).material) {
+            ((node as any).material as THREE.MeshStandardMaterial).color.setHex(0x22d3ee);
+            ((node as any).material as THREE.MeshStandardMaterial).emissive.setHex(0x22d3ee);
+            ((node as any).material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8;
+          }
+        } else {
+          if ((node as any).material) {
+            ((node as any).material as THREE.MeshStandardMaterial).color.setHex(0xffffff);
+            ((node as any).material as THREE.MeshStandardMaterial).emissive.setHex(0x000000);
+            ((node as any).material as THREE.MeshStandardMaterial).emissiveIntensity = 0;
+          }
         }
-      });
-      
-      // Only apply tilt when keys are pressed, reset smoothly when not
-      if (keysPressed > 0) {
-        const targetTiltX = Math.min(tiltX, MAX_TILT);
-        const targetTiltZ = THREE.MathUtils.clamp(tiltZ, -MAX_TILT, MAX_TILT);
         
-        const springX = -TILT_STIFFNESS * (keyboardTilt.current.rotX - targetTiltX);
-        const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
-        keyboardTilt.current.rotXVel += (springX + dampX) * delta;
-        keyboardTilt.current.rotX += keyboardTilt.current.rotXVel * delta;
-        
-        const springZ = -TILT_STIFFNESS * (keyboardTilt.current.rotZ - targetTiltZ);
-        const dampZ = -TILT_DAMPING * keyboardTilt.current.rotZVel;
-        keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
-        keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
-      } else {
-        // Smoothly return tilt to zero
-        const springX = -TILT_STIFFNESS * keyboardTilt.current.rotX;
-        const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
-        keyboardTilt.current.rotXVel += (springX + dampX) * delta;
-        keyboardTilt.current.rotX += keyboardTilt.current.rotXVel * delta;
-        
-        const springZ = -TILT_STIFFNESS * keyboardTilt.current.rotZ;
-        const dampZ = -TILT_DAMPING * keyboardTilt.current.rotZVel;
-        keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
-        keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
+        const targetKeyY = isPressed ? basePosY - 0.015 : basePosY;
+        node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.4);
       }
+    });
+    
+    if (keysPressed > 0) {
+      const targetTiltX = Math.min(tiltX, MAX_TILT);
+      const targetTiltZ = THREE.MathUtils.clamp(tiltZ, -MAX_TILT, MAX_TILT);
       
-      // Apply tilt additively to the base rotation
-      groupRef.current.rotation.x += keyboardTilt.current.rotX;
-      groupRef.current.rotation.z += keyboardTilt.current.rotZ;
+      const springX = -TILT_STIFFNESS * (keyboardTilt.current.rotX - targetTiltX);
+      const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
+      keyboardTilt.current.rotXVel += (springX + dampX) * delta;
+      keyboardTilt.current.rotX += keyboardTilt.current.rotXVel * delta;
+      
+      const springZ = -TILT_STIFFNESS * (keyboardTilt.current.rotZ - targetTiltZ);
+      const dampZ = -TILT_DAMPING * keyboardTilt.current.rotZVel;
+      keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
+      keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
     } else {
-      const spinSpeed = 0.01 + (state.pointer.x * 0.08);
-      groupRef.current.rotation.y += spinSpeed;
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, state.pointer.y * 0.5, 0.05);
-      groupRef.current.rotation.z += 0.003; 
+      const springX = -TILT_STIFFNESS * keyboardTilt.current.rotX;
+      const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
+      keyboardTilt.current.rotXVel += (springX + dampX) * delta;
+      keyboardTilt.current.rotX += keyboardTilt.current.rotXVel * delta;
+      
+      const springZ = -TILT_STIFFNESS * keyboardTilt.current.rotZ;
+      const dampZ = -TILT_DAMPING * keyboardTilt.current.rotZVel;
+      keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
+      keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
     }
+    
+    groupRef.current.rotation.x += keyboardTilt.current.rotX;
+    groupRef.current.rotation.z += keyboardTilt.current.rotZ;
   });
 
   return (

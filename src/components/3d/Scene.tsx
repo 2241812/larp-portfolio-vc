@@ -10,7 +10,7 @@ interface SceneProps {
 
 const Scene = memo(function Scene({ isSettled }: SceneProps) {
   return (
-    <div className="w-full h-full fixed inset-0 z-10 pointer-events-none">
+    <div className="w-full h-full fixed inset-0 z-[1] pointer-events-none">
       <Canvas
         dpr={[1, 1.5]}
         gl={{ 
@@ -26,8 +26,13 @@ const Scene = memo(function Scene({ isSettled }: SceneProps) {
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 5]} intensity={1.5} />
         <Environment preset="city" />
-        <KeyboardModel isSettled={isSettled} />
-        <ContactShadows position={[0, -0.3, 0]} opacity={0.6} scale={5} blur={2.5} far={4} />
+        
+        {!isSettled && (
+          <>
+            <KeyboardModel isSettled={isSettled} />
+            <ContactShadows position={[0, -0.3, 0]} opacity={0.6} scale={15} blur={2.5} far={4} />
+          </>
+        )}
       </Canvas>
     </div>
   );

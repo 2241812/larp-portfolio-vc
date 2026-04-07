@@ -469,19 +469,8 @@ const GitHubStats = memo(function GitHubStats() {
     <section
       ref={sectionRef}
       id="github"
-      className="min-h-screen flex items-center justify-center px-4 md:px-24 py-24 relative overflow-hidden"
+      className="min-h-screen flex items-center justify-center px-4 md:px-24 py-24 relative"
     >
-      {/* Background watermark */}
-      <div className="absolute left-[5%] top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
-        <h2
-          className="text-[8rem] md:text-[14rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900/15 to-transparent tracking-tighter uppercase whitespace-nowrap"
-          style={{ WebkitTextStroke: '1px rgba(34,211,238,0.03)' }}
-        >
-          GITHUB
-        </h2>
-      </div>
-
-      {/* Neon glow accent */}
       <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] bg-cyan-600/5 blur-[120px] rounded-full pointer-events-none" />
 
       <motion.div

@@ -131,6 +131,11 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
 
   const levelPoints = [1, 3, 5, 10, 20];
 
+  const scoreRef = useRef(score);
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
+
   // Game loop
   useEffect(() => {
     if (!gameMode || gameOver) return;
@@ -140,7 +145,7 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
       const delta = time - lastTimeRef.current;
       lastTimeRef.current = time;
 
-      const currentSpeed = Math.min(BASE_SPEED + (score / 500) * 0.5, MAX_SPEED);
+      const currentSpeed = Math.min(BASE_SPEED + (scoreRef.current / 500) * 0.5, MAX_SPEED);
       setGameSpeed(currentSpeed);
       setScrollOffset(prev => {
         const next = prev + currentSpeed * (delta / 16);
@@ -160,7 +165,7 @@ const ContributionCalendar = memo(function ContributionCalendar({ username = '22
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [gameMode, gameOver, score, totalWidth]);
+  }, [gameMode, gameOver, totalWidth]);
 
   // Show hint after entering game mode
   useEffect(() => {

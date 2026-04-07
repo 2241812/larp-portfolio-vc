@@ -12,7 +12,7 @@ const MatrixRain = memo(function MatrixRain() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !isInView) return;
+    if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -79,7 +79,7 @@ const MatrixRain = memo(function MatrixRain() {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
     };
-  }, [isInView]);
+  }, []);
 
   return (
     <div ref={containerRef} className="fixed inset-0 z-[3] pointer-events-none">
