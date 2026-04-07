@@ -1,6 +1,6 @@
 "use client";
-import { memo } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { memo, useRef, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { Environment, ContactShadows, PerspectiveCamera } from '@react-three/drei';
 import KeyboardModel from './KeyboardModel';
 
@@ -8,11 +8,33 @@ interface SceneProps {
   isSettled: boolean;
 }
 
+// Suppress THREE.Clock deprecation warning from @react-three/fiber
+function SuppressClockWarning() {
+  const { invalidate } = useThree();
+  const lastTime = useRef(performance.now());
+  
+  useEffect(() => {
+    let animationId: number;
+    
+    const animate = () => {
+      lastTime.current = performance.now();
+      invalidate();
+      animationId = requestAnimationFrame(animate);
+    };
+    
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [invalidate]);
+  
+  return null;
+}
+
 const Scene = memo(function Scene({ isSettled }: SceneProps) {
   return (
     <div className="w-full h-full absolute inset-0">
       <Canvas
         dpr={[1, 2]}
+        frameloop="demand"
         gl={{ 
           powerPreference: 'high-performance',
           antialias: true,
@@ -23,6 +45,9 @@ const Scene = memo(function Scene({ isSettled }: SceneProps) {
         }}
         style={{ pointerEvents: 'auto' }}
       >
+        {/* Custom frame loop to avoid THREE.Clock deprecation warning */}
+        <SuppressClockWarning />
+        
         {/* Camera positioned for better keyboard view during loading */}
         <PerspectiveCamera makeDefault position={[0, 2, 5]} fov={45} />
         
