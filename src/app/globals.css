@@ -34,44 +34,62 @@
   --radius-xl: 1rem;
 }
 
-/* Hide scrollbar by default, show on hover */
-* {
+/* Global scrollbar styling - thin and subtle */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.3) transparent;
+}
+
+html::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.3);
+  border-radius: 4px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.5);
+}
+
+/* Hide scrollbar for nested scrollable containers to prevent flash */
+.hide-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-*::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 3px;
-  transition: background 0.3s ease;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* Show scrollbar on hover */
-*:hover::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.3);
-}
-
-*:hover::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 211, 238, 0.5);
-}
-
-/* Always hide for specific elements */
-.overflow-x-auto::-webkit-scrollbar {
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-.overflow-y-auto::-webkit-scrollbar {
-  display: none;
+/* Thin scrollbar for overflow containers */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.2) transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.2);
+  border-radius: 2px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.4);
 }
 
 @theme inline {

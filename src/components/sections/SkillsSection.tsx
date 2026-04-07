@@ -118,16 +118,16 @@ const ProjectResultCard = memo(function ProjectResultCard({
 
   if (project.url) {
     return (
-      <motion.a
-        href={project.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
-        whileHover={{ scale: 1.01, borderColor: '#22d3ee60' }}
-        className="group block p-4 bg-neutral-950/60 border border-cyan-900/20 rounded-lg hover:border-cyan-500/40 transition-all duration-300 no-underline focus:outline-none focus:ring-2 focus:ring-cyan-400"
-      >
+    <motion.a
+      href={project.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      initial={{ opacity: 0, y: 10, borderColor: 'rgba(8, 145, 178, 0.2)' }}
+      animate={{ opacity: 1, y: 0, borderColor: 'rgba(8, 145, 178, 0.2)' }}
+      transition={{ delay: index * 0.05 }}
+      whileHover={{ scale: 1.01, borderColor: 'rgba(34, 211, 238, 0.4)' }}
+      className="group block p-4 bg-neutral-950/60 border rounded-lg transition-all duration-300 no-underline focus:outline-none focus:ring-2 focus:ring-cyan-400"
+    >
         {content}
       </motion.a>
     );
@@ -135,11 +135,11 @@ const ProjectResultCard = memo(function ProjectResultCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 10, borderColor: 'rgba(8, 145, 178, 0.2)' }}
+      animate={{ opacity: 1, y: 0, borderColor: 'rgba(8, 145, 178, 0.2)' }}
       transition={{ delay: index * 0.05 }}
-      whileHover={{ scale: 1.01, borderColor: '#22d3ee60' }}
-      className="group block p-4 bg-neutral-950/60 border border-cyan-900/20 rounded-lg hover:border-cyan-500/40 transition-all duration-300"
+      whileHover={{ scale: 1.01, borderColor: 'rgba(34, 211, 238, 0.4)' }}
+      className="group block p-4 bg-neutral-950/60 border rounded-lg transition-all duration-300"
     >
       {content}
     </motion.div>
@@ -231,8 +231,7 @@ const RelatedProjectsPanel = memo(function RelatedProjectsPanel({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="space-y-4 max-h-[400px] overflow-y-auto pr-2"
-            style={{ scrollbarWidth: 'thin' }}
+            className="space-y-4 max-h-[400px] overflow-y-auto pr-2 thin-scrollbar"
           >
             {relatedProjects.map((project, idx) => (
               <ProjectResultCard key={project.title + idx} project={project} index={idx} />
