@@ -28,10 +28,12 @@ const KEY_MAP: Record<string, string> = {
 // Glow ring component that pulses around the keyboard
 function GlowRing({ isSettled }: { isSettled: boolean }) {
   const ringRef = useRef<THREE.Mesh>(null);
+  const elapsedRef = useRef(0);
   
-  useFrame((state) => {
+  useFrame((_, delta) => {
     if (!ringRef.current || isSettled) return;
-    const time = state.clock.elapsedTime;
+    elapsedRef.current += delta;
+    const time = elapsedRef.current;
     // Pulsing scale effect
     const pulse = 1 + Math.sin(time * 2) * 0.05;
     ringRef.current.scale.set(pulse, pulse, 1);
@@ -137,6 +139,7 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: bo
   const pressedKeys = useRef<Set<string>>(new Set());
   const initialPositions = useRef<Record<string, number>>({});
   const bootSequenceComplete = useRef(false);
+  const elapsedTimeRef = useRef(0);
   const bootStartTime = useRef<number | null>(null);
   
   const keyboardTilt = useRef({ rotX: 0, rotXVel: 0, rotZ: 0, rotZVel: 0 });
@@ -201,10 +204,11 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: bo
     };
   }, [isSettled]);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
 
-    const time = state.clock.elapsedTime;
+    elapsedTimeRef.current += delta;
+    const time = elapsedTimeRef.current;
     
     // Initialize boot sequence timing
     if (!isSettled && bootStartTime.current === null) {
