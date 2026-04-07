@@ -6,7 +6,7 @@ import { containerVariants, cardVariants, headingVariants } from './shared';
 
 const AboutSection = memo(function AboutSection() {
   return (
-    <section id="about me" className="min-h-screen flex items-center justify-start px-8 md:px-12 relative">
+    <section id="about" className="min-h-screen flex items-center justify-start px-8 md:px-12 relative">
       <motion.div
         variants={containerVariants}
         initial="hidden"

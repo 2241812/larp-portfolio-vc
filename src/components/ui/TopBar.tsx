@@ -7,8 +7,16 @@ interface TopBarProps {
   isSettled: boolean;
 }
 
+// Navigation items with display labels and corresponding section IDs
+const navConfig = [
+  { label: 'about me', id: 'about' },
+  { label: 'experience', id: 'experience' },
+  { label: 'skills', id: 'skills' },
+  { label: 'projects', id: 'projects' },
+  { label: 'contact', id: 'contact' },
+];
+
 const TopBar = memo(function TopBar({ isSettled }: TopBarProps) {
-  const navItems = ['about me', 'experience', 'skills', 'projects', 'contact'];
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Close mobile menu on resize to desktop
@@ -36,11 +44,29 @@ const TopBar = memo(function TopBar({ isSettled }: TopBarProps) {
 
   const scrollToSection = useCallback((id: string) => {
     setMobileMenuOpen(false);
-    if (id === 'home') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    }
+    
+    // Small delay to allow mobile menu to close first
+    requestAnimationFrame(() => {
+      if (id === 'home') {
+        // Use Lenis scroll if available, fallback to native
+        const lenis = (window as unknown as { lenis?: { scrollTo: (target: number, options?: { duration?: number }) => void } }).lenis;
+        if (lenis) {
+          lenis.scrollTo(0, { duration: 1.2 });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        const element = document.getElementById(id);
+        if (element) {
+          const lenis = (window as unknown as { lenis?: { scrollTo: (target: HTMLElement, options?: { offset?: number; duration?: number }) => void } }).lenis;
+          if (lenis) {
+            lenis.scrollTo(element, { offset: -80, duration: 1.2 });
+          } else {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }
+    });
   }, []);
 
   return (
@@ -71,16 +97,16 @@ const TopBar = memo(function TopBar({ isSettled }: TopBarProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-6" aria-label="Main navigation">
-            {navItems.map((item) => (
+            {navConfig.map((item) => (
               <button
-                key={item}
-                onClick={() => scrollToSection(item)}
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
                 className="group relative px-1 py-1 font-mono text-xs md:text-sm tracking-widest uppercase text-neutral-400 transition-colors duration-300 hover:text-cyan-400 cursor-pointer focus:outline-none focus:text-cyan-400"
               >
                 <span className="absolute -left-4 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300 text-cyan-500" aria-hidden="true">
                   {">"}
                 </span>
-                {item}
+                {item.label}
                 <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-cyan-400 scale-x-0 group-hover:scale-x-100 group-focus:scale-x-100 transition-transform duration-300 origin-left shadow-[0_0_8px_rgba(34,211,238,0.8)]" aria-hidden="true" />
               </button>
             ))}
@@ -141,17 +167,17 @@ const TopBar = memo(function TopBar({ isSettled }: TopBarProps) {
               aria-label="Mobile navigation"
             >
               <div className="flex flex-col p-8 space-y-2">
-                {navItems.map((item, index) => (
+                {navConfig.map((item, index) => (
                   <motion.button
-                    key={item}
+                    key={item.id}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 + 0.1 }}
-                    onClick={() => scrollToSection(item)}
+                    onClick={() => scrollToSection(item.id)}
                     className="group relative flex items-center gap-4 py-4 px-4 font-mono text-lg tracking-widest uppercase text-neutral-300 hover:text-cyan-400 focus:text-cyan-400 focus:outline-none transition-colors duration-300 border-b border-cyan-900/20 text-left"
                   >
                     <span className="text-cyan-500/50 text-sm font-mono" aria-hidden="true">0{index + 1}.</span>
-                    <span>{item}</span>
+                    <span>{item.label}</span>
                     <motion.span
                       className="ml-auto text-cyan-500 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity"
                       aria-hidden="true"

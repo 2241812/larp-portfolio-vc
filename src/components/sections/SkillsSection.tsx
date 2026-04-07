@@ -231,8 +231,7 @@ const RelatedProjectsPanel = memo(function RelatedProjectsPanel({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="space-y-4 max-h-[400px] overflow-y-auto pr-2"
-            style={{ scrollbarWidth: 'thin' }}
+            className="space-y-4 max-h-[400px] overflow-y-auto pr-2 thin-scrollbar"
           >
             {relatedProjects.map((project, idx) => (
               <ProjectResultCard key={project.title + idx} project={project} index={idx} />

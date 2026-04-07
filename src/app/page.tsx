@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { ReactLenis } from 'lenis/react';
+import LenisProvider from '@/components/ui/LenisProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
 import TopBar from '@/components/ui/TopBar';
@@ -52,8 +52,8 @@ export default function Home() {
       setLoadingPhase('finished');
       setTimeout(() => {
         setLoadingPhase('settled');
-      }, 800); 
-    }, 3200);
+      }, 600); // Reduced delay for snappier transition
+    }, 3000); // Slightly faster loading
 
     return () => {
       clearInterval(interval);
@@ -137,7 +137,7 @@ export default function Home() {
       </AnimatePresence>
 
       {loadingPhase === 'settled' && (
-        <ReactLenis root options={{ lerp: 0.05, smoothWheel: true }} autoRaf={true}>
+        <LenisProvider>
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -208,7 +208,7 @@ export default function Home() {
             </main>
             <ParticleBurst ref={burstRef} />
           </motion.div>
-        </ReactLenis>
+        </LenisProvider>
       )}
     </>
   );
