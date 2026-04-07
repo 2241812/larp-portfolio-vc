@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
+import Image from 'next/image';
 import { ReactLenis } from '@studio-freight/react-lenis';
 import { motion } from 'framer-motion';
 import Scene from '@/components/3d/Scene';
@@ -9,6 +10,7 @@ import GitHubStats from '@/components/ui/GitHubStats';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
 import { resumeData } from '@/data/resumeData';
+import profilePhoto from '../../assets/c__Users_UZNIR_AppData_Roaming_Cursor_User_workspaceStorage_empty-window_images_Gemini_Generated_Image_jrlzyijrlzyijrlz-09de930c-5ad5-4e2a-bf4b-627f8f260b7b.png';
 
 type FloatingLetter = { id: string; char: string; startX: number; startY: number; rot: number; floatDelay: number; };
 type DebrisLetterData = FloatingLetter & { startLeft: string; driftX: number; driftY: number; driftRot: number; scale: number; duration: number; };
@@ -345,8 +347,8 @@ export default function Home() {
            <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
 
-           <MatrixRain />
-           <Scene isSettled={isSettled} />
+          <MatrixRain />
+          <Scene isSettled={isSettled} />
 
            {/* Floating typing letters - above keyboard */}
            {letters.length > 0 && (
@@ -356,7 +358,7 @@ export default function Home() {
            )}
 
            {/* Hint text - above keyboard, below letters */}
-           {!inputValue && !isAssembling && (
+          {!inputValue && !isAssembling && (
              <motion.p 
                className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 text-xs tracking-[0.3em] uppercase text-neutral-500 pointer-events-none"
                initial={{ opacity: 0 }}
@@ -368,8 +370,8 @@ export default function Home() {
              </motion.p>
            )}
 
-           {/* Command input field - above keyboard */}
-           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+          {/* Command input field - above keyboard */}
+          <div className="fixed bottom-24 md:bottom-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
              <div 
                className={`w-80 md:w-[30rem] h-14 border bg-neutral-950/90 backdrop-blur-xl rounded-lg flex items-center px-5 transition-all duration-500 ${isAssembling && !isError ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} ${isError ? 'border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.3)]' : 'border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)]'}`}
              >
@@ -401,8 +403,8 @@ export default function Home() {
              <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" />
              <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-cyan-600/10 blur-[150px] rounded-[100%] pointer-events-none z-0" />
 
-             <MatrixRain />
-             <Scene isSettled={isSettled} />
+            <MatrixRain />
+            <Scene isSettled={isSettled} />
 
              {debris.length > 0 && (
                <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
@@ -414,39 +416,89 @@ export default function Home() {
 
              <div className="relative z-20 flex flex-col w-full">
                <section id="home" className="min-h-screen flex flex-col items-center justify-between py-12 pointer-events-none">
-                 
-                 {/* Top: name and title */}
-                 <div className="text-center space-y-3 pointer-events-auto pt-16">
-                   
-                   <div className="relative flex justify-center items-center mt-4 mb-8 w-full max-w-[90vw]">
-                     <motion.h1 
-                       className="relative text-[10vw] md:text-[7rem] font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap"
-                       initial={{ opacity: 0, y: 20 }}
-                       animate={{ opacity: 1, y: 0 }}
-                       transition={{ duration: 0.8, ease: "easeOut" }}
-                       style={{ fontFamily: 'var(--font-orbitron)' }}
+                
+                {/* Top: name, title, and photo */}
+                <div className="pointer-events-auto pt-16 w-full max-w-5xl flex flex-col items-center gap-10 px-6">
+                  <div className="relative flex flex-col items-center gap-6 w-full">
+                    <div className="relative flex justify-center items-center mt-4 w-full max-w-[90vw]">
+                      <motion.h1 
+                        className="relative text-[10vw] md:text-[7rem] font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-500/50 drop-shadow-[0_0_40px_rgba(34,211,238,0.5)] whitespace-nowrap text-center"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        style={{ fontFamily: 'var(--font-orbitron)' }}
                       >
                         {resumeData.personalInfo.name}
                       </motion.h1>
                     </div>
 
-                   <motion.div 
-                     className="w-80 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-8"
-                     initial={{ scaleX: 0, opacity: 0 }}
-                     animate={{ scaleX: 1, opacity: 1 }}
-                     transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                   />
+                    <motion.div 
+                      className="w-80 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent"
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                    />
 
-                   <motion.p 
-                     initial={{ opacity: 0, letterSpacing: "0em" }}
-                     animate={{ opacity: 1, letterSpacing: "0.4em" }}
-                     transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                     className="text-base md:text-2xl text-cyan-400 uppercase font-medium tracking-[0.4em]"
-                     style={{ fontFamily: 'var(--font-rajdhani)' }}
-                   >
-                     {resumeData.personalInfo.title}
-                   </motion.p>
-                 </div>
+                    <motion.p 
+                      initial={{ opacity: 0, letterSpacing: "0em" }}
+                      animate={{ opacity: 1, letterSpacing: "0.4em" }}
+                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                      className="text-base md:text-2xl text-cyan-400 uppercase font-medium tracking-[0.4em] text-center"
+                      style={{ fontFamily: 'var(--font-rajdhani)' }}
+                    >
+                      {resumeData.personalInfo.title}
+                    </motion.p>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-10 w-full">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.7, ease: "easeOut", delay: 0.6 }}
+                      className="relative w-40 h-40 md:w-48 md:h-48 rounded-3xl overflow-hidden border border-cyan-500/40 shadow-[0_0_40px_rgba(34,211,238,0.25)] bg-neutral-900/60 flex-shrink-0"
+                    >
+                      <Image
+                        src={profilePhoto}
+                        alt={resumeData.personalInfo.name}
+                        fill
+                        sizes="192px"
+                        priority
+                        className="object-cover"
+                      />
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.7, ease: "easeOut", delay: 0.7 }}
+                      className="flex-1 text-left space-y-4"
+                    >
+                      <p className="text-sm md:text-base text-neutral-300 leading-relaxed max-w-2xl">
+                        Computer Science student at Saint Louis University focusing on scalable system architecture,
+                        containerization, and AI workflow automation. I enjoy building reproducible AI development environments
+                        and multi-service applications that feel reliable and easy to extend.
+                      </p>
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-neutral-300 font-mono">
+                        <li className="flex items-center gap-2">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                          Dockerized OpenCode AI dev environment in VSCode.
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                          PyQt6 workflow automator for AI generation monitoring.
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                          Campus navigation microservices with Dijkstra routing.
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                          Unity + AR Foundation projects rooted in real locations.
+                        </li>
+                      </ul>
+                    </motion.div>
+                  </div>
+                </div>
                  
                </section>
 

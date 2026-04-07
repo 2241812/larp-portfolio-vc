@@ -196,6 +196,7 @@ const Sections = memo(function Sections() {
         >
           <motion.h3 variants={headingVariants} className="text-4xl font-bold text-cyan-400 mb-8 tracking-wider uppercase">Technical Skills</motion.h3>
 
+          {/* Programming first */}
           <motion.div variants={cardVariants} className="mb-8">
             <h4 className="text-xl font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">Programming & Web</h4>
             <div className="flex flex-wrap gap-3">
@@ -214,26 +215,9 @@ const Sections = memo(function Sections() {
             </div>
           </motion.div>
 
-          <motion.div variants={cardVariants}>
-            <h4 className="text-xl font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">Frameworks & Tools</h4>
-            <div className="flex flex-wrap gap-3">
-              {resumeData.skills.frameworks.map((skill, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.04, duration: 0.35 }}
-                  className="px-4 py-1.5 bg-cyan-900/30 text-cyan-300 border border-cyan-800/50 rounded-md text-base font-mono"
-                >
-                  {skill}
-                </motion.span>
-              ))}
-            </div>
-          </motion.div>
-
+          {/* Infrastructure second to highlight your systems focus */}
           {resumeData.skills.infrastructure && (
-            <motion.div variants={cardVariants} className="mt-8">
+            <motion.div variants={cardVariants} className="mb-8">
               <h4 className="text-xl font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">
                 Infrastructure & Tooling
               </h4>
@@ -253,6 +237,25 @@ const Sections = memo(function Sections() {
               </div>
             </motion.div>
           )}
+
+          {/* Frameworks & tools */}
+          <motion.div variants={cardVariants}>
+            <h4 className="text-xl font-bold text-neutral-400 mb-4 uppercase tracking-widest border-b border-cyan-900/50 pb-2">Frameworks & Libraries</h4>
+            <div className="flex flex-wrap gap-3">
+              {resumeData.skills.frameworks.map((skill, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.04, duration: 0.35 }}
+                  className="px-4 py-1.5 bg-cyan-900/30 text-cyan-300 border border-cyan-800/50 rounded-md text-base font-mono"
+                >
+                  {skill}
+                </motion.span>
+              ))}
+            </div>
+          </motion.div>
 
           {resumeData.skills.coreCompetencies && (
             <motion.div variants={cardVariants} className="mt-8">
@@ -303,7 +306,28 @@ const Sections = memo(function Sections() {
                 <div>
                   <h4 className="text-xl font-bold text-neutral-100">{proj.title}</h4>
                   <p className="text-cyan-500 font-mono text-xs mt-1 mb-3">{proj.role}</p>
-                  <p className="text-sm leading-relaxed text-neutral-400 mb-4 line-clamp-3">{proj.description}</p>
+                  <p className="text-sm leading-relaxed text-neutral-400 mb-2 line-clamp-3">{proj.description}</p>
+                  {/* Tech stack line based on resume information */}
+                  {proj.title === "OpenCode-VSCode-Setup" && (
+                    <p className="text-[11px] text-cyan-300 font-mono mb-2">
+                      Tech: Docker, Docker Compose, VSCode Remote Containers, .env configuration
+                    </p>
+                  )}
+                  {proj.title === "MultiTask_ContextSwitch" && (
+                    <p className="text-[11px] text-cyan-300 font-mono mb-2">
+                      Tech: Python, PyQt6, system automation, process monitoring
+                    </p>
+                  )}
+                  {proj.title === "WebDev_Campus-Navigator_CS312" && (
+                    <p className="text-[11px] text-cyan-300 font-mono mb-2">
+                      Tech: Docker, Go, Node.js, PHP, Dijkstra&apos;s algorithm, CI/CD pipeline
+                    </p>
+                  )}
+                  {proj.title === "Baguio AR Application Project" && (
+                    <p className="text-[11px] text-cyan-300 font-mono mb-2">
+                      Tech: Unity 3D, AR Foundation, C#
+                    </p>
+                  )}
                 </div>
                 {proj.link && (
                   <a href={proj.link} target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-4 text-xs font-mono uppercase tracking-widest">
