@@ -137,13 +137,81 @@ export default function Home() {
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
               </div>
 
-              {/* Scan line effect */}
-              <motion.div
-                className="absolute inset-x-8 md:inset-x-24 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none"
-                initial={{ top: '10%' }}
-                animate={{ top: ['10%', '90%', '10%'] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              />
+              {/* Holographic grid lines effect */}
+              <div className="absolute inset-x-8 md:inset-x-24 inset-y-4 overflow-hidden pointer-events-none">
+                {/* Horizontal pulse lines */}
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={`h-line-${i}`}
+                    className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"
+                    initial={{ top: `${25 + i * 25}%`, opacity: 0, scaleX: 0 }}
+                    animate={{ 
+                      opacity: [0, 0.6, 0],
+                      scaleX: [0, 1, 0],
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      delay: i * 0.4,
+                      repeat: Infinity,
+                      repeatDelay: 1,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+                {/* Vertical scan lines */}
+                {[0, 1].map((i) => (
+                  <motion.div
+                    key={`v-line-${i}`}
+                    className="absolute top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-cyan-400/30 to-transparent"
+                    initial={{ left: i === 0 ? '0%' : '100%' }}
+                    animate={{ 
+                      left: i === 0 ? ['0%', '50%'] : ['100%', '50%'],
+                      opacity: [0.3, 0.6, 0.3],
+                    }}
+                    transition={{ 
+                      duration: 3,
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+                {/* Center focal point glow */}
+                <motion.div
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-cyan-400/10 blur-xl"
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                {/* Data stream characters rising from keyboard */}
+                <div className="absolute bottom-0 left-0 right-0 h-full flex justify-center gap-8 overflow-hidden">
+                  {['<', '/', '>', '{', '}', '=', ';', '0', '1'].map((char, i) => (
+                    <motion.span
+                      key={`stream-${i}`}
+                      className="font-mono text-cyan-400/30 text-xs"
+                      initial={{ y: '100%', opacity: 0 }}
+                      animate={{ 
+                        y: [100, -200],
+                        opacity: [0, 0.5, 0],
+                      }}
+                      transition={{ 
+                        duration: 3,
+                        delay: i * 0.3,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    >
+                      {char}
+                    </motion.span>
+                  ))}
+                </div>
+              </div>
 
               {/* Side labels */}
               <div className="absolute left-2 md:left-12 top-1/2 -translate-y-1/2 -rotate-90 origin-center">
