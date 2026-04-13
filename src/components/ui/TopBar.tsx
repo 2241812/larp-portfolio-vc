@@ -10,7 +10,6 @@ interface TopBarProps {
 // Navigation items with display labels and corresponding section IDs
 const navConfig = [
   { label: 'about me', id: 'about' },
-  { label: 'experience', id: 'experience' },
   { label: 'skills', id: 'skills' },
   { label: 'projects', id: 'projects' },
   { label: 'contact', id: 'contact' },
