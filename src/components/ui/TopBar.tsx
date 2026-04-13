@@ -12,6 +12,7 @@ const navConfig = [
   { label: 'about me', id: 'about' },
   { label: 'skills', id: 'skills' },
   { label: 'projects', id: 'projects' },
+  { label: 'blog', id: 'blog' },
   { label: 'contact', id: 'contact' },
 ];
 
