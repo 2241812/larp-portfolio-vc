@@ -777,7 +777,7 @@ const GitHubStats = memo(function GitHubStats() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-8 text-neutral-600 font-mono text-sm"
+              className="text-center py-8 text-neutral-500 font-mono text-sm"
             >
               No recent activity found
             </motion.div>
