@@ -71,7 +71,7 @@ const ExperienceSection = memo(function ExperienceSection() {
       >
         <motion.div variants={headingVariants} className="flex items-center gap-4 mb-12">
           <div className="w-8 h-[1px] bg-cyan-500/50" aria-hidden="true" />
-          <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">05. Blog Posts</h2>
+          <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">05. Experience</h2>
         </motion.div>
 
         {/* Carousel Container */}
