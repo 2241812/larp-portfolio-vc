@@ -9,6 +9,7 @@ import {
   SkillsSection,
   ProjectsSection,
   ContactSection,
+  BlogSection,
   type UnifiedProject,
 } from '@/components/sections';
 
@@ -48,6 +49,7 @@ const Sections = memo(function Sections() {
         <ProjectsSection pinnedRepos={pinnedRepos} reposLoading={isLoading} reposError={isError} onRetry={retry} />
         <SkillsSection allProjects={allProjects} pinnedRepos={pinnedRepos} />
         <ExperienceSection />
+        <BlogSection />
         <ContactSection />
       </div>
     </>
