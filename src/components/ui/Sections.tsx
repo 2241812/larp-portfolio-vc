@@ -5,7 +5,6 @@ import { usePinnedRepos } from '@/hooks/useGitHubData';
 import GitHubStats from '@/components/ui/GitHubStats';
 import {
   AboutSection,
-  ExperienceSection,
   SkillsSection,
   ProjectsSection,
   ContactSection,
@@ -48,7 +47,6 @@ const Sections = memo(function Sections() {
         <GitHubStats />
         <ProjectsSection pinnedRepos={pinnedRepos} reposLoading={isLoading} reposError={isError} onRetry={retry} />
         <SkillsSection allProjects={allProjects} pinnedRepos={pinnedRepos} />
-        <ExperienceSection />
         <BlogSection />
         <ContactSection />
       </div>
