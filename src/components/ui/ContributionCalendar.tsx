@@ -253,9 +253,20 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
     setGameSpeed(1);
   }, [score, highScore, combo, gameStartTime, recordGameResult]);
 
+  const toggleGame = useCallback(() => {
+    if (gameMode) {
+      exitGame();
+    } else {
+      startGame();
+    }
+  }, [gameMode, startGame, exitGame]);
+
   useImperativeHandle(ref, () => ({
+    toggleGame,
     startGame,
-  }), [startGame]);
+    exitGame,
+    isGameMode: gameMode,
+  }), [toggleGame, startGame, exitGame, gameMode]);
 
   return (
     <div ref={sectionRef} className="w-full">
