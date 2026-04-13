@@ -12,7 +12,7 @@ interface ContributionDay {
   level: number;
 }
 
-const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ username = '2241812', onDataLoaded }: { username?: string; onDataLoaded?: (data: { date: string; count: number }[]) => void }, ref) {
+const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ username = '2241812', onDataLoaded, onGameModeChange }: { username?: string; onDataLoaded?: (data: { date: string; count: number }[]) => void; onGameModeChange?: (isActive: boolean) => void }, ref) {
   const [contributions, setContributions] = useState<ContributionDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalContributions, setTotalContributions] = useState(0);
@@ -199,10 +199,13 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
   useEffect(() => {
     if (gameMode) {
       setShowHint(true);
+      onGameModeChange?.(true);
       const t = setTimeout(() => setShowHint(false), 4000);
       return () => clearTimeout(t);
+    } else {
+      onGameModeChange?.(false);
     }
-  }, [gameMode]);
+  }, [gameMode, onGameModeChange]);
 
   const handleCellBreak = useCallback((day: { date: string; count: number; level: number }, weekIdx: number, dayIdx: number) => {
     if (!gameMode || gameOver) return;

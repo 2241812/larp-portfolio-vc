@@ -397,6 +397,7 @@ const GitHubStats = memo(function GitHubStats() {
   const router = useRouter();
   const { ref: sectionRef, isInView } = useInView({ rootMargin: '200px', once: true });
   const contributionCalendarRef = useRef<{ toggleGame: () => void; isGameMode?: boolean } | null>(null);
+  const [isGameActive, setIsGameActive] = useState(false);
 
   const [userData, setUserData] = useState<GitHubUser | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -640,8 +641,12 @@ const GitHubStats = memo(function GitHubStats() {
             </button>
             <button
               onClick={() => contributionCalendarRef.current?.toggleGame()}
-              className="px-4 py-2 text-xs font-mono text-cyan-400 border border-cyan-500/50 bg-cyan-900/20 rounded-lg hover:bg-cyan-900/40 hover:border-cyan-400 transition-all duration-300 cursor-pointer"
-              title="Toggle Contribution Clicker Game"
+              className={`px-4 py-2 text-xs font-mono border rounded-lg transition-all duration-300 cursor-pointer ${
+                isGameActive
+                  ? 'text-red-400 border-red-500/50 bg-red-900/20 hover:bg-red-900/40 hover:border-red-400'
+                  : 'text-cyan-400 border-cyan-500/50 bg-cyan-900/20 hover:bg-cyan-900/40 hover:border-cyan-400'
+              }`}
+              title={isGameActive ? 'Stop Game' : 'Start Game'}
             >
               // break
             </button>
@@ -652,7 +657,7 @@ const GitHubStats = memo(function GitHubStats() {
             </svg>
             <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">Contribution Activity</h3>
           </div>
-          <ContributionCalendar ref={contributionCalendarRef} username="2241812" onDataLoaded={onContributionDataLoaded} />
+          <ContributionCalendar ref={contributionCalendarRef} username="2241812" onDataLoaded={onContributionDataLoaded} onGameModeChange={setIsGameActive} />
         </motion.div>
 
         {/* ── Recent Activity Feed ── */}
