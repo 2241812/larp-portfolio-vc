@@ -33,11 +33,12 @@ export function useAsync<T, E = string>(
     }
   }, [asyncFunction]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (immediate) {
       execute();
     }
-  }, [execute, immediate, ...dependencies]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [execute, immediate, ...dependencies]);
 
   return { execute, status, data, error };
 }
@@ -95,6 +96,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
  */
 export function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T | undefined>(undefined);
+  // eslint-disable-next-line react-hooks/refs
   const prevValue = ref.current;
 
   useEffect(() => {
