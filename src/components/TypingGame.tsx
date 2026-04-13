@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import Scene from '@/components/3d/Scene';
 
 interface TypingStats {
   wpm: number;
@@ -17,8 +19,10 @@ interface TypingGameProps {
 }
 
 const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGameProps) {
+  const router = useRouter();
   const [input, setInput] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [showResetFeedback, setShowResetFeedback] = useState(false);
   const [stats, setStats] = useState<TypingStats>({
     wpm: 0,
     accuracy: 100,
@@ -41,13 +45,19 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
     timerRef.current = setInterval(() => {
       if (!startTimeRef.current) return;
 
-      const timeElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      const wordsTyped = input.trim().split(/\s+/).filter(w => w.length > 0).length;
-      const wpm = timeElapsed > 0 ? Math.round((wordsTyped / timeElapsed) * 60) : 0;
+      const timeElapsedSec = (Date.now() - startTimeRef.current) / 1000;
+      const timeElapsedMin = timeElapsedSec / 60;
+      
+      let correctChars = 0;
+      for (let i = 0; i < input.length; i++) {
+        if (input[i] === testText[i]) correctChars++;
+      }
 
-      const correctChars = input.split('').filter((char, i) => char === testText[i]).length;
       const totalChars = input.length;
+      // WPM standard: (correct chars / 5) / minutes
+      const wpm = timeElapsedMin > 0 ? Math.round((correctChars / 5) / timeElapsedMin) : 0;
       const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+      const wordsTyped = input.trim().split(/\s+/).filter(w => w.length > 0).length;
 
       setStats({
         wpm: Math.max(0, wpm),
@@ -55,7 +65,7 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
         charsTyped: totalChars,
         correctChars,
         wordsTyped,
-        timeElapsed,
+        timeElapsed: Math.floor(timeElapsedSec),
       });
     }, 100);
 
@@ -64,39 +74,7 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
     };
   }, [isActive, input, testText, isFinished]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!isActive && e.key !== 'Escape') {
-      setIsActive(true);
-      startTimeRef.current = Date.now();
-    }
-
-    // Trigger 3D keyboard animation
-    if (onKeyPress) {
-      onKeyPress(e.key);
-    }
-
-    // Handle escape to reset
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      handleReset();
-    }
-  }, [isActive, onKeyPress]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newInput = e.target.value;
-    
-    // Don't allow typing past the test text
-    if (newInput.length <= testText.length) {
-      setInput(newInput);
-      
-      if (newInput.length === testText.length) {
-        setIsFinished(true);
-        setIsActive(false);
-      }
-    }
-  };
-
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setInput('');
     setIsActive(false);
     setIsFinished(false);
@@ -116,17 +94,77 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!isActive && e.key !== 'Escape') {
+      setIsActive(true);
+      startTimeRef.current = Date.now();
+    }
+
+    // Trigger 3D keyboard animation
+    if (onKeyPress) {
+      onKeyPress(e.key);
+    }
+
+    // Handle escape to reset
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      handleReset();
+      setShowResetFeedback(true);
+      setTimeout(() => setShowResetFeedback(false), 800);
+    }
+  }, [isActive, onKeyPress, handleReset]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newInput = e.target.value;
+    
+    // Don't allow typing past the test text
+    if (newInput.length <= testText.length) {
+      setInput(newInput);
+      
+      if (newInput.length === testText.length) {
+        setIsFinished(true);
+        setIsActive(false);
+      }
+    }
   };
 
   const progress = (input.length / testText.length) * 100;
 
   // Split text into words for display and scrolling
   const words = testText.split(' ');
+  const wordStartIndices = React.useMemo(() => {
+    let index = 0;
+    return words.map(word => {
+      const current = index;
+      index += word.length + 1; // +1 for the space
+      return current;
+    });
+  }, [words]);
+
   const inputWords = input.split(' ');
+  const activeWordRef = useRef<HTMLSpanElement>(null);
+
+  // Keep active word centered via scroll
+  useEffect(() => {
+    if (activeWordRef.current && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const offsetTop = activeWordRef.current.offsetTop;
+      const halfContainer = container.clientHeight / 2;
+      container.scrollTo({ top: Math.max(0, offsetTop - halfContainer + 40), behavior: 'smooth' });
+    }
+  }, [inputWords.length]);
 
   return (
-    <div className="w-full h-screen bg-neutral-950 flex flex-col overflow-hidden">
-      {/* Top Stats Bar */}
+    <div className="w-full h-screen bg-neutral-950 flex flex-col overflow-hidden relative">
+      <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
+        <Scene isSettled={true} />
+      </div>
+      
+      <div className="relative z-10 flex flex-col h-full pointer-events-none">
+        <div className="pointer-events-auto flex flex-col h-full max-w-7xl mx-auto w-full">
+          {/* Top Stats Bar */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -195,25 +233,33 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
       </motion.div>
 
       {/* Main typing area - scrolling text like monkeytype */}
-      <div className="flex-1 flex items-center justify-center px-8 md:px-24 py-12 overflow-hidden">
+      <div className="flex-1 flex items-center justify-center px-8 md:px-24 py-12 overflow-hidden relative">
+        {showResetFeedback && (
+          <motion.div
+            initial={{ opacity: 1, scale: 1.2 }}
+            animate={{ opacity: 0, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+          >
+            <div className="text-cyan-400 font-bold text-4xl uppercase tracking-widest drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">Restarted</div>
+          </motion.div>
+        )}
         <div
           ref={scrollContainerRef}
-          className="w-full max-w-4xl text-3xl md:text-5xl font-mono leading-relaxed text-neutral-600 overflow-y-auto transition-transform duration-75"
-          style={{
-            transform: `translateY(-${Math.max(0, inputWords.length - 2) * 2}rem)`,
-          }}
+          className="w-full max-w-4xl text-3xl md:text-5xl font-mono leading-relaxed text-neutral-600 overflow-y-scroll overflow-x-hidden snap-y h-[70vh] no-scrollbar scroll-smooth relative"
+          style={{ scrollBehavior: 'smooth', maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)' }}
         >
           {words.map((word, wordIdx) => {
-            const inputWord = inputWords[wordIdx] || '';
             const isCurrentWord = wordIdx === inputWords.length - 1 && input.length > 0 && !input.endsWith(' ');
             const isTypedWord = wordIdx < inputWords.length - 1 || (wordIdx === inputWords.length - 1 && input.endsWith(' '));
 
             return (
               <motion.span
                 key={wordIdx}
+                ref={isCurrentWord ? activeWordRef : null}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className={`transition-all duration-75 ${
+                className={`inline-block mb-[0.2em] transition-all duration-75 ${
                   isCurrentWord
                     ? ''
                     : isTypedWord
@@ -222,8 +268,8 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
                 }`}
               >
                 {word.split('').map((char, charIdx) => {
-                  const globalCharIdx = words.slice(0, wordIdx).join(' ').length + (wordIdx > 0 ? 1 : 0) + charIdx;
-                  const inputChar = input[globalCharIdx] || '';
+                  const globalCharIdx = wordStartIndices[wordIdx] + charIdx;
+                  const inputChar = input[globalCharIdx];
                   const isCorrect = inputChar === char;
                   const isCurrent = globalCharIdx === input.length;
 
@@ -233,18 +279,33 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
                       className={`transition-all duration-75 ${
                         isCurrent
                           ? 'bg-cyan-500/40 text-cyan-100 font-semibold border-b-2 border-cyan-400 animate-pulse'
-                          : word.length > charIdx && inputChar
+                          : typeof inputChar !== 'undefined'
                           ? isCorrect
-                            ? 'text-cyan-300'
+                            ? 'text-cyan-300 drop-shadow-[0_0_2px_rgba(34,211,238,0.5)]'
                             : 'text-red-400 bg-red-950/30'
-                          : 'text-neutral-600'
+                          : 'text-neutral-600 opacity-60'
                       }`}
                     >
                       {char}
                     </span>
                   );
                 })}
-                {wordIdx < words.length - 1 && <span className="text-neutral-600"> </span>}
+                {/* Visual representation of a required space */}
+                {wordIdx < words.length - 1 && (
+                  <span
+                    className={`transition-all duration-75 ${
+                      input.length === wordStartIndices[wordIdx] + word.length
+                        ? 'bg-cyan-500/40 border-b-2 border-cyan-400 animate-pulse text-transparent'
+                        : input.length > wordStartIndices[wordIdx] + word.length
+                        ? input[wordStartIndices[wordIdx] + word.length] === ' '
+                          ? 'text-transparent'
+                          : 'text-red-400 bg-red-950/30'
+                        : 'text-transparent'
+                    }`}
+                  >
+                    _
+                  </span>
+                )}
               </motion.span>
             );
           })}
@@ -263,6 +324,7 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck="false"
+        aria-label="Typing test input"
       />
 
       {/* Results Modal */}
@@ -319,7 +381,7 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
                   Try Again
                 </button>
                 <button
-                  onClick={() => window.history.back()}
+                  onClick={() => router.push('/')}
                   className="px-8 py-3 text-sm font-mono text-cyan-400 border border-cyan-500/50 bg-cyan-900/20 rounded-lg hover:bg-cyan-900/40 hover:border-cyan-400 transition-all duration-300"
                 >
                   Back to Portfolio
@@ -335,11 +397,13 @@ const TypingGame = memo(function TypingGame({ testText, onKeyPress }: TypingGame
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center text-xs MD:text-sm text-neutral-600 font-mono pb-6"
+          className="text-center text-xs md:text-sm text-neutral-600 font-mono pb-6"
         >
           Click to focus • Start typing to begin
         </motion.div>
       )}
+        </div>
+      </div>
     </div>
   );
 });

@@ -115,11 +115,11 @@ const TopBar = memo(function TopBar({ isSettled }: TopBarProps) {
           {/* Mobile Hamburger Button */}
           <button
             className="md:hidden relative w-10 h-10 flex items-center justify-center text-cyan-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-neutral-950 rounded-md transition-colors"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-menu"
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-          >
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            >
             <div className="w-6 h-5 relative flex flex-col justify-between">
               <motion.span
                 className="w-full h-0.5 bg-current rounded-full origin-center"

@@ -11,9 +11,10 @@ interface SceneProps {
 // Suppress THREE.Clock deprecation warning from @react-three/fiber
 function SuppressClockWarning() {
   const { invalidate } = useThree();
-  const lastTime = useRef(performance.now());
+  const lastTime = useRef<number>(0);
   
   useEffect(() => {
+    lastTime.current = performance.now();
     let animationId: number;
     
     const animate = () => {

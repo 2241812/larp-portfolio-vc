@@ -2,6 +2,9 @@
 import React, { useState, useEffect, memo, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from '@/hooks/useInView';
+import { useGameStats } from '@/hooks/useGameStats';
+import AchievementToast from './AchievementToast';
+import { GameDifficulty, CELL_SIZE, LEVEL_POINTS, LEVEL_COLORS, LEVEL_GLOWS } from '@/constants/gameConstants';
 
 interface ContributionDay {
   date: string;
@@ -26,14 +29,35 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
   const [gameOver, setGameOver] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; points: number }[]>([]);
+  const [gameStartTime, setGameStartTime] = useState(0);
+  
+  // Stats integration
+  const { stats, recordGameResult, newAchievements, clearNewAchievements } = useGameStats();
+  
   const animFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const CELL_SIZE = 14; // 11px cell + 3px gap
   const VISIBLE_WIDTH = 500; // approximate visible area
   const BASE_SPEED = 0.3; // pixels per frame at 60fps
   const MAX_SPEED = 4;
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDownInGame = (e: KeyboardEvent) => {
+      if (!gameMode) return;
+      const key = e.key.toLowerCase();
+      
+      // Escape to quit game
+      if (key === 'escape') {
+        exitGame();
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDownInGame);
+    return () => window.removeEventListener('keydown', handleKeyDownInGame);
+  }, [gameMode]);
 
   useEffect(() => {
     if (!isInView) return;
@@ -145,7 +169,11 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
       const delta = time - lastTimeRef.current;
       lastTimeRef.current = time;
 
-      const currentSpeed = Math.min(BASE_SPEED + (scoreRef.current / 500) * 0.5, MAX_SPEED);
+      // Scale speed by base settings
+      const currentSpeed = Math.min(
+        BASE_SPEED + (scoreRef.current / 500) * 0.5, 
+        MAX_SPEED
+      );
       setGameSpeed(currentSpeed);
       setScrollOffset(prev => {
         const next = prev + currentSpeed * (delta / 16);
@@ -181,7 +209,8 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
     if (!day.date) return;
     if (brokenCells.has(day.date)) return;
 
-    const points = levelPoints[day.level] * (1 + Math.floor(combo / 5));
+    const basePoints = levelPoints[day.level];
+    const points = Math.floor(basePoints * (1 + combo * 0.1));
     setScore(prev => prev + points);
     setCombo(prev => prev + 1);
     setBrokenCells(prev => new Set([...prev, day.date]));
@@ -205,10 +234,16 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
     setGameSpeed(1);
     setGameOver(false);
     setGameMode(true);
+    setGameStartTime(Date.now());
   }, [score, highScore]);
 
   const exitGame = useCallback(() => {
     if (score > highScore) setHighScore(score);
+    
+    // Record game result and stats (using Medium as default difficulty)
+    const gameTime = Date.now() - gameStartTime;
+    recordGameResult(score, combo, GameDifficulty.Medium, gameTime);
+    
     setGameMode(false);
     setGameOver(false);
     setScore(0);
@@ -216,27 +251,11 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
     setBrokenCells(new Set());
     setScrollOffset(0);
     setGameSpeed(1);
-  }, [score, highScore]);
+  }, [score, highScore, combo, gameStartTime, recordGameResult]);
 
   useImperativeHandle(ref, () => ({
     startGame,
   }), [startGame]);
-
-  const levelColors = [
-    'bg-neutral-800/50',
-    'bg-cyan-900/60',
-    'bg-cyan-700/70',
-    'bg-cyan-500/80',
-    'bg-cyan-400',
-  ];
-
-  const levelGlows = [
-    '',
-    'shadow-[0_0_3px_rgba(34,211,238,0.1)]',
-    'shadow-[0_0_5px_rgba(34,211,238,0.2)]',
-    'shadow-[0_0_8px_rgba(34,211,238,0.3)]',
-    'shadow-[0_0_12px_rgba(34,211,238,0.5)]',
-  ];
 
   return (
     <div ref={sectionRef} className="w-full">
@@ -251,7 +270,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
         </div>
       ) : (
         <>
-          {/* Header row: stats on left */}
+          {/* Header row: stats on left, mode button on right */}
           <div className="flex items-center justify-between mb-3 gap-4">
             <div className="flex items-center gap-3 min-w-0">
               {!gameMode && (
@@ -285,6 +304,18 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
                 </div>
               )}
             </div>
+            
+            {/* Difficulty indicator + mode button */}
+            {!gameMode && (
+              <motion.button
+                onClick={() => startGame()}
+                className="text-xs font-mono px-3 py-1 rounded border border-cyan-500/50 text-cyan-400 hover:bg-cyan-900/40 hover:border-cyan-400 transition-all"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Start Game
+              </motion.button>
+            )}
           </div>
 
           {/* Grid container: holds both the grid and the right-aligned controls */}
@@ -307,8 +338,8 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
             {/* Legend - moved to bottom-left with padding */}
             <div className="absolute -left-4 -bottom-6 flex items-center gap-1.5 z-10">
               <span className="text-[10px] text-neutral-600 font-mono">Less</span>
-              {levelColors.map((color, i) => (
-                <div key={i} className={`w-[11px] h-[11px] rounded-sm ${color} ${levelGlows[i]}`} />
+              {LEVEL_COLORS.map((color, i) => (
+                <div key={i} className={`w-[11px] h-[11px] rounded-sm ${color} ${LEVEL_GLOWS[i]}`} />
               ))}
               <span className="text-[10px] text-neutral-600 font-mono">More</span>
             </div>
@@ -342,10 +373,10 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
                           key={day.date || `empty-${weekIdx}-${dayIdx}`}
                           className={`w-[11px] h-[11px] rounded-sm transition-all duration-150 ${
                             gameMode && hasData && !isBroken && !gameOver
-                              ? `${levelColors[day.level]} ${levelGlows[day.level]} cursor-crosshair hover:scale-[2] hover:brightness-150`
+                              ? `${LEVEL_COLORS[day.level]} ${LEVEL_GLOWS[day.level]} cursor-crosshair hover:scale-[2] hover:brightness-150`
                               : isBroken
                               ? 'bg-transparent scale-0'
-                              : `${levelColors[day.level]} ${levelGlows[day.level]} cursor-default`
+                              : `${LEVEL_COLORS[day.level]} ${LEVEL_GLOWS[day.level]} cursor-default`
                           }`}
                           title={hasData ? `${day.date}: ${day.count} contributions${gameMode ? ` (${levelPoints[day.level]}pts)` : ''}` : ''}
                           whileHover={gameMode && hasData && !isBroken && !gameOver ? { scale: 2 } : { scale: 1.3 }}
@@ -399,6 +430,12 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
           </div>
         </>
       )}
+      
+      {/* Achievement Toast Notifications */}
+      <AchievementToast
+        achievements={newAchievements}
+        onDismiss={clearNewAchievements}
+      />
     </div>
   );
 }));

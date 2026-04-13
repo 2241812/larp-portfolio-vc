@@ -9,7 +9,7 @@ import {
   SkillsSection,
   ProjectsSection,
   ContactSection,
-  FooterSection,
+  BlogSection,
   type UnifiedProject,
 } from '@/components/sections';
 
@@ -43,16 +43,14 @@ const Sections = memo(function Sections() {
 
   return (
     <>
-      <div className="relative z-10 flex flex-col w-full pointer-events-none [&>section]:pointer-events-auto max-w-5xl mx-auto">
+      <div className="relative z-10 flex flex-col w-full pointer-events-none [&>section]:pointer-events-auto max-w-6xl mx-auto pb-12">
         <AboutSection />
         <GitHubStats />
         <ProjectsSection pinnedRepos={pinnedRepos} reposLoading={isLoading} reposError={isError} onRetry={retry} />
         <SkillsSection allProjects={allProjects} pinnedRepos={pinnedRepos} />
         <ExperienceSection />
+        <BlogSection />
         <ContactSection />
-      </div>
-      <div className="w-full pointer-events-none [&>footer]:pointer-events-auto">
-        <FooterSection />
       </div>
     </>
   );

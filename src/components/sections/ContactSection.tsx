@@ -4,12 +4,25 @@ import { motion } from 'framer-motion';
 import { resumeData } from '@/data/resumeData';
 import { containerVariants, cardVariants, headingVariants, fireConfetti } from './shared';
 import { GlitchSocialLink, CopyableField } from '@/components/ui/cards/ContactFields';
+import { AchievementBadge } from '@/components/ui/cards/MetricCards';
 
-/**
- * ContactSection - Main contact section with stats, social links, and contact details
- * All reusable components (StatCard, GlitchSocialLink, CopyableField, AnimatedCounter)
- * have been extracted to separate files for better maintainability and reusability.
- */
+const credentials = [
+  {
+    icon: '🎓',
+    title: 'B.S. Computer Science',
+    description: `Saint Louis University | GPA: ${resumeData.education.gpa}`,
+  },
+  {
+    icon: '⭐',
+    title: 'Smart City Challenge',
+    description: 'Certified Participant - 2024',
+  },
+  {
+    icon: '🏆',
+    title: 'AI Development',
+    description: 'Industry Specialization Certificate',
+  },
+];
 
 // ── Contact Section Component ──
 const ContactSection = memo(function ContactSection() {
@@ -21,15 +34,11 @@ const ContactSection = memo(function ContactSection() {
     <section id="contact" className="min-h-screen flex flex-col items-center justify-center px-8 md:px-12 relative py-20">
       {/* Floating Stats Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-        <motion.div
-          className="absolute top-10 right-10 w-32 h-32 rounded-full border border-cyan-500/20"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        <div
+          className="absolute top-10 right-10 w-32 h-32 rounded-full border border-cyan-500/20 animate-[spin_20s_linear_infinite]"
         />
-        <motion.div
-          className="absolute bottom-20 left-10 w-40 h-40 rounded-full border border-cyan-500/10"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        <div
+          className="absolute bottom-20 left-10 w-40 h-40 rounded-full border border-cyan-500/10 animate-[spin_25s_linear_infinite_reverse]"
         />
       </div>
 
@@ -37,11 +46,11 @@ const ContactSection = memo(function ContactSection() {
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-        className="w-full max-w-4xl relative z-10"
+        viewport={{ once: true, amount: 0.1 }}
+        className="w-full max-w-6xl relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
       >
-        {/* Main Contact Terminal */}
-        <div className="bg-neutral-950/90 backdrop-blur-xl border border-cyan-900/40 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.05)]">
+        {/* LEFT SIDE: Main Contact Terminal */}
+        <div className="bg-neutral-950/90 backdrop-blur-xl border border-cyan-900/40 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.05)] h-fit">
           {/* Terminal Title Bar */}
           <div className="flex items-center gap-2 px-4 py-3 bg-neutral-900/60 border-b border-cyan-900/30">
             <div className="w-3 h-3 rounded-full bg-red-500/60 hover:bg-red-500/80 transition-colors" aria-hidden="true" />
@@ -126,66 +135,121 @@ const ContactSection = memo(function ContactSection() {
           </div>
         </div>
 
-        {/* Let's Connect CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          viewport={{ once: true, amount: 0.3 }}
-          className="mt-12 bg-gradient-to-r from-cyan-900/20 to-cyan-900/5 border border-cyan-900/40 rounded-xl p-8 text-center"
-        >
-          <h3 className="text-lg font-bold text-cyan-400 mb-2 font-mono">Ready to Connect?</h3>
-          <p className="text-neutral-400 text-sm mb-6">
-            Let's collaborate on innovative projects. Download my resume or reach out directly.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <motion.a
-              href="/Javier, Narciso III C._Resume_.pdf"
-              download
-              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(34,211,238,0.3)' }}
-              whileTap={{ scale: 0.95 }}
-              className="px-5 py-2 rounded-lg bg-cyan-600/80 hover:bg-cyan-500 text-neutral-950 font-semibold transition-all duration-300 font-mono text-sm flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Resume
-            </motion.a>
+        {/* RIGHT SIDE: Credentials & Connect */}
+        <div className="flex flex-col gap-8 h-full justify-between">
+          <motion.div variants={containerVariants} className="flex flex-col">
+            <h2 className="text-xl font-bold text-cyan-400 mb-2 font-mono tracking-wider">
+              <span className="text-neutral-600">$</span> credentials
+            </h2>
+            <p className="text-xs text-neutral-500 font-mono uppercase tracking-widest mb-6">
+              Academic Background & Certifications
+            </p>
+            
+            <div className="flex flex-col gap-3">
+              {credentials.map((credential, index) => (
+                <AchievementBadge
+                  key={index}
+                  icon={credential.icon}
+                  title={credential.title}
+                  description={credential.description}
+                  delay={index * 0.1}
+                />
+              ))}
+            </div>
+
             <motion.a
               href={resumeData.personalInfo.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={handleConfettiClick}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(34,211,238,0.2)' }}
-              whileTap={{ scale: 0.95 }}
-              className="px-5 py-2 rounded-lg border border-cyan-400/60 text-cyan-400 hover:text-cyan-300 hover:border-cyan-300/80 font-semibold transition-all duration-300 font-mono text-sm flex items-center justify-center gap-2"
+              whileHover={{ scale: 1.02 }}
+              className="inline-flex items-center w-fit gap-2 mt-4 text-xs text-cyan-400 hover:text-cyan-300 font-mono transition-colors duration-300"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+              <span>View LinkedIn Certificates</span>
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
-              Connect
             </motion.a>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* Connection Status Indicator */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          viewport={{ once: true }}
-          className="mt-8 text-center"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900/40 border border-green-900/30">
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-2 h-2 rounded-full bg-green-500"
-              aria-hidden="true"
-            />
-            <span className="text-xs text-green-400 font-mono">Online & Ready to Connect</span>
-          </div>
-        </motion.div>
+          {/* Let's Connect CTA Section */}
+          <motion.div
+            variants={cardVariants}
+            className="bg-gradient-to-r from-cyan-900/20 to-cyan-900/5 border border-cyan-900/40 rounded-xl p-6 md:p-8 text-center"
+          >
+            <h3 className="text-lg font-bold text-cyan-400 mb-2 font-mono">Ready to Connect?</h3>
+            <p className="text-neutral-400 text-sm mb-6">
+              Let's collaborate on innovative projects. Download my resume or reach out directly.
+            </p>
+            <div className="flex flex-col xl:flex-row gap-3 justify-center items-center">
+              <motion.a
+                href="/Javier, Narciso III C._Resume_.pdf"
+                download
+                whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(34,211,238,0.3)' }}
+                whileTap={{ scale: 0.95 }}
+                className="px-5 py-2 w-full lg:w-auto rounded-lg bg-cyan-600/80 hover:bg-cyan-500 text-neutral-950 font-semibold transition-all duration-300 font-mono text-sm flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Resume
+              </motion.a>
+              <motion.a
+                href={resumeData.personalInfo.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleConfettiClick}
+                whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(34,211,238,0.2)' }}
+                whileTap={{ scale: 0.95 }}
+                className="px-5 py-2 w-full lg:w-auto rounded-lg border border-cyan-400/60 text-cyan-400 hover:text-cyan-300 hover:border-cyan-300/80 font-semibold transition-all duration-300 font-mono text-sm flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                </svg>
+                Connect
+              </motion.a>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Footer Bottom elements aligned to bottom */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        viewport={{ once: true }}
+        className="w-full max-w-6xl relative z-10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-500 font-mono mt-16 pt-8 border-t border-cyan-900/30"
+      >
+        <div>© 2026 Narciso III Javier. Computer Science Student @ SLU.</div>
+        <div className="flex items-center gap-3">
+          <a
+            href="https://github.com/2241812"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-cyan-400 transition-colors duration-300"
+            aria-label="GitHub"
+          >
+            GitHub
+          </a>
+          <span className="text-neutral-700">•</span>
+          <a
+            href={resumeData.personalInfo.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-cyan-400 transition-colors duration-300"
+            aria-label="LinkedIn"
+          >
+            LinkedIn
+          </a>
+          <span className="text-neutral-700">•</span>
+          <a
+            href={`mailto:${resumeData.personalInfo.email}`}
+            className="hover:text-cyan-400 transition-colors duration-300"
+            aria-label="Email"
+          >
+            Email
+          </a>
+        </div>
       </motion.div>
     </section>
   );

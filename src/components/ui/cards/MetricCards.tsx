@@ -102,12 +102,21 @@ export const AchievementBadge = memo(function AchievementBadge({
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
       viewport={{ once: true, amount: 0.3 }}
-      whileHover={{ scale: 1.05, y: -5 }}
-      className="p-4 rounded-xl bg-neutral-900/60 border border-cyan-900/30 hover:border-cyan-400/60 transition-all duration-300"
+      whileHover={{ scale: 1.02, x: 10 }}
+      className="p-4 rounded-xl bg-neutral-900/60 border border-cyan-900/30 hover:border-cyan-400/60 hover:bg-neutral-800/80 transition-all duration-300 group cursor-pointer flex items-center gap-4"
     >
-      <div className="text-cyan-400 mb-2 text-xl">{icon}</div>
-      <h4 className="text-sm font-semibold text-neutral-200 mb-1">{title}</h4>
-      <p className="text-xs text-neutral-500 leading-relaxed">{description}</p>
+      <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-cyan-900/30 flex items-center justify-center text-2xl border border-cyan-800/40 group-hover:bg-cyan-800/50 group-hover:scale-110 transition-transform duration-300">
+        <motion.div
+          animate={{ rotate: [0, -10, 10, -10, 0] }}
+          transition={{ duration: 0.5, delay: delay + 0.5 }}
+        >
+          {icon}
+        </motion.div>
+      </div>
+      <div>
+        <h4 className="text-sm font-bold text-neutral-200 group-hover:text-cyan-300 transition-colors duration-300 mb-1">{title}</h4>
+        <p className="text-xs text-neutral-500 font-mono leading-relaxed">{description}</p>
+      </div>
     </motion.div>
   );
 });

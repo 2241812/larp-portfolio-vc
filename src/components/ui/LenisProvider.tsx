@@ -9,10 +9,16 @@ function LenisExposer() {
   useEffect(() => {
     if (lenis) {
       (window as unknown as { lenis: typeof lenis }).lenis = lenis;
+      
+      // Auto-resize on DOM changes so scroll doesn't glitch at the bottom
+      const ro = new ResizeObserver(() => lenis.resize());
+      ro.observe(document.body);
+      
+      return () => {
+        ro.disconnect();
+        delete (window as unknown as { lenis?: typeof lenis }).lenis;
+      };
     }
-    return () => {
-      delete (window as unknown as { lenis?: typeof lenis }).lenis;
-    };
   }, [lenis]);
   
   return null;
