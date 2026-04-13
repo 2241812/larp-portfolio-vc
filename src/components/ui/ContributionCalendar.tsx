@@ -317,16 +317,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
             </div>
             
             {/* Difficulty indicator + mode button */}
-            {!gameMode && (
-              <motion.button
-                onClick={() => startGame()}
-                className="text-xs font-mono px-3 py-1 rounded border border-cyan-500/50 text-cyan-400 hover:bg-cyan-900/40 hover:border-cyan-400 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Start Game
-              </motion.button>
-            )}
+            {/* Button removed - game is controlled via "// break" in GitHubStats */}
           </div>
 
           {/* Grid container: holds both the grid and the right-aligned controls */}
