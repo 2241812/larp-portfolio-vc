@@ -1,7 +1,10 @@
 "use client";
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resumeData } from '@/data/resumeData';
+import { useInView } from '@/hooks/useInView';
+import { useGitHubAnalyzer } from '@/hooks/useGitHubAnalyzer';
+import { mergeSkillsWithGitHub, formatEndorsements, type EnhancedSkill } from '@/utils/skillsAnalyzer';
 import {
   containerVariants,
   cardVariants,
@@ -16,51 +19,70 @@ import {
 const SkillsList = memo(function SkillsList({
   activeSkill,
   setActiveSkill,
+  enhancedSkills,
+  isLoadingGitHub,
 }: {
   activeSkill: string | null;
   setActiveSkill: (skill: string | null) => void;
+  enhancedSkills: Record<string, EnhancedSkill[]>;
+  isLoadingGitHub: boolean;
 }) {
-  const categoryMap: Record<string, string[]> = {
-    'Programming & Web': resumeData.skills.programming,
-    ...(resumeData.skills.infrastructure ? { 'Infrastructure & Tooling': resumeData.skills.infrastructure } : {}),
-    'Frameworks & Libraries': resumeData.skills.frameworks,
-    ...(resumeData.skills.coreCompetencies ? { 'Core Competencies': resumeData.skills.coreCompetencies } : {}),
-  };
-
   return (
     <div className="space-y-6">
-      {Object.entries(categoryMap).map(([category, skills]) => (
+      {Object.entries(enhancedSkills).map(([category, skills]) => (
         <div key={category}>
           <h4 className="text-sm font-bold text-neutral-400 mb-3 uppercase tracking-widest border-b border-cyan-900/50 pb-2">
             {category}
           </h4>
           <div className="flex flex-wrap gap-2" role="group" aria-label={`${category} skills`}>
             {skills.map((skill, i) => {
-              const isActive = activeSkill === skill;
+              const isActive = activeSkill === skill.name;
               return (
                 <motion.button
-                  key={skill}
+                  key={skill.name}
                   initial={{ opacity: 0, scale: 0.8 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.02, duration: 0.3 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setActiveSkill(isActive ? null : skill)}
+                  onClick={() => setActiveSkill(isActive ? null : skill.name)}
                   aria-pressed={isActive}
-                  className={`px-3 py-1.5 text-sm font-mono rounded-md border transition-all duration-300 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-neutral-950 ${
+                  className={`relative px-3 py-1.5 text-sm font-mono rounded-md border transition-all duration-300 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-neutral-950 ${
                     isActive
                       ? 'bg-cyan-500/10 text-cyan-400 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
                       : 'bg-neutral-900/50 text-neutral-400 border-neutral-800 hover:border-cyan-500/50 hover:text-cyan-300'
                   }`}
                 >
-                  {skill}
+                  <span>{skill.name}</span>
+                  {/* Endorsement badge */}
+                  {skill.verified && skill.endorsements !== undefined && skill.endorsements > 0 && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                      title={`Found in ${skill.endorsements} repository(ies)`}
+                    >
+                      <span className="w-1 h-1 rounded-full bg-cyan-400" aria-hidden="true" />
+                      {skill.endorsements}
+                    </motion.span>
+                  )}
                 </motion.button>
               );
             })}
           </div>
         </div>
       ))}
+      {isLoadingGitHub && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          className="text-[10px] font-mono text-neutral-600 text-center py-4"
+        >
+          [ analyzing github repositories... ]
+        </motion.div>
+      )}
     </div>
   );
 });
@@ -251,9 +273,44 @@ interface SkillsSectionProps {
 
 const SkillsSection = memo(function SkillsSection({ allProjects, pinnedRepos }: SkillsSectionProps) {
   const [activeSkill, setActiveSkill] = useState<string | null>(null);
+  const { ref: sectionRef, isInView } = useInView({ rootMargin: '200px', once: false });
+
+  // Fetch and analyze GitHub repos
+  const { analysis, isLoading: isLoadingGitHub } = useGitHubAnalyzer('2241812', isInView);
+
+  // Merge GitHub-analyzed skills with hardcoded skills
+  const enhancedSkills = useMemo(() => {
+    if (!analysis) {
+      // Fallback to hardcoded skills if GitHub analysis not available
+      return {
+        'Programming & Web': resumeData.skills.programming.map(name => ({
+          name,
+          category: 'Programming & Web' as const,
+          description: (resumeData.skillDescriptions as Record<string, string>)?.[name] || '',
+        })),
+        'Infrastructure & Tooling': (resumeData.skills.infrastructure || []).map(name => ({
+          name,
+          category: 'Infrastructure & Tooling' as const,
+          description: (resumeData.skillDescriptions as Record<string, string>)?.[name] || '',
+        })),
+        'Frameworks & Libraries': resumeData.skills.frameworks.map(name => ({
+          name,
+          category: 'Frameworks & Libraries' as const,
+          description: (resumeData.skillDescriptions as Record<string, string>)?.[name] || '',
+        })),
+        'Core Competencies': (resumeData.skills.coreCompetencies || []).map(name => ({
+          name,
+          category: 'Core Competencies' as const,
+          description: (resumeData.skillDescriptions as Record<string, string>)?.[name] || '',
+        })),
+      };
+    }
+
+    return mergeSkillsWithGitHub(analysis.skills);
+  }, [analysis]);
 
   return (
-    <section id="skills" className="min-h-screen flex items-center justify-start px-8 md:px-12 relative">
+    <section ref={sectionRef} id="skills" className="min-h-screen flex items-center justify-start px-8 md:px-12 relative">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -268,11 +325,21 @@ const SkillsSection = memo(function SkillsSection({ allProjects, pinnedRepos }: 
           </motion.div>
           <motion.p variants={cardVariants} className="text-xs font-mono text-neutral-500">
             [ SELECT SKILL TO FILTER PROJECTS ]
+            {analysis && (
+              <span className="ml-2 text-cyan-400">
+                {analysis.skills.length} skills detected
+              </span>
+            )}
           </motion.p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8">
-          <SkillsList activeSkill={activeSkill} setActiveSkill={setActiveSkill} />
+          <SkillsList
+            activeSkill={activeSkill}
+            setActiveSkill={setActiveSkill}
+            enhancedSkills={enhancedSkills}
+            isLoadingGitHub={isLoadingGitHub}
+          />
           <RelatedProjectsPanel activeSkill={activeSkill} allProjects={allProjects} pinnedRepos={pinnedRepos} />
         </div>
       </motion.div>

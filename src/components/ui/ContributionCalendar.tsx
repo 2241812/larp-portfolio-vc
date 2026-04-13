@@ -5,6 +5,7 @@ import { useInView } from '@/hooks/useInView';
 import { useGameStats } from '@/hooks/useGameStats';
 import AchievementToast from './AchievementToast';
 import { GameDifficulty, CELL_SIZE, LEVEL_POINTS, LEVEL_COLORS, LEVEL_GLOWS } from '@/constants/gameConstants';
+import { fetchGitHubContributions } from '@/services/api';
 
 interface ContributionDay {
   date: string;
@@ -64,7 +65,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
 
     let cancelled = false;
 
-    async function fetchContributions() {
+    async function handleFetchContributions() {
       try {
         const today = new Date();
         const oneYearAgo = new Date();
@@ -72,50 +73,60 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
         const toDate = today.toISOString().split('T')[0];
         const fromDate = oneYearAgo.toISOString().split('T')[0];
         
-        const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?from=${fromDate}&to=${toDate}`);
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
+        const data = await fetchGitHubContributions(username, fromDate, toDate);
         
         if (cancelled) return;
 
-         interface ContributionData {
-           date: string;
-           count: number;
-         }
-         
-         const days: ContributionDay[] = data.contributions.map((c: ContributionData) => ({
-           date: c.date,
-           count: c.count,
-           level: c.count === 0 ? 0 : c.count <= 3 ? 1 : c.count <= 6 ? 2 : c.count <= 9 ? 3 : 4,
-         }));
+        // If no contributions returned (API failed), generate placeholder
+        if (!data.contributions || data.contributions.length === 0) {
+          console.warn('[ContributionCalendar] No contributions data received, using placeholder');
+          generatePlaceholderData();
+          return;
+        }
 
-         setContributions(days);
-         setTotalContributions(days.reduce((sum, d) => sum + d.count, 0));
-         onDataLoaded?.(days.map(d => ({ date: d.date, count: d.count })));
+        interface ContributionData {
+          date: string;
+          count: number;
+        }
+        
+        const days: ContributionDay[] = data.contributions.map((c: ContributionData) => ({
+          date: c.date,
+          count: c.count,
+          level: c.count === 0 ? 0 : c.count <= 3 ? 1 : c.count <= 6 ? 2 : c.count <= 9 ? 3 : 4,
+        }));
+
+        setContributions(days);
+        setTotalContributions(days.reduce((sum, d) => sum + d.count, 0));
+        onDataLoaded?.(days.map(d => ({ date: d.date, count: d.count })));
       } catch (err) {
         if (cancelled) return;
-        console.error('Failed to fetch contributions:', err);
-        const placeholder: ContributionDay[] = [];
-        const today = new Date();
-        for (let i = 364; i >= 0; i--) {
-          const date = new Date(today);
-          date.setDate(date.getDate() - i);
-          placeholder.push({
-            date: date.toISOString().split('T')[0],
-            count: Math.floor(Math.random() * 12),
-            level: Math.floor(Math.random() * 5),
-          });
-        }
-        setContributions(placeholder);
-        setTotalContributions(placeholder.reduce((sum, d) => sum + d.count, 0));
+        console.error('[ContributionCalendar] Failed to fetch contributions:', err);
+        // Generate realistic placeholder data on error
+        generatePlaceholderData();
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
 
-    fetchContributions();
+    handleFetchContributions();
     return () => { cancelled = true; };
   }, [username, isInView]);
+
+  const generatePlaceholderData = useCallback(() => {
+    const placeholder: ContributionDay[] = [];
+    const today = new Date();
+    for (let i = 364; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      placeholder.push({
+        date: date.toISOString().split('T')[0],
+        count: Math.floor(Math.random() * 12),
+        level: Math.floor(Math.random() * 5),
+      });
+    }
+    setContributions(placeholder);
+    setTotalContributions(placeholder.reduce((sum, d) => sum + d.count, 0));
+  }, []);
 
   const contributionMap = new Map<string, number>();
   contributions.forEach(c => contributionMap.set(c.date, c.count));

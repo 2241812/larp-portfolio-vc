@@ -8,6 +8,7 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import Sections from '@/components/ui/Sections';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
+import ChatWidget from '@/components/ChatWidget';
 import { resumeData } from '@/data/resumeData';
 
 export default function Home() {
@@ -71,14 +72,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Skip to main content link for keyboard users */}
-      <a 
-        href="#main-content" 
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyan-500 focus:text-neutral-950 focus:rounded-md focus:font-mono focus:text-sm focus:font-bold"
-      >
-        Skip to main content
-      </a>
-      
       <div className="fixed inset-0 z-0 bg-grid pointer-events-none opacity-50" aria-hidden="true" />
       <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black pointer-events-none" aria-hidden="true" />
       
@@ -332,6 +325,11 @@ export default function Home() {
           </motion.div>
         </LenisProvider>
       )}
+      
+      {/* Floating Chat Widget - Shows after loading is complete */}
+      <AnimatePresence>
+        {loadingPhase === 'settled' && <ChatWidget />}
+      </AnimatePresence>
     </>
   );
 }

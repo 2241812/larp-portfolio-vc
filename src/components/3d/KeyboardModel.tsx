@@ -99,11 +99,11 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: bo
     ];
 
     let currentIndex = 0;
-    let typingInterval: NodeJS.Timeout;
+    let typingInterval: NodeJS.Timeout | null = null;
 
     const typeNextKey = () => {
       if (currentIndex >= typingSequence.length) {
-        clearInterval(typingInterval);
+        if (typingInterval) clearInterval(typingInterval);
         return;
       }
 
@@ -120,7 +120,7 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: bo
     typingInterval = setInterval(typeNextKey, 300);
 
     return () => {
-      clearInterval(typingInterval);
+      if (typingInterval) clearInterval(typingInterval);
       pressedKeys.current.clear();
     };
   }, [isSettled]);

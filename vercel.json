@@ -1,0 +1,38 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev", 
+  "installCommand": "npm ci --legacy-peer-deps",
+  "framework": "nextjs",
+  "nodeVersion": "20.x",
+  "env": {
+    "NEXT_PUBLIC_GITHUB_USERNAME": "2241812",
+    "NODE_ENV": "production"
+  },
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/models/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/resume",
+      "destination": "/#resume",
+      "permanent": true
+    }
+  ]
+}
