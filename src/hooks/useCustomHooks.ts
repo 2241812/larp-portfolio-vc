@@ -12,7 +12,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 export function useAsync<T, E = string>(
   asyncFunction: () => Promise<T>,
   immediate: boolean = true,
-  dependencies: any[] = []
+  dependencies: any[] = [] // eslint-disable-line @typescript-eslint/no-explicit-any
 ) {
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
   const [data, setData] = useState<T | null>(null);
@@ -37,7 +37,7 @@ export function useAsync<T, E = string>(
     if (immediate) {
       execute();
     }
-  }, [execute, immediate, ...dependencies]);
+  }, [execute, immediate, ...dependencies]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   return { execute, status, data, error };
 }
@@ -70,7 +70,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
   callback: T,
   delay: number = 500
 ): T {
-  const lastRun = useRef(Date.now());
+  const lastRun = useRef<number>(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   return useCallback((...args: any[]) => {
@@ -95,12 +95,13 @@ export function useThrottle<T extends (...args: any[]) => any>(
  */
 export function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T | undefined>(undefined);
+  const prevValue = ref.current;
 
   useEffect(() => {
     ref.current = value;
   }, [value]);
 
-  return ref.current;
+  return prevValue;
 }
 
 /**
