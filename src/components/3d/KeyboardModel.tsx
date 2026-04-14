@@ -17,7 +17,7 @@ const KEY_MAP: Record<string, string> = {
 };
 
 const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }: { isSettled: boolean; modelScale?: number }) {
-  const { scene, nodes } = useGLTF('/models/keyboard.glb') as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const { scene, nodes } = useGLTF('/models/keyboard.glb') as any;
   const groupRef = useRef<THREE.Group>(null);
   const targetRotY = useRef<number | null>(null);
   
@@ -50,7 +50,7 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
         if (!node) return;
 
         let maxHeight = 0;
-        node.traverse((child: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        node.traverse((child: any) => {
           if (child.isMesh && child.geometry) {
             const geom = child.geometry as THREE.BufferGeometry;
             if (!geom.boundingBox) geom.computeBoundingBox();
@@ -104,11 +104,9 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
     const typeNextKey = () => {
       if (currentIndex >= typingSequence.length) {
         if (typingInterval) clearInterval(typingInterval);
-        pressedKeys.current.clear();
         return;
       }
 
-      pressedKeys.current.clear();
       const keyToPress = typingSequence[currentIndex];
       pressedKeys.current.add(keyToPress);
 
@@ -177,21 +175,15 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
           tiltZ -= keyX * MAX_TILT;
           tiltX += MAX_TILT * 0.3;
           
-          if ((node as any).material) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((node as any).material) {
             ((node as any).material as THREE.MeshStandardMaterial).color.setHex(0x22d3ee);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ((node as any).material as THREE.MeshStandardMaterial).emissive.setHex(0x22d3ee);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ((node as any).material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8;
           }
         } else {
-          if ((node as any).material) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((node as any).material) {
             ((node as any).material as THREE.MeshStandardMaterial).color.setHex(0xffffff);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ((node as any).material as THREE.MeshStandardMaterial).emissive.setHex(0x000000);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ((node as any).material as THREE.MeshStandardMaterial).emissiveIntensity = 0;
           }
         }
