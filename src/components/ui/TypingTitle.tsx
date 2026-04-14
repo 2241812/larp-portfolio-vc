@@ -8,43 +8,40 @@ interface TypingTitleProps {
 }
 
 const TypingTitle: React.FC<TypingTitleProps> = ({ 
-  jobTitles = ['AI Development Intern', 'Game Dev Intern', 'DevOps Intern'],
+  jobTitles = ['DevOps Intern', 'Game Dev Intern', 'AI Development Intern'],
   className = '' 
 }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [currentTitleIndex, setCurrentTitleIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const stateRef = useRef({ displayedIndex: 0, isDeleting: false });
 
   const currentTitle = jobTitles[currentTitleIndex];
 
   useEffect(() => {
-    const state = stateRef.current;
     const fullText = currentTitle;
-
-    if (!state.isDeleting) {
+    
+    if (!isDeleting) {
       // Typing effect
-      if (state.displayedIndex < fullText.length) {
+      if (displayedText.length < fullText.length) {
         timerRef.current = setTimeout(() => {
-          state.displayedIndex += 1;
-          setDisplayedText(fullText.slice(0, state.displayedIndex));
-        }, 50); // Typing speed
-      } else {
+          setDisplayedText(fullText.slice(0, displayedText.length + 1));
+        }, 50);
+      } else if (displayedText.length === fullText.length) {
         // Finished typing, pause before deleting
         timerRef.current = setTimeout(() => {
-          state.isDeleting = true;
-        }, 2000); // Pause for 2 seconds
+          setIsDeleting(true);
+        }, 2000);
       }
     } else {
       // Deleting effect
-      if (state.displayedIndex > 0) {
+      if (displayedText.length > 0) {
         timerRef.current = setTimeout(() => {
-          state.displayedIndex -= 1;
-          setDisplayedText(fullText.slice(0, state.displayedIndex));
-        }, 30); // Deleting speed
+          setDisplayedText(displayedText.slice(0, -1));
+        }, 30);
       } else {
         // Move to next title
-        state.isDeleting = false;
+        setIsDeleting(false);
         setCurrentTitleIndex((prev) => (prev + 1) % jobTitles.length);
       }
     }
@@ -52,7 +49,7 @@ const TypingTitle: React.FC<TypingTitleProps> = ({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [displayedText, currentTitleIndex, jobTitles]);
+  }, [displayedText, isDeleting, currentTitle, jobTitles]);
 
   return (
     <div className={`inline-block ${className}`}>

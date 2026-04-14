@@ -2,7 +2,7 @@ export const resumeData = {
   personalInfo: {
     name: "Narciso III Javier",
     title: "Computer Science Student",
-    titleAnimated: ["AI Development Intern", "Game Dev Intern", "DevOps Intern"],
+    titleAnimated: ["DevOps Intern", "Game Dev Intern", "AI Development Intern"],
     location: "Baguio City, Philippines",
     phone: "+63-976-451-1638",
     email: "2241812@slu.edu.ph",
