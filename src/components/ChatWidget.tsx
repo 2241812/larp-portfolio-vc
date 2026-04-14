@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateResponse, ConversationManager, type Message } from '@/services/chatbot';
+import { type Message } from '@/services/chatbot';
 
 interface ChatWidgetProps {
   isOpen?: boolean;
@@ -15,7 +15,7 @@ const ChatWidget = memo(function ChatWidget({ isOpen: initialOpen = false, onClo
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const conversationManagerRef = useRef(new ConversationManager());
+  const conversationHistoryRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -38,7 +38,9 @@ const ChatWidget = memo(function ChatWidget({ isOpen: initialOpen = false, onClo
         timestamp: new Date(),
       };
       setMessages([welcomeMessage]);
-      conversationManagerRef.current.addMessage('assistant', welcomeMessage.content);
+      conversationHistoryRef.current = [
+        { role: 'assistant', content: welcomeMessage.content },
+      ];
     }
   }, [isOpen]);
 
@@ -54,24 +56,49 @@ const ChatWidget = memo(function ChatWidget({ isOpen: initialOpen = false, onClo
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    conversationManagerRef.current.addMessage('user', inputValue);
+    conversationHistoryRef.current.push({ role: 'user', content: inputValue });
     setInputValue('');
     setIsLoading(true);
 
-    // Simulate response delay for natural feel
-    setTimeout(() => {
-      const responseText = generateResponse(inputValue);
+    try {
+      // Call the chat API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userMessage: inputValue,
+          messages: conversationHistoryRef.current.filter(m => m.role === 'assistant' || conversationHistoryRef.current.indexOf(m) > 0),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
       const assistantMessage: Message = {
         id: `assistant_${Date.now()}`,
-        content: responseText,
+        content: data.message || "I encountered an issue generating a response.",
         role: 'assistant',
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-      conversationManagerRef.current.addMessage('assistant', responseText);
+      conversationHistoryRef.current.push({ role: 'assistant', content: assistantMessage.content });
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMessage: Message = {
+        id: `error_${Date.now()}`,
+        content: "Sorry, I encountered an error. Please try again.",
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -87,15 +114,15 @@ const ChatWidget = memo(function ChatWidget({ isOpen: initialOpen = false, onClo
   };
 
   const handleReset = () => {
-    conversationManagerRef.current.clearHistory();
-    setMessages([
-      {
-        id: 'welcome',
-        content: "Hey! 👋 I'm Narciso. What would you like to know about me?",
-        role: 'assistant',
-        timestamp: new Date(),
-      },
-    ]);
+    conversationHistoryRef.current = [];
+    const resetMessage: Message = {
+      id: 'welcome-reset',
+      content: "Hey! 👋 I'm Narciso. What would you like to know about me?",
+      role: 'assistant',
+      timestamp: new Date(),
+    };
+    setMessages([resetMessage]);
+    conversationHistoryRef.current = [{ role: 'assistant', content: resetMessage.content }];
   };
 
   return (
