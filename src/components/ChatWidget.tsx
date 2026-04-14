@@ -33,7 +33,7 @@ const ChatWidget = memo(function ChatWidget({ isOpen: initialOpen = false, onClo
     if (isOpen && messages.length === 0) {
       const welcomeMessage: Message = {
         id: 'welcome',
-        content: "Hey! 👋 I'm Narciso, a CS student and AI Development Intern. Ask me anything about my skills, projects, or how to get in touch!",
+        content: "Hey! 👋 I'm Narciso, a CS student working across AI development, game dev, and DevOps. Ask me anything about my skills, projects, or how to get in touch!",
         role: 'assistant',
         timestamp: new Date(),
       };
