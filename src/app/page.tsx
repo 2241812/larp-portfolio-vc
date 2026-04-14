@@ -2,7 +2,11 @@
 import { useState, useEffect, useRef } from 'react';
 import LenisProvider from '@/components/ui/LenisProvider';
 import { motion, AnimatePresence } from 'framer-motion';
-import Scene from '@/components/3d/Scene';
+import dynamic from 'next/dynamic';
+
+const Scene = dynamic(() => import('@/components/3d/Scene'), {
+  ssr: false,
+});
 import TopBar from '@/components/ui/TopBar';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import Sections from '@/components/ui/Sections';

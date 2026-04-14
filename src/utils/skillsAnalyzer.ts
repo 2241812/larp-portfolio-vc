@@ -62,9 +62,37 @@ export function mergeSkillsWithGitHub(gitHubSkills: AnalyzedSkill[]): Record<str
     Infrastructure: 'Infrastructure & Tooling',
   };
 
+  // Specific skill to category mappings (for more granular control)
+  const specificSkillMapping: Record<string, string> = {
+    'Docker': 'Infrastructure & Tooling',
+    'Docker Compose': 'Infrastructure & Tooling',
+    'Kubernetes': 'Infrastructure & Tooling',
+    'Containerization': 'Infrastructure & Tooling',
+    'Container': 'Infrastructure & Tooling',
+    'Podman': 'Infrastructure & Tooling',
+    'AWS': 'Infrastructure & Tooling',
+    'GCP': 'Infrastructure & Tooling',
+    'Azure': 'Infrastructure & Tooling',
+    'CI/CD': 'Infrastructure & Tooling',
+    'Jenkins': 'Infrastructure & Tooling',
+    'GitHub Actions': 'Infrastructure & Tooling',
+    'GitLab CI': 'Infrastructure & Tooling',
+    'Git': 'Infrastructure & Tooling',
+    'GitHub': 'Infrastructure & Tooling',
+    'GitLab': 'Infrastructure & Tooling',
+    'Microservices': 'Infrastructure & Tooling',
+  };
+
   gitHubSkills.forEach((gitHubSkill) => {
     if (!processedGitHubSkills.has(gitHubSkill.name)) {
-      const targetCategory = categoryMapping[gitHubSkill.category] || 'Programming & Web';
+      // Check if skill has specific mapping
+      let targetCategory = specificSkillMapping[gitHubSkill.name];
+      
+      // Fall back to category-based mapping
+      if (!targetCategory) {
+        targetCategory = categoryMapping[gitHubSkill.category] || 'Programming & Web';
+      }
+      
       const categoryKey = targetCategory as keyof typeof enhancedSkills;
 
       enhancedSkills[categoryKey].push({

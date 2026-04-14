@@ -2,7 +2,11 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import Scene from '@/components/3d/Scene';
+import dynamic from 'next/dynamic';
+
+const Scene = dynamic(() => import('@/components/3d/Scene'), {
+  ssr: false,
+});
 
 interface TypingStats {
   wpm: number;
@@ -48,6 +52,8 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
   
   const [input, setInput] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
   const [stats, setStats] = useState<TypingStats>({
     wpm: 0,
     accuracy: 100,
@@ -63,6 +69,20 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const typingBoxRef = useRef<HTMLDivElement>(null);
+
+  // Focus input when welcome screen is dismissed
+  useEffect(() => {
+    if (!showWelcome && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [showWelcome]);
+
+  // Ensure input stays focused when test is active
+  useEffect(() => {
+    if (isActive && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isActive]);
 
   // Update stats every 100ms
   useEffect(() => {
@@ -92,12 +112,19 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
         wordsTyped,
         timeElapsed: Math.floor(timeElapsedSec),
       });
+
+      // Auto-finish when duration time is exceeded
+      if (mode === 'duration' && timeElapsedSec >= duration) {
+        setIsFinished(true);
+        setIsActive(false);
+        if (timerRef.current) clearInterval(timerRef.current);
+      }
     }, 100);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isActive, input, testText, isFinished]);
+  }, [isActive, input, testText, isFinished, mode, duration]);
 
   // Scroll to active word
   useEffect(() => {
@@ -118,6 +145,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
     setInput('');
     setIsActive(false);
     setIsFinished(false);
+    setShowSettings(true);
     setStats({
       wpm: 0,
       accuracy: 100,
@@ -142,6 +170,10 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
     setIsActive(false);
     setIsFinished(false);
     startTimeRef.current = null;
+    // Scroll to top
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -210,6 +242,13 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
     }
   };
 
+  const handleInputBlur = () => {
+    // If test is active, immediately refocus to keep input active
+    if (isActive && inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
   const progress = (input.length / testText.length) * 100;
 
   // Split text for display
@@ -223,12 +262,203 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
         <Scene isSettled={true} />
       </div>
 
+      {/* Welcome Screen */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-sm bg-black/40"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-center space-y-8"
+            >
+              {/* Title */}
+              <div className="space-y-2">
+                <h1 className="text-5xl md:text-6xl font-black uppercase tracking-widest text-cyan-400" style={{ fontFamily: 'var(--font-orbitron)' }}>
+                  Type Test
+                </h1>
+                <p className="text-sm md:text-base text-neutral-400 font-mono">
+                  Master your typing speed and accuracy
+                </p>
+              </div>
+
+              {/* Start Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setShowWelcome(false);
+                  setShowSettings(true);
+                }}
+                className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-cyan-400 text-neutral-950 font-black text-lg md:text-xl uppercase tracking-widest rounded-lg shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all duration-300"
+              >
+                Start Test
+              </motion.button>
+
+              {/* Instructions */}
+              <div className="text-left max-w-md mx-auto space-y-2 text-xs md:text-sm text-neutral-400 font-mono">
+                <p className="flex items-center gap-2">
+                  <span className="text-cyan-400">→</span> Configure your test settings
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-cyan-400">→</span> Choose difficulty and duration
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-cyan-400">→</span> Type as fast as you can
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="text-yellow-400">→</span> Press Tab + Enter to restart
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Settings Configuration Modal */}
+      <AnimatePresence>
+        {showSettings && !showWelcome && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-sm bg-black/40 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full max-w-md bg-gradient-to-br from-neutral-900/95 to-neutral-950/95 backdrop-blur-xl border border-cyan-400/20 rounded-2xl p-8 space-y-6"
+            >
+              <div>
+                <h2 className="text-2xl font-bold text-cyan-400 uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-orbitron)' }}>
+                  Configure Test
+                </h2>
+                <p className="text-xs text-neutral-500">Customize your typing challenge</p>
+              </div>
+
+              {/* Mode Selection */}
+              <div>
+                <label className="text-xs font-mono text-cyan-400/70 uppercase tracking-wider block mb-3">Test Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setMode('duration')}
+                    className={`py-2.5 px-3 rounded-lg font-mono text-xs transition-all ${
+                      mode === 'duration'
+                        ? 'bg-cyan-400 border border-cyan-400 text-neutral-950 font-semibold'
+                        : 'bg-neutral-900/50 border border-cyan-400/20 text-neutral-400 hover:text-cyan-400'
+                    }`}
+                  >
+                    Duration
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setMode('words')}
+                    className={`py-2.5 px-3 rounded-lg font-mono text-xs transition-all ${
+                      mode === 'words'
+                        ? 'bg-cyan-400 border border-cyan-400 text-neutral-950 font-semibold'
+                        : 'bg-neutral-900/50 border border-cyan-400/20 text-neutral-400 hover:text-cyan-400'
+                    }`}
+                  >
+                    Words
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Duration/Words Value */}
+              <div>
+                <label className="text-xs font-mono text-cyan-400/70 uppercase tracking-wider block mb-2">
+                  {mode === 'duration' ? 'Duration (seconds)' : 'Word Count'}
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={mode === 'duration' ? 15 : 10}
+                    max={mode === 'duration' ? 300 : 500}
+                    step={mode === 'duration' ? 5 : 10}
+                    value={mode === 'duration' ? duration : wordCount}
+                    onChange={(e) => {
+                      if (mode === 'duration') {
+                        setDuration(parseInt(e.target.value));
+                      } else {
+                        setWordCount(parseInt(e.target.value));
+                      }
+                    }}
+                    className="flex-1 h-2 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  />
+                  <div className="bg-cyan-400/10 border border-cyan-400/20 rounded px-3 py-1.5 text-sm font-mono text-cyan-300 min-w-[60px] text-center">
+                    {mode === 'duration' ? `${duration}s` : `${wordCount}w`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Difficulty Selection */}
+              <div>
+                <label className="text-xs font-mono text-cyan-400/70 uppercase tracking-wider block mb-3">Difficulty</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['easy', 'medium', 'hard'] as const).map((diff) => (
+                    <motion.button
+                      key={diff}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setDifficulty(diff)}
+                      className={`py-2 px-2 rounded text-[10px] md:text-xs font-mono font-bold capitalize transition-all ${
+                        difficulty === diff
+                          ? 'bg-cyan-400 border border-cyan-400 text-neutral-950 font-semibold'
+                          : 'bg-neutral-900/50 border border-cyan-400/20 text-neutral-400 hover:text-cyan-400'
+                      }`}
+                    >
+                      {diff}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    startTestWithSettings();
+                    setShowSettings(false);
+                  }}
+                  className="flex-1 py-2.5 px-4 bg-cyan-400 text-neutral-950 rounded-lg font-bold font-mono text-xs uppercase tracking-wider hover:bg-cyan-300 transition-all font-semibold"
+                >
+                  Begin Test
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowWelcome(true)}
+                  className="py-2.5 px-4 text-cyan-400/70 border border-cyan-400/20 rounded-lg font-mono text-xs uppercase tracking-wider hover:text-cyan-400 hover:border-cyan-400/40 transition-all"
+                >
+                  Back
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Left Sidebar - Settings Menu */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
+        animate={{ opacity: !showWelcome && !showSettings ? 1 : 0, x: 0 }}
         transition={{ duration: 0.4 }}
         className="relative z-10 w-56 border-r border-cyan-900/30 bg-neutral-950/40 backdrop-blur-sm flex flex-col p-4 overflow-y-auto"
+        style={{ display: (!showWelcome && !showSettings) ? 'flex' : 'none' }}
       >
         {/* Header */}
         <div className="mb-6">
@@ -320,7 +550,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
                     : 'bg-neutral-900/50 border border-cyan-400/20 text-neutral-400 hover:text-cyan-400'
                 }`}
               >
-                {diff.slice(0, 3)}
+                {diff}
               </button>
             ))}
           </div>
@@ -331,7 +561,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={startTestWithSettings}
-          className="w-full py-2 px-3 mt-auto mb-3 bg-cyan-400/20 border border-cyan-400/60 text-cyan-300 rounded-md font-bold font-mono text-xs uppercase tracking-wider hover:bg-cyan-400/30 transition-all duration-300"
+          className="w-full py-2 px-3 mt-auto mb-3 bg-cyan-400 text-neutral-950 rounded-md font-bold font-mono text-xs uppercase tracking-wider hover:bg-cyan-300 transition-all duration-300"
         >
           New Test
         </motion.button>
@@ -347,7 +577,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
       </motion.div>
 
       {/* Main Content Area */}
-      <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col overflow-hidden" style={{ display: (!showWelcome && !showSettings) ? 'flex' : 'none' }}>
         {/* Top Navigation Bar */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -423,13 +653,19 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
               </div>
 
               <div className="flex items-baseline gap-1.5">
-                <div className="text-[9px] text-neutral-600 font-mono uppercase tracking-wider">Time</div>
+                <div className="text-[9px] text-neutral-600 font-mono uppercase tracking-wider">
+                  {mode === 'duration' ? 'Time Left' : 'Time'}
+                </div>
                 <motion.div
-                  className="text-xl md:text-2xl font-black text-neutral-300"
+                  className={`text-xl md:text-2xl font-black ${
+                    mode === 'duration' && duration - stats.timeElapsed <= 5
+                      ? 'text-red-400'
+                      : 'text-neutral-300'
+                  }`}
                   style={{ fontFamily: 'var(--font-orbitron)' }}
                   key={stats.timeElapsed}
                 >
-                  {stats.timeElapsed}
+                  {mode === 'duration' ? Math.max(0, duration - stats.timeElapsed) : stats.timeElapsed}
                   <span className="text-xs text-neutral-500">s</span>
                 </motion.div>
               </div>
@@ -564,9 +800,10 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
         value={input}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onBlur={handleInputBlur}
         placeholder=""
-        autoFocus
-        className="absolute opacity-0 w-0 h-0 pointer-events-none"
+        tabIndex={0}
+        className="fixed top-0 left-0 opacity-0 w-px h-px pointer-events-auto -z-10 border-none outline-none"
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"
@@ -623,7 +860,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
                     Final WPM
                   </div>
                   <div
-                    className="text-4xl md:text-5xl font-black text-cyan-400"
+                    className="text-2xl md:text-3xl font-black text-cyan-400"
                     style={{ fontFamily: 'var(--font-orbitron)' }}
                   >
                     {stats.wpm}
@@ -648,7 +885,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
                     Accuracy
                   </div>
                   <div
-                    className={`text-4xl md:text-5xl font-black ${
+                    className={`text-2xl md:text-3xl font-black ${
                       stats.accuracy >= 98
                         ? 'text-green-400'
                         : stats.accuracy >= 95
@@ -673,7 +910,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
                     Time
                   </div>
                   <div
-                    className="text-4xl md:text-5xl font-black text-neutral-300"
+                    className="text-2xl md:text-3xl font-black text-neutral-300"
                     style={{ fontFamily: 'var(--font-orbitron)' }}
                   >
                     {stats.timeElapsed}
@@ -691,7 +928,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
                     Characters
                   </div>
                   <div
-                    className="text-4xl md:text-5xl font-black text-neutral-300"
+                    className="text-2xl md:text-3xl font-black text-neutral-300"
                     style={{ fontFamily: 'var(--font-orbitron)' }}
                   >
                     {stats.charsTyped}

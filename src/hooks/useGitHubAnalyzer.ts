@@ -56,19 +56,35 @@ const LANGUAGE_CATEGORY_MAP: Record<string, 'Language' | 'Framework' | 'Tool' | 
   'Rails': 'Framework',
   'Unity': 'Framework',
   'Unreal': 'Framework',
+  'PyQt6': 'Framework',
+  'AR Foundation': 'Framework',
   
-  // Infrastructure & Tools
+  // Infrastructure & Containerization
   'Docker': 'Infrastructure',
+  'Docker Compose': 'Infrastructure',
   'Kubernetes': 'Infrastructure',
+  'Containerization': 'Infrastructure',
+  'Container': 'Infrastructure',
+  'Podman': 'Infrastructure',
   'AWS': 'Infrastructure',
   'GCP': 'Infrastructure',
   'Azure': 'Infrastructure',
+  'CI/CD': 'Infrastructure',
+  'Jenkins': 'Infrastructure',
+  'GitHub Actions': 'Infrastructure',
+  'GitLab CI': 'Infrastructure',
+  
+  // Tools
   'Git': 'Tool',
   'GitHub': 'Tool',
   'GitLab': 'Tool',
   'Webpack': 'Tool',
   'Vite': 'Tool',
   'Babel': 'Tool',
+  'VSCode': 'Tool',
+  'Visual Studio': 'Tool',
+  'GraphQL': 'Tool',
+  'REST': 'Tool',
 };
 
 /**
@@ -207,11 +223,18 @@ function extractKeywordsFromDescription(description: string): string[] {
   const descLower = description.toLowerCase();
 
   const patterns = [
+    // Frontend frameworks
     /react|vue|angular|next\.?js|svelte/gi,
+    // Backend frameworks
     /express|django|flask|fastapi|spring|rails|laravel/gi,
-    /docker|kubernetes|aws|gcp|azure|graphql|rest/gi,
-    /typescript|javascript|python|java|go|rust/gi,
-    /mongodb|postgresql|mysql|redis|elasticsearch/gi,
+    // Containerization & Infrastructure (comprehensive)
+    /docker|kubernetes|k8s|podman|container|docker[- ]compose|containerd/gi,
+    /aws|gcp|google cloud|azure|cloud platform/gi,
+    /ci[\/\-]?cd|jenkins|github actions|gitlab ci|circleci|travis/gi,
+    // Databases
+    /mongodb|postgresql|mysql|redis|elasticsearch|dynamodb|firestore/gi,
+    // Other tools
+    /typescript|python|java|go|rust|graphql|rest api|microservice/gi,
   ];
 
   patterns.forEach((pattern) => {
@@ -219,11 +242,33 @@ function extractKeywordsFromDescription(description: string): string[] {
     if (matches) {
       matches.forEach((match) => {
         // Normalize common variations
-        const normalized = match
-          .toLowerCase()
-          .replace('next.js', 'Next.js')
-          .replace('nextjs', 'Next.js');
-        keywords.add(normalized.charAt(0).toUpperCase() + normalized.slice(1));
+        let normalized = match.toLowerCase();
+        
+        // Normalize multi-word terms
+        if (normalized.includes('docker compose') || normalized.includes('docker-compose')) {
+          normalized = 'Docker Compose';
+        } else if (normalized.includes('github action')) {
+          normalized = 'GitHub Actions';
+        } else if (normalized.includes('gitlab ci')) {
+          normalized = 'GitLab CI';
+        } else if (normalized.includes('google cloud')) {
+          normalized = 'GCP';
+        } else if (normalized.includes('ci/cd') || normalized.includes('ci-cd')) {
+          normalized = 'CI/CD';
+        } else if (normalized === 'k8s') {
+          normalized = 'Kubernetes';
+        } else if (normalized.includes('microservice')) {
+          normalized = 'Microservices';
+        } else if (normalized.includes('rest api') || normalized === 'rest') {
+          normalized = 'REST';
+        } else {
+          // Capitalize first letter
+          normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+        }
+        
+        if (normalized && normalized.length > 1) {
+          keywords.add(normalized);
+        }
       });
     }
   });

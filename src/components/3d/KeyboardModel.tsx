@@ -4,14 +4,6 @@ import { useGLTF, Center } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const KEY_CENTER_X: Record<string, number> = {
-  'Digit1': -0.35, 'Digit2': -0.3, 'Digit3': -0.25, 'Digit4': -0.2, 'Digit5': -0.15, 'Digit6': -0.1, 'Digit7': -0.05, 'Digit8': 0, 'Digit9': 0.05, 'Digit0': 0.1,
-  'KeyQ': -0.25, 'KeyW': -0.2, 'KeyE': -0.15, 'KeyR': -0.1, 'KeyT': -0.05, 'KeyY': 0, 'KeyU': 0.05, 'KeyI': 0.1, 'KeyO': 0.15, 'KeyP': 0.2,
-  'KeyA': -0.2, 'KeyS': -0.15, 'KeyD': -0.1, 'KeyF': -0.05, 'KeyG': 0, 'KeyH': 0.05, 'KeyJ': 0.1, 'KeyK': 0.15, 'KeyL': 0.2,
-  'KeyZ': -0.15, 'KeyX': -0.1, 'KeyC': -0.05, 'KeyV': 0, 'KeyB': 0.05, 'KeyN': 0.1, 'KeyM': 0.15,
-  'Space': 0, 'Enter': 0.25
-};
-
 const KEY_MAP: Record<string, string> = {
   'Digit1': 'Object_104', 'Digit2': 'Object_106', 'Digit3': 'Object_108', 'Digit4': 'Object_110', 'Digit5': 'Object_112', 'Digit6': 'Object_114', 'Digit7': 'Object_116', 'Digit8': 'Object_118', 'Digit9': 'Object_120', 'Digit0': 'Object_122', 'Minus': 'Object_124', 'Backspace': 'Object_98', 'KeyQ': 'Object_74', 'KeyW': 'Object_166', 'KeyE': 'Object_168', 'KeyR': 'Object_170', 'KeyT': 'Object_172', 'KeyY': 'Object_174', 'KeyU': 'Object_176', 'KeyI': 'Object_178', 'KeyO': 'Object_180', 'KeyP': 'Object_182', 'KeyA': 'Object_68', 'KeyS': 'Object_128', 'KeyD': 'Object_130', 'KeyF': 'Object_132', 'KeyG': 'Object_134', 'KeyH': 'Object_136', 'KeyJ': 'Object_138', 'KeyK': 'Object_140', 'KeyL': 'Object_142', 'Enter': 'Object_100', 'KeyZ': 'Object_70', 'KeyX': 'Object_148', 'KeyC': 'Object_150', 'KeyV': 'Object_152', 'KeyB': 'Object_154', 'KeyN': 'Object_156', 'KeyM': 'Object_158', 'Comma': 'Object_160', 'Period': 'Object_162', 'Slash': 'Object_164', 'Space': 'Object_80'
 };
@@ -26,11 +18,6 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
   const keyHeights = useRef<Record<string, number>>({});
   const avgKeyHeight = useRef<number>(1);
   const PRESS_DEPTH = 0.015;
-  
-  const keyboardTilt = useRef({ rotX: 0, rotXVel: 0, rotZ: 0, rotZVel: 0 });
-  const TILT_STIFFNESS = 600;
-  const TILT_DAMPING = 18;
-  const MAX_TILT = 0.04;
 
   useEffect(() => {
     Object.values(KEY_MAP).forEach((nodeName) => {
@@ -112,12 +99,12 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
 
       setTimeout(() => {
         pressedKeys.current.delete(keyToPress);
-      }, 150);
+      }, 120);
 
       currentIndex++;
     };
 
-    typingInterval = setInterval(typeNextKey, 300);
+    typingInterval = setInterval(typeNextKey, 250);
 
     return () => {
       if (typingInterval) clearInterval(typingInterval);
@@ -125,7 +112,7 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
     };
   }, [isSettled]);
 
-  useFrame((state, delta) => {
+  useFrame(() => {
     if (!groupRef.current) return;
 
     // Scale responsive to viewport
@@ -148,21 +135,17 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
     const targetRotX = isSettled ? 0.4 : 0.6;
     const finalRotY = isSettled ? (targetRotY.current || 0) : 0;
 
-    groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.08);
-    groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, targetScale, 0.08);
-    groupRef.current.scale.z = THREE.MathUtils.lerp(groupRef.current.scale.z, targetScale, 0.08);
+    groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.05);
+    groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, targetScale, 0.05);
+    groupRef.current.scale.z = THREE.MathUtils.lerp(groupRef.current.scale.z, targetScale, 0.05);
 
-    groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetPosX, 0.08);
-    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetPosY, 0.08);
+    groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetPosX, 0.06);
+    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetPosY, 0.06);
 
-    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.08);
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, finalRotY, 0.08);
-    groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.08);
+    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.05);
+    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, finalRotY, 0.05);
+    groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, 0.05);
 
-    let tiltX = 0;
-    let tiltZ = 0;
-    let keysPressed = 0;
-    
     Object.entries(KEY_MAP).forEach(([keyCode, nodeName]) => {
       if (nodeName && nodes[nodeName] && initialPositions.current[nodeName] !== undefined) {
         const node = nodes[nodeName] as THREE.Object3D;
@@ -170,11 +153,6 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
         const isPressed = pressedKeys.current.has(keyCode);
         
         if (isPressed) {
-          keysPressed++;
-          const keyX = KEY_CENTER_X[keyCode] || 0;
-          tiltZ -= keyX * MAX_TILT;
-          tiltX += MAX_TILT * 0.3;
-          
           if ((node as any).material) {
             ((node as any).material as THREE.MeshStandardMaterial).color.setHex(0x22d3ee);
             ((node as any).material as THREE.MeshStandardMaterial).emissive.setHex(0x22d3ee);
@@ -193,37 +171,10 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
         const depthScale = (nodeHeight > 0 ? (avgKeyHeight.current / nodeHeight) : 1);
         const pressOffset = PRESS_DEPTH * depthScale;
         const targetKeyY = isPressed ? basePosY - pressOffset : basePosY;
-        node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.4);
+        node.position.y = THREE.MathUtils.lerp(node.position.y, targetKeyY, 0.25);
       }
     });
-    
-    if (keysPressed > 0) {
-      const targetTiltX = Math.min(tiltX, MAX_TILT);
-      const targetTiltZ = THREE.MathUtils.clamp(tiltZ, -MAX_TILT, MAX_TILT);
-      
-      const springX = -TILT_STIFFNESS * (keyboardTilt.current.rotX - targetTiltX);
-      const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
-      keyboardTilt.current.rotXVel += (springX + dampX) * delta;
-      keyboardTilt.current.rotX += keyboardTilt.current.rotXVel * delta;
-      
-      const springZ = -TILT_STIFFNESS * (keyboardTilt.current.rotZ - targetTiltZ);
-      const dampZ = -TILT_DAMPING * keyboardTilt.current.rotZVel;
-      keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
-      keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
-    } else {
-      const springX = -TILT_STIFFNESS * keyboardTilt.current.rotX;
-      const dampX = -TILT_DAMPING * keyboardTilt.current.rotXVel;
-      keyboardTilt.current.rotXVel += (springX + dampX) * delta;
-      keyboardTilt.current.rotX += keyboardTilt.current.rotXVel * delta;
-      
-      const springZ = -TILT_STIFFNESS * keyboardTilt.current.rotZ;
-      const dampZ = -TILT_DAMPING * keyboardTilt.current.rotZVel;
-      keyboardTilt.current.rotZVel += (springZ + dampZ) * delta;
-      keyboardTilt.current.rotZ += keyboardTilt.current.rotZVel * delta;
-    }
-    
-    groupRef.current.rotation.x += keyboardTilt.current.rotX;
-    groupRef.current.rotation.z += keyboardTilt.current.rotZ;
+
   });
 
   return (
