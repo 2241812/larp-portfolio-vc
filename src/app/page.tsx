@@ -9,7 +9,6 @@ import Sections from '@/components/ui/Sections';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
 import ChatWidget from '@/components/ChatWidget';
-import TypingTitle from '@/components/ui/TypingTitle';
 import { resumeData } from '@/data/resumeData';
 
 export default function Home() {
@@ -306,16 +305,15 @@ export default function Home() {
                       {resumeData.personalInfo.name}
                     </motion.h1>
 
-                    <motion.div
+                    <motion.p 
                       initial={{ opacity: 0, letterSpacing: "0em" }}
-                      animate={{ opacity: 1 }}
+                      animate={{ opacity: 1, letterSpacing: "0.05em" }}
                       transition={{ duration: 1.5, ease: "easeOut", delay: 0.8 }}
+                      className="text-base sm:text-lg md:text-2xl text-cyan-400 uppercase font-semibold text-center"
+                      style={{ fontFamily: 'var(--font-rajdhani)' }}
                     >
-                      <TypingTitle 
-                        text="AI Development Intern"
-                        className="text-base sm:text-lg md:text-2xl font-semibold"
-                      />
-                    </motion.div>
+                      AI Development Intern
+                    </motion.p>
                   </div>
                   
                 </div>
