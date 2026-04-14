@@ -1,29 +1,34 @@
 # Narciso III Javier | 3D Interactive Portfolio
 
-An interactive 3D portfolio built with **Next.js 16**, **Three.js**, **React Three Fiber**, and **Framer Motion**. Features a 3D keyboard model, interactive animations, GitHub stats integration, and multiple mini-games.
+An interactive 3D portfolio built with **Next.js 16**, **Three.js**, **React Three Fiber**, and **Framer Motion**. Features a 3D keyboard model, interactive animations, GitHub stats integration, LLM-powered chatbot, and multiple mini-games.
 
 ## ✨ Features
 
 - **3D Keyboard Model**: Interactive GLTF keyboard with key press animations and scroll-based transformations
+- **Animated Title**: Cycling job titles with typing animation effect (Computer Science Student | [Job Titles])
 - **Interactive Typing Challenge**: Real-time WPM tracking, accuracy calculation, difficulty settings (Easy/Medium/Hard)
 - **Contribution Calendar Game**: Click cells to break them (mini-game with scoring system)
 - **GitHub Integration**: Live GitHub profile stats, contribution calendar, and activity feed
+- **Gist Blog Section**: Display GitHub Gists as blog articles with markdown support
+- **LLM-Powered Chatbot**: AI-driven conversational chatbot using OpenRouter API (📬 floating widget) with intelligent context awareness
 - **Matrix Rain Effect**: Canvas-based Japanese character rain animation
 - **Particle Effects**: Canvas-based particle burst system with collision detection
 - **Smooth Scrolling**: Lenis-based smooth scroll with section-based navigation
-- **Rule-Based Chatbot**: Interactive chatbot with 20+ conversation patterns (💬 floating widget)
 - **Responsive Design**: Fully responsive on mobile, tablet, and desktop
 - **Performance Optimized**: GPU-accelerated 3D rendering, lazy loading, optimized animations
+- **Custom Favicon**: Logo-based favicon for browser tab
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 16.2.1 (App Router)
+- **Framework**: Next.js 16.2.3 (App Router with Turbopack)
 - **3D Rendering**: Three.js + React Three Fiber + Drei
 - **Animations**: Framer Motion
 - **Styling**: Tailwind CSS v4 with custom CSS variables
 - **Smooth Scroll**: React Lenis
-- **Data Fetching**: SWR for caching
-- **Language**: TypeScript 5.x
+- **Data Fetching**: SWR for intelligent caching and deduplication
+- **LLM Integration**: OpenRouter API with free models
+- **Language**: TypeScript 5.9.3
+- **Runtime**: Node.js 20.x+
 - **Deployment**: Vercel-ready
 
 ## 🚀 Getting Started
@@ -36,14 +41,23 @@ An interactive 3D portfolio built with **Next.js 16**, **Three.js**, **React Thr
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/my-3d-portfolio.git
+git clone https://github.com/2241812/narcisoIIIjavier.git
 cd my-3d-portfolio
 
 # Install dependencies
 npm install
+```
 
-# Copy environment variables
-cp .env.example .env.local
+### Configuration
+
+Create a `.env.local` file in the project root:
+
+```bash
+# LLM Configuration (for chatbot)
+NEXT_PUBLIC_OPENROUTER_API_KEY=your_api_key_here
+
+# GitHub Configuration (optional - uses public API by default)
+NEXT_PUBLIC_GITHUB_TOKEN=your_github_token_here
 ```
 
 ### Development
@@ -64,7 +78,7 @@ npm run build
 # Start production server
 npm start
 
-# Run linting
+# Run linting and fix
 npm run lint
 ```
 
