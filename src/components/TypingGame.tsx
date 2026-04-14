@@ -356,7 +356,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
           className="flex items-center justify-between px-6 md:px-8 py-3 border-b border-cyan-900/30 bg-neutral-950/40 backdrop-blur-sm"
         >
           <h1 className="text-lg font-bold tracking-widest uppercase text-cyan-400" style={{ fontFamily: 'var(--font-orbitron)' }}>
-            // typing challenge
+            {/* typing challenge */}
           </h1>
           <div className="w-16" />
         </motion.div>

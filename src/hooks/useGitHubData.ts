@@ -43,7 +43,7 @@ function getCachedData(username: string): PinnedRepo[] | null {
     // Clear expired cache
     localStorage.removeItem(`${CACHE_KEY}_${username}`);
     localStorage.removeItem(`${CACHE_EXPIRY_KEY}_${username}`);
-  } catch (e) {
+  } catch (_e) {
     // Silently fail on localStorage access
   }
   return null;

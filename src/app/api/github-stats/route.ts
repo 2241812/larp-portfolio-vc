@@ -76,6 +76,7 @@ export async function GET(request: Request) {
 }
 
 // Handle OPTIONS requests for CORS preflight
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, {
     status: 200,

@@ -7,12 +7,6 @@ export interface Message {
   timestamp: Date;
 }
 
-interface ChatbotRule {
-  patterns: string[];
-  responses: (string | (() => string))[];
-  isDefault?: boolean;
-}
-
 /**
  * Training data extracted from portfolio content
  */
@@ -299,7 +293,7 @@ function selectResponse(responses: (string | (() => string))[]): string {
 /**
  * Generate chatbot response with improved matching and context awareness
  */
-export function generateResponse(userInput: string, context?: ConversationManager): string {
+export function generateResponse(userInput: string, _context?: ConversationManager): string {
   if (!userInput.trim()) {
     return "Please say something! What would you like to know about the portfolio?";
   }

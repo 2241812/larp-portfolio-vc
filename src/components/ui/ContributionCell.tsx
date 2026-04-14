@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import type { ContributionDay } from '@/hooks/useContributionData';
-import { LEVEL_COLORS, LEVEL_GLOWS, CELL_CLASSES, CONTRIBUTION_CONFIG } from '@/constants/contributionCalendar';
+import { LEVEL_COLORS, LEVEL_GLOWS, CELL_CLASSES } from '@/constants/contributionCalendar';
 
 interface ContributionCellProps {
   day: ContributionDay;

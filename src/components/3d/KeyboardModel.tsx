@@ -71,7 +71,7 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
         keyHeights.current = heights;
         avgKeyHeight.current = sum / cnt;
       }
-    } catch (err) {
+    } catch {
       // If anything fails here, fall back to defaults
     }
 
@@ -139,14 +139,14 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
       mobileReductionFactor = 0.9; // 10% reduction for tablet
     }
 
-    let targetScale = isSettled 
+    const targetScale = isSettled 
       ? (15.0 * modelScale * mobileReductionFactor) 
       : (18.0 * modelScale * mobileReductionFactor);
     
     const targetPosX = 0;
-    let targetPosY = isSettled ? (0.45 * modelScale) : (2 * modelScale);
-    let targetRotX = isSettled ? 0.4 : 0.6;
-    let finalRotY = isSettled ? (targetRotY.current || 0) : 0;
+    const targetPosY = isSettled ? (0.45 * modelScale) : (2 * modelScale);
+    const targetRotX = isSettled ? 0.4 : 0.6;
+    const finalRotY = isSettled ? (targetRotY.current || 0) : 0;
 
     groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.08);
     groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, targetScale, 0.08);

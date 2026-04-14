@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from '@/hooks/useInView';
 import { useGameStats } from '@/hooks/useGameStats';
 import AchievementToast from './AchievementToast';
-import { GameDifficulty, CELL_SIZE, LEVEL_POINTS, LEVEL_COLORS, LEVEL_GLOWS } from '@/constants/gameConstants';
+import { GameDifficulty, CELL_SIZE, LEVEL_COLORS, LEVEL_GLOWS } from '@/constants/gameConstants';
 import { fetchGitHubContributions } from '@/services/api';
 
 interface ContributionDay {
@@ -33,13 +33,12 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
   const [gameStartTime, setGameStartTime] = useState(0);
   
   // Stats integration
-  const { stats, recordGameResult, newAchievements, clearNewAchievements } = useGameStats();
+  const { recordGameResult, newAchievements, clearNewAchievements } = useGameStats();
   
   const animFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const VISIBLE_WIDTH = 500; // approximate visible area
   const BASE_SPEED = 0.3; // pixels per frame at 60fps
   const MAX_SPEED = 4;
 

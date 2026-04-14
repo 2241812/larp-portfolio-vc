@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { resumeData } from '@/data/resumeData';
 import { useInView } from '@/hooks/useInView';
 import { useGitHubAnalyzer } from '@/hooks/useGitHubAnalyzer';
-import { mergeSkillsWithGitHub, formatEndorsements, type EnhancedSkill } from '@/utils/skillsAnalyzer';
+import { mergeSkillsWithGitHub, type EnhancedSkill } from '@/utils/skillsAnalyzer';
 import {
   containerVariants,
   cardVariants,

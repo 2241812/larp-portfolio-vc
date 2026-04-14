@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useReducer } from 'react';
+import { useCallback, useRef, useEffect, useReducer } from 'react';
 
 // Game state reducer
 interface GameState {

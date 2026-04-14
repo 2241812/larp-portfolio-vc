@@ -29,7 +29,7 @@ const DEFAULT_RETRY_DELAY = 1000; // 1 second
  */
 function createTimeoutController(timeout: number): AbortController {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  setTimeout(() => controller.abort(), timeout);
   return controller;
 }
 
