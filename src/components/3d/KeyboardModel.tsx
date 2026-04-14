@@ -129,7 +129,9 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
     if (!groupRef.current) return;
 
     // Scale responsive to viewport - reduce scale on mobile/tablet
-    let targetScale = isSettled ? (15.0 * modelScale) : (18.0 * modelScale);
+    // Apply additional 50% reduction on mobile for more compact view
+    const mobileAdjustment = modelScale < 0.5 ? 0.5 : 1;
+    let targetScale = isSettled ? (15.0 * modelScale * mobileAdjustment) : (18.0 * modelScale * mobileAdjustment);
     const targetPosX = 0;
     let targetPosY = isSettled ? (0.45 * modelScale) : (2 * modelScale);
     let targetRotX = isSettled ? 0.4 : 0.6;
