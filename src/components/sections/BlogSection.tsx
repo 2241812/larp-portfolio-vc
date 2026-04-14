@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { containerVariants, cardVariants } from './shared';
 import { useInView } from '@/hooks/useInView';
 import { useGistData } from '@/hooks/useGistData';
-import { resumeData } from '@/data/resumeData';
 
 const BlogSection = memo(function BlogSection() {
   const { ref, isInView } = useInView({ rootMargin: '300px', once: true });

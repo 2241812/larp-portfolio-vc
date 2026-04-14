@@ -178,7 +178,7 @@ const ContactSection = memo(function ContactSection() {
           >
             <h3 className="text-lg font-bold text-cyan-400 mb-2 font-mono">Ready to Connect?</h3>
             <p className="text-neutral-400 text-sm mb-6">
-              Let's collaborate on innovative projects. Download my resume or reach out directly.
+              Let&apos;s collaborate on innovative projects. Download my resume or reach out directly.
             </p>
             <div className="flex flex-col xl:flex-row gap-3 justify-center items-center">
               <motion.a
