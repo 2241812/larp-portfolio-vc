@@ -8,13 +8,20 @@ import { resumeData } from '@/data/resumeData';
 
 const BlogSection = memo(function BlogSection() {
   const { ref, isInView } = useInView({ rootMargin: '300px', once: true });
-  const { gists, isLoading, isError, retry } = useGistData('2241812', isInView);
+  const { gists, isLoading, isError, error, retry } = useGistData('2241812', isInView);
 
   // Filter for gists that have markdown files or specific descriptions to act as "blogs"
   const blogGists = gists.filter(gist => 
     Object.values(gist.files).some(file => file.language === 'Markdown' || file.type === 'text/markdown') || 
     gist.description.toLowerCase().includes('blog')
-  ).slice(0, 4); // Only show top 4
+  ).slice(0, 4);
+
+  // Debug: Log all gists and filter info
+  if (gists.length > 0) {
+    console.log('Total gists fetched:', gists.length);
+    console.log('Gists:', gists);
+    console.log('Filtered blog gists:', blogGists.length);
+  }
 
   return (
     <section id="blog" ref={ref} className="min-h-screen py-24 flex items-center justify-center relative z-10 px-8 md:px-12 w-full">
@@ -38,7 +45,8 @@ const BlogSection = memo(function BlogSection() {
 
         {isError ? (
           <div className="w-full bg-red-950/20 border border-red-500/20 rounded-xl p-8 flex flex-col items-center justify-center">
-            <span className="text-red-400 font-mono text-sm mb-4">ERR_CONNECTION_REFUSED</span>
+            <span className="text-red-400 font-mono text-sm mb-2">ERR_CONNECTION_REFUSED</span>
+            <span className="text-red-400/70 font-mono text-xs mb-4">{error}</span>
             <button
               onClick={retry}
               className="px-6 py-2 text-xs font-mono text-red-400 border border-red-500/50 bg-red-900/20 rounded-lg hover:bg-red-900/40 hover:border-red-400 transition-all duration-300"
@@ -48,7 +56,11 @@ const BlogSection = memo(function BlogSection() {
           </div>
         ) : blogGists.length === 0 && !isLoading ? (
           <div className="w-full bg-neutral-900/40 border border-neutral-800/60 rounded-xl p-8 text-center">
-             <span className="text-neutral-500 font-mono text-sm">No markdown Gists found. Create a public Gist with a .md file to see it here!</span>
+             <span className="text-neutral-500 font-mono text-sm">
+               {gists.length > 0 
+                 ? `Found ${gists.length} gist(s) but none match filter (need .md file or 'blog' in description)`
+                 : 'No gists found. Make sure your gist is public and check browser console for errors.'}
+             </span>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
