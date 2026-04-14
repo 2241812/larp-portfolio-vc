@@ -9,7 +9,7 @@ import Sections from '@/components/ui/Sections';
 import MatrixRain from '@/components/ui/MatrixRain';
 import ParticleBurst, { ParticleBurstRef } from '@/components/ui/ParticleBurst';
 import ChatWidget from '@/components/ChatWidget';
-import GlitchTitle from '@/components/ui/GlitchTitle';
+import TypingTitle from '@/components/ui/TypingTitle';
 import { resumeData } from '@/data/resumeData';
 
 export default function Home() {
@@ -321,8 +321,8 @@ export default function Home() {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 1.5, ease: "easeOut", delay: 1.2 }}
                     >
-                      <GlitchTitle 
-                        titles={resumeData.personalInfo.titleAnimated}
+                      <TypingTitle 
+                        roles={resumeData.personalInfo.titleAnimated}
                         className="text-sm sm:text-base md:text-lg font-semibold"
                       />
                     </motion.div>
