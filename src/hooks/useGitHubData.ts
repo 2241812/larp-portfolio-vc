@@ -84,11 +84,8 @@ export function usePinnedRepos(username: string) {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
       dedupingInterval: 300000, // 5 minutes - reduced request frequency
-      errorRetryInterval: (retryCount) => {
-        // Exponential backoff: 10s, 30s, 90s, 270s, etc.
-        return Math.min(10000 * Math.pow(3, retryCount - 1), 600000);
-      },
-      errorRetryCount: 5, // More retries with exponential backoff
+      errorRetryInterval: 30000, // 30 seconds between retries
+      errorRetryCount: 5, // More retries with longer intervals
       onError: (error) => {
         // Log rate limit errors for debugging
         if (error?.message?.includes('Rate limited')) {
