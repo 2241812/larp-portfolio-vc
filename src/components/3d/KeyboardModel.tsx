@@ -128,10 +128,21 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }:
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    // Scale responsive to viewport - reduce scale on mobile/tablet
-    // Apply additional 50% reduction on mobile for more compact view
-    const mobileAdjustment = modelScale < 0.5 ? 0.5 : 1;
-    let targetScale = isSettled ? (15.0 * modelScale * mobileAdjustment) : (18.0 * modelScale * mobileAdjustment);
+    // Scale responsive to viewport
+    // Mobile (< 0.5): Apply 20% additional reduction (1 - 0.2 = 0.8)
+    // Tablet (0.5-1.0): Apply 10% reduction (1 - 0.1 = 0.9)
+    // Desktop (> 1.0): Normal scaling
+    let mobileReductionFactor = 1;
+    if (modelScale < 0.5) {
+      mobileReductionFactor = 0.8; // 20% reduction for mobile
+    } else if (modelScale < 1.0) {
+      mobileReductionFactor = 0.9; // 10% reduction for tablet
+    }
+
+    let targetScale = isSettled 
+      ? (15.0 * modelScale * mobileReductionFactor) 
+      : (18.0 * modelScale * mobileReductionFactor);
+    
     const targetPosX = 0;
     let targetPosY = isSettled ? (0.45 * modelScale) : (2 * modelScale);
     let targetRotX = isSettled ? 0.4 : 0.6;

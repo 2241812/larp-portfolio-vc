@@ -167,8 +167,14 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
       tabPressedRef.current = false;
     }
 
-    // Start typing on first keypress
-    if (!isActive) {
+    // Prevent typing beyond test text length
+    if (!isActive && inputRef.current && inputRef.current.value.length >= testText.length) {
+      e.preventDefault();
+      return;
+    }
+
+    // Start typing on first keypress (but not for control keys)
+    if (!isActive && !['Tab', 'Shift', 'Control', 'Alt', 'Meta', 'Escape'].includes(e.key)) {
       setIsActive(true);
       startTimeRef.current = Date.now();
     }
@@ -176,18 +182,25 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
     if (onKeyPress) {
       onKeyPress(e.key);
     }
-  }, [isActive, onKeyPress, handleReset]);
+  }, [isActive, onKeyPress, handleReset, testText.length]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newInput = e.target.value;
 
-    if (newInput.length <= testText.length) {
-      setInput(newInput);
-
-      if (newInput.length === testText.length) {
-        setIsFinished(true);
-        setIsActive(false);
+    // Prevent input longer than test text
+    if (newInput.length > testText.length) {
+      if (inputRef.current) {
+        inputRef.current.value = input;
       }
+      return;
+    }
+
+    setInput(newInput);
+
+    // Auto-complete when all text is typed
+    if (newInput.length === testText.length && newInput === testText) {
+      setIsFinished(true);
+      setIsActive(false);
     }
   };
 
@@ -433,87 +446,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
             </div>
           </motion.div>
 
-          {/* Typing Text Box - Centered */}
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            ref={typingBoxRef}
-            onClick={handleBoxClick}
-            className="relative w-full max-w-3xl cursor-text group"
-          >
-            {/* Box Background */}
-            <div className="bg-gradient-to-b from-neutral-900/80 to-neutral-950/80 backdrop-blur-lg border border-cyan-400/20 rounded-xl p-6 shadow-2xl shadow-cyan-400/5 hover:border-cyan-400/40 transition-all duration-300">
-              {/* Visual indicator when not active */}
-              {!isActive && !isFinished && (
-                <motion.div
-                  animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.95, 1.05, 0.95] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 rounded-xl border border-cyan-400/20 pointer-events-none"
-                />
-              )}
 
-              {/* Text Display Container */}
-              <div
-                ref={scrollContainerRef}
-                className="h-40 md:h-48 overflow-y-auto overflow-x-hidden text-2xl md:text-3xl font-mono leading-relaxed text-neutral-600 pb-3"
-                style={{
-                  maskImage: 'linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)',
-                  scrollBehavior: 'smooth',
-                }}
-              >
-                <div className="text-[10px] text-neutral-600 font-mono uppercase tracking-wider">WPM</div>
-                <motion.div
-                  className="text-2xl md:text-3xl font-black text-cyan-400"
-                  style={{ fontFamily: 'var(--font-orbitron)' }}
-                  key={stats.wpm}
-                >
-                  {stats.wpm}
-                </motion.div>
-              </div>
-
-              <div className="flex items-baseline gap-2">
-                <div className="text-[10px] text-neutral-600 font-mono uppercase tracking-wider">Accuracy</div>
-                <motion.div
-                  className={`text-2xl md:text-3xl font-black ${
-                    stats.accuracy >= 98
-                      ? 'text-green-400'
-                      : stats.accuracy >= 95
-                      ? 'text-cyan-400'
-                      : stats.accuracy >= 85
-                      ? 'text-yellow-400'
-                      : 'text-red-400'
-                  }`}
-                  style={{ fontFamily: 'var(--font-orbitron)' }}
-                  key={stats.accuracy}
-                >
-                  {stats.accuracy}%
-                </motion.div>
-              </div>
-
-              <div className="flex items-baseline gap-2">
-                <div className="text-[10px] text-neutral-600 font-mono uppercase tracking-wider">Time</div>
-                <motion.div
-                  className="text-2xl md:text-3xl font-black text-neutral-300"
-                  style={{ fontFamily: 'var(--font-orbitron)' }}
-                  key={stats.timeElapsed}
-                >
-                  {stats.timeElapsed}
-                  <span className="text-sm text-neutral-500">s</span>
-                </motion.div>
-              </div>
-
-              <div className="ml-auto flex items-baseline gap-2">
-                <div className="text-[10px] text-neutral-600 font-mono uppercase tracking-wider">Progress</div>
-                <motion.div
-                  className="text-2xl md:text-3xl font-black text-cyan-300"
-                  style={{ fontFamily: 'var(--font-orbitron)' }}
-                >
-                  {Math.round(progress)}%
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
 
           {/* Typing Text Box - Centered, Hovering with space for keyboard below */}
           <motion.div
@@ -538,7 +471,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
               {/* Text Display Container */}
               <div
                 ref={scrollContainerRef}
-                className="h-48 md:h-56 overflow-y-auto overflow-x-hidden text-3xl md:text-4xl font-mono leading-relaxed text-neutral-600 pb-4"
+                className="h-48 md:h-56 overflow-y-auto overflow-x-hidden text-3xl md:text-4xl font-mono leading-relaxed text-neutral-600 pb-4 px-2"
                 style={{
                   maskImage: 'linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)',
                   scrollBehavior: 'smooth',
@@ -610,14 +543,14 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
           </motion.div>
 
           {/* Spacer for 3D Keyboard - Creates visual separation */}
-          <div className="w-full h-6" />
+          <div className="w-full h-4 md:h-6" />
 
-          {/* 3D Keyboard Model - Below the text box with space */}
+          {/* 3D Keyboard Model - Below the text box with space, responsive height */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="w-full max-w-5xl h-96 flex-shrink-0 pointer-events-none"
+            className="w-full max-w-5xl h-64 md:h-96 flex-shrink-0 pointer-events-none"
           >
             <Scene isSettled={true} />
           </motion.div>
