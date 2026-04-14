@@ -306,24 +306,14 @@ export default function Home() {
                       {resumeData.personalInfo.name}
                     </motion.h1>
 
-                    <motion.p 
-                      initial={{ opacity: 0, letterSpacing: "0em" }}
-                      animate={{ opacity: 1, letterSpacing: "0.05em" }}
-                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.8 }}
-                      className="text-base sm:text-lg md:text-2xl text-cyan-400 uppercase font-semibold text-center"
-                      style={{ fontFamily: 'var(--font-rajdhani)' }}
-                    >
-                      {resumeData.personalInfo.title}
-                    </motion.p>
-
                     <motion.div
                       initial={{ opacity: 0, letterSpacing: "0em" }}
                       animate={{ opacity: 1 }}
-                      transition={{ duration: 1.5, ease: "easeOut", delay: 1.2 }}
+                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.8 }}
                     >
                       <TypingTitle 
-                        roles={resumeData.personalInfo.titleAnimated}
-                        className="text-sm sm:text-base md:text-lg font-semibold"
+                        text="AI Development Intern"
+                        className="text-base sm:text-lg md:text-2xl font-semibold"
                       />
                     </motion.div>
                   </div>
