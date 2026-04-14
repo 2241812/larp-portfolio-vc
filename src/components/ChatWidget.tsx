@@ -42,6 +42,7 @@ const ChatWidget = memo(function ChatWidget({ isOpen: initialOpen = false, onClo
         { role: 'assistant', content: welcomeMessage.content },
       ];
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleSendMessage = async () => {

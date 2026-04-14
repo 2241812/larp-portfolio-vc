@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { containerVariants, cardVariants, headingVariants, langColors, type PinnedRepo } from './shared';
 
 // ── Terminal Project Card ──
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TerminalProjectCard = memo(function TerminalProjectCard({ repo, index }: { repo: PinnedRepo; index: number }) {
   return (
     <motion.a

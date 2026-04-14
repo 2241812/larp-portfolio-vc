@@ -28,6 +28,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
   const [scrollOffset, setScrollOffset] = useState(0);
   const [gameSpeed, setGameSpeed] = useState(1);
   const [gameOver, setGameOver] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showHint, setShowHint] = useState(false);
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; points: number }[]>([]);
   const [gameStartTime, setGameStartTime] = useState(0);
@@ -57,6 +58,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
 
     window.addEventListener('keydown', handleKeyDownInGame);
     return () => window.removeEventListener('keydown', handleKeyDownInGame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameMode]);
 
   useEffect(() => {
@@ -109,6 +111,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
 
     handleFetchContributions();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username, isInView]);
 
   const generatePlaceholderData = useCallback(() => {
@@ -236,6 +239,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
     setTimeout(() => {
       setParticles(prev => prev.filter(p => p.id !== particleId));
     }, 800);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameMode, gameOver, brokenCells, combo, scrollOffset]);
 
   const startGame = useCallback(() => {

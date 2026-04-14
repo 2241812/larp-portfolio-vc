@@ -3,10 +3,12 @@ import { memo, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Environment, ContactShadows, PerspectiveCamera } from '@react-three/drei';
 import KeyboardModel from './KeyboardModel';
+import TypingKeyboardModel from './TypingKeyboardModel';
 import { useViewport } from '@/hooks/useViewport';
 
 interface SceneProps {
   isSettled: boolean;
+  isTypingMode?: boolean;
 }
 
 // Suppress THREE.Clock deprecation warning from @react-three/fiber
@@ -31,7 +33,7 @@ function SuppressClockWarning() {
   return null;
 }
 
-const Scene = memo(function Scene({ isSettled }: SceneProps) {
+const Scene = memo(function Scene({ isSettled, isTypingMode = false }: SceneProps) {
   const viewport = useViewport();
   
   return (
@@ -68,7 +70,11 @@ const Scene = memo(function Scene({ isSettled }: SceneProps) {
         <Environment preset="city" />
         
         <>
-          <KeyboardModel isSettled={isSettled} modelScale={viewport.scale} />
+          {isTypingMode ? (
+            <TypingKeyboardModel isSettled={isSettled} modelScale={viewport.scale} />
+          ) : (
+            <KeyboardModel isSettled={isSettled} modelScale={viewport.scale} />
+          )}
           <ContactShadows 
             position={[0, -0.5, 0]} 
             opacity={0.8} 

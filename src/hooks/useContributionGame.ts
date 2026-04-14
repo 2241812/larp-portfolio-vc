@@ -167,3 +167,4 @@ export const useContributionGame = ({ totalWidth, levelPoints }: UseContribution
     exitGame,
   };
 };
+
