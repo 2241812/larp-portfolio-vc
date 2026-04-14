@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resumeData } from '@/data/resumeData';
 
 interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
@@ -87,16 +87,16 @@ export async function POST(request: NextRequest) {
 
     // Build conversation history with portfolio context
     const portfolioContext = buildPortfolioContext();
-    const systemMessage = {
-      role: 'user' as const,
+    const systemMessage: ChatMessage = {
+      role: 'system',
       content: portfolioContext,
     };
 
     // Prepare messages for OpenRouter
     const openrouterMessages: ChatMessage[] = [
       systemMessage,
-      ...messages,
-      { role: 'user' as const, content: userMessage },
+      ...messages.filter(m => m.role !== 'system'),
+      { role: 'user', content: userMessage },
     ];
 
     // Call OpenRouter API

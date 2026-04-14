@@ -1,34 +1,34 @@
 export const resumeData = {
   personalInfo: {
     name: "Narciso III Javier",
-    title: "Computer Science Student · AI Development Intern",
-    location: "Baguio City, Benguet",
-    phone: "+63-927-872-0192",
-    email: "renzoj156@gmail.com",
+    title: "Game Development Intern · Mega Cat Studios",
+    location: "Baguio City, Philippines",
+    phone: "+63-976-451-1638",
+    email: "2241812@slu.edu.ph",
     linkedin: "https://www.linkedin.com/in/narcisoiii-javier/"
   },
   education: {
-    university: "Saint Louis University | (SAMCIS) School of Computing and Information Studies",
+    university: "Saint Louis University",
     degree: "Bachelor of Science in Computer Science",
     gpa: "3.53",
     classOf: "2027"
   },
   skills: {
     programming: [
+      "C#",
       "Python",
       "Go",
       "JavaScript (ES6+)",
       "Node.js",
       "PHP",
       "C++",
-      "C#",
       "Java",
       "HTML",
       "CSS"
     ],
     frameworks: [
-      "PyQt6",
       "Unity 3D",
+      "PyQt6",
       "AR Foundation",
       "AI Frameworks",
       "OpenCode"
@@ -38,14 +38,17 @@ export const resumeData = {
       "Docker Compose",
       "VSCode Remote Containers",
       "CI/CD Pipelines",
-      "Git/GitHub"
+      "Git/GitHub",
+      "Visual Studio"
     ],
     coreCompetencies: [
+      "Game Development",
+      "Systems Architecture",
+      "Player-Centric Design",
       "Microservices Architecture",
       "Containerization",
-      "Environment Isolation",
       "System Automation",
-      "AI Workflow Integration"
+      "Technical Documentation"
     ],
   },
   skillDescriptions: {
@@ -73,14 +76,18 @@ export const resumeData = {
     "Containerization": "Lightweight alternative to virtualization that encapsulates an application in a container with its own operating environment.",
     "Environment Isolation": "Practice of separating development, testing, and production environments to prevent interference and ensure consistency.",
     "System Automation": "Use of technology to perform tasks with minimal human intervention, increasing efficiency and reducing errors.",
-    "AI Workflow Integration": "Process of incorporating artificial intelligence capabilities into existing business processes and systems."
+    "AI Workflow Integration": "Process of incorporating artificial intelligence capabilities into existing business processes and systems.",
+    "Visual Studio": "Comprehensive integrated development environment (IDE) by Microsoft for building .NET, C#, and C++ applications with powerful debugging and profiling tools.",
+    "Game Development": "Art and science of creating interactive entertainment experiences using engines like Unity 3D, focusing on gameplay mechanics, physics, and player experience.",
+    "Player-Centric Design": "Design philosophy that prioritizes player enjoyment and user experience when developing games and interactive applications.",
+    "Systems Architecture": "Design and structure of software systems, including how components interact, communicate, and scale efficiently."
   },
   projects: [
     {
-      title: "OpenCode-VSCode-Setup",
-      role: "Environment Architect",
+      title: "Unity 3D Game Projects",
+      role: "Game Developer",
       description:
-        "Engineered a quick setup guide and containerized configuration for running an OpenCode AI development environment directly inside a VSCode terminal, using Docker and VSCode Remote Containers for isolated, reproducible sandboxes.",
+        "Developed game systems and mechanics using C# and Unity 3D, building gameplay sensibilities through hands-on personal projects. Focused on player-centric design and iterating on mechanics based on playability and user experience.",
     },
     {
       title: "MultiTask_ContextSwitch",
@@ -90,22 +97,23 @@ export const resumeData = {
       link: "https://github.com/2241812/MultiTask_ContextSwitch"
     },
     {
+      title: "WebDev_Campus-Navigator_CS312",
+      role: "Full-Stack Developer",
+      description:
+        "Designed a containerized microservices web application using Docker, Go, Node.js, and PHP to handle scalable campus navigation requests powered by Dijkstra's algorithm.",
+      link: "https://github.com/2241812/WebDev_Campus-Navigator_CS312"
+    },
+    {
+      title: "OpenCode-VSCode-Setup",
+      role: "Environment Architect",
+      description:
+        "Engineered a quick setup guide and containerized configuration for running an OpenCode AI development environment directly inside a VSCode terminal, using Docker and VSCode Remote Containers for isolated, reproducible sandboxes.",
+    },
+    {
       title: "Basic Hand Sign Recognition System",
       role: "AI Engineer",
       description: "Built an end-to-end computer vision pipeline using a CNN model to interpret hand signs via real-time webcam feed.",
       link: "https://colab.research.google.com/drive/1JtmdmGKfQzO4xnSUnl4rRVXulx5v6TJG?usp=sharing"
-    },
-    {
-      title: "WebDev_Campus-Navigator_CS312",
-      role: "Full-Stack Developer",
-      description:
-        "Designed a containerized microservices web application using Docker, Go, Node.js, and PHP to handle scalable campus navigation requests powered by Dijkstra’s algorithm.",
-      link: "https://github.com/2241812/WebDev_Campus-Navigator_CS312"
-    },
-    {
-      title: "Baguio AR Application Project",
-      role: "Backend Developer",
-      description: "Developed a mobile Augmented Reality (AR) application using Unity 3D and AR Foundation to interactively display Baguio City's historical data."
     }
   ]
 };
