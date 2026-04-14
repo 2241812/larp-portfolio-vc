@@ -18,8 +18,20 @@ export interface GistData {
 }
 
 const fetcher = async <T>(url: string): Promise<T> => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch');
+  const headers: HeadersInit = {
+    'Accept': 'application/vnd.github.v3+json',
+  };
+
+  // Add GitHub token if available for higher rate limits
+  if (process.env.NEXT_PUBLIC_GITHUB_TOKEN) {
+    headers['Authorization'] = `Bearer ${process.env.NEXT_PUBLIC_GITHUB_TOKEN}`;
+  }
+
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    const error = new Error('Failed to fetch gists');
+    throw error;
+  }
   return res.json();
 };
 
@@ -32,6 +44,7 @@ export function useGistData(username: string, isInView: boolean) {
       revalidateOnReconnect: true,
       dedupingInterval: 60000,
       errorRetryCount: 3,
+      errorRetryInterval: 5000,
     }
   );
 
@@ -39,6 +52,7 @@ export function useGistData(username: string, isInView: boolean) {
     gists: data || [],
     isLoading,
     isError: !!error,
+    error: error?.message,
     retry: () => mutate(),
   };
 }
