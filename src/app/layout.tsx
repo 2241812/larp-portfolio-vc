@@ -85,8 +85,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${rajdhani.variable} h-full antialiased`}
     >
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/logo.jpg" sizes="any" />
+        <link rel="apple-touch-icon" href="/logo.jpg" />
       </head>
       <body className="min-h-full">{children}</body>
     </html>
