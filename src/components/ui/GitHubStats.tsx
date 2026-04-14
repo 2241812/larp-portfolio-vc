@@ -539,9 +539,9 @@ const GitHubStats = memo(function GitHubStats() {
                 <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-900/40 to-transparent" />
 
                 {/* Two 2x2 grids side by side */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
                   {/* Profile stats 2x2 */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {[
                       { label: 'Repos', value: userData.public_repos.toLocaleString(), icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
                       { label: 'Followers', value: userData.followers.toLocaleString(), icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
@@ -550,7 +550,7 @@ const GitHubStats = memo(function GitHubStats() {
                     ].map((stat) => (
                       <motion.div
                         key={stat.label}
-                        className="relative rounded-lg p-3 flex flex-col items-center text-center bg-cyan-950/20 border border-cyan-900/30 cursor-default overflow-hidden"
+                        className="relative rounded-lg p-2.5 sm:p-3 md:p-4 flex flex-col items-center text-center bg-cyan-950/20 border border-cyan-900/30 cursor-default overflow-hidden"
                         whileHover={{
                           scale: 1.04,
                           borderColor: '#22d3ee66',
@@ -558,19 +558,19 @@ const GitHubStats = memo(function GitHubStats() {
                         }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div className="w-7 h-7 rounded-md bg-cyan-900/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400 mb-1.5">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <div className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7 rounded-md bg-cyan-900/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400 mb-1 sm:mb-1.5">
+                          <svg className="w-3 sm:w-3.5 md:w-4 h-3 sm:h-3.5 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
                           </svg>
                         </div>
                         <motion.span
-                          className="text-lg font-black text-neutral-100 tracking-tight"
+                          className="text-base sm:text-lg md:text-xl font-black text-neutral-100 tracking-tight"
                           style={{ fontFamily: 'var(--font-orbitron)' }}
                           whileHover={{ color: '#22d3ee' }}
                         >
                           {stat.value}
                         </motion.span>
-                        <span className="text-[9px] text-neutral-500 font-mono uppercase tracking-widest mt-0.5">
+                        <span className="text-[8px] sm:text-[9px] md:text-[10px] text-neutral-500 font-mono uppercase tracking-widest mt-0.5">
                           {stat.label}
                         </span>
                       </motion.div>
@@ -578,7 +578,7 @@ const GitHubStats = memo(function GitHubStats() {
                   </div>
 
                   {/* Streak stats 2x2 */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {[
                       { label: 'Streak', value: `${streakLoading ? '...' : streak?.currentStreak ?? 0}`, icon: 'M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z' },
                       { label: 'Longest', value: `${streakLoading ? '...' : streak?.longestStreak ?? 0}`, icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
@@ -587,7 +587,7 @@ const GitHubStats = memo(function GitHubStats() {
                     ].map((stat) => (
                       <motion.div
                         key={stat.label}
-                        className="relative rounded-lg p-3 flex flex-col items-center text-center bg-cyan-900/10 border border-cyan-700/30 cursor-default overflow-hidden"
+                        className="relative rounded-lg p-2.5 sm:p-3 md:p-4 flex flex-col items-center text-center bg-cyan-900/10 border border-cyan-700/30 cursor-default overflow-hidden"
                         whileHover={{
                           scale: 1.04,
                           borderColor: '#22d3ee80',
@@ -595,13 +595,13 @@ const GitHubStats = memo(function GitHubStats() {
                         }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div className="w-7 h-7 rounded-md bg-cyan-800/40 border border-cyan-600/40 flex items-center justify-center text-cyan-300 mb-1.5">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <div className="w-5 sm:w-6 md:w-7 h-5 sm:h-6 md:h-7 rounded-md bg-cyan-800/40 border border-cyan-600/40 flex items-center justify-center text-cyan-300 mb-1 sm:mb-1.5">
+                          <svg className="w-3 sm:w-3.5 md:w-4 h-3 sm:h-3.5 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
                           </svg>
                         </div>
                         <motion.span
-                          className="text-lg font-black text-cyan-300 tracking-tight"
+                          className="text-base sm:text-lg md:text-xl font-black text-cyan-300 tracking-tight"
                           style={{ fontFamily: 'var(--font-orbitron)' }}
                           whileHover={{
                             color: '#67e8f9',
@@ -610,7 +610,7 @@ const GitHubStats = memo(function GitHubStats() {
                         >
                           {stat.value}
                         </motion.span>
-                        <span className="text-[9px] text-cyan-600 font-mono uppercase tracking-widest mt-0.5">
+                        <span className="text-[8px] sm:text-[9px] md:text-[10px] text-cyan-600 font-mono uppercase tracking-widest mt-0.5">
                           {stat.label}
                         </span>
                       </motion.div>

@@ -3,6 +3,7 @@ import { memo, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Environment, ContactShadows, PerspectiveCamera } from '@react-three/drei';
 import KeyboardModel from './KeyboardModel';
+import { useViewport } from '@/hooks/useViewport';
 
 interface SceneProps {
   isSettled: boolean;
@@ -31,6 +32,8 @@ function SuppressClockWarning() {
 }
 
 const Scene = memo(function Scene({ isSettled }: SceneProps) {
+  const viewport = useViewport();
+  
   return (
     <div className="w-full h-full absolute inset-0">
       <Canvas
@@ -49,8 +52,12 @@ const Scene = memo(function Scene({ isSettled }: SceneProps) {
         {/* Custom frame loop to avoid THREE.Clock deprecation warning */}
         <SuppressClockWarning />
         
-        {/* Camera positioned for better keyboard view during loading */}
-        <PerspectiveCamera makeDefault position={[0, 2, 5]} fov={45} />
+        {/* Camera positioned responsively based on viewport */}
+        <PerspectiveCamera 
+          makeDefault 
+          position={[0, 2 * viewport.scale, 5 * viewport.scale]} 
+          fov={45 + (1 - viewport.scale) * 20} 
+        />
         
         {/* Enhanced lighting for dramatic effect */}
         <ambientLight intensity={0.3} />
@@ -61,11 +68,11 @@ const Scene = memo(function Scene({ isSettled }: SceneProps) {
         <Environment preset="city" />
         
         <>
-          <KeyboardModel isSettled={isSettled} />
+          <KeyboardModel isSettled={isSettled} modelScale={viewport.scale} />
           <ContactShadows 
             position={[0, -0.5, 0]} 
             opacity={0.8} 
-            scale={20} 
+            scale={20 * viewport.scale} 
             blur={2} 
             far={5}
             color="#22d3ee"

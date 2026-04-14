@@ -296,10 +296,10 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
       ) : (
         <>
           {/* Header row: stats on left, mode button on right */}
-          <div className="flex items-center justify-between mb-3 gap-4">
+          <div className="flex items-center justify-between mb-4 sm:mb-5 gap-4">
             <div className="flex items-center gap-3 min-w-0">
               {!gameMode && (
-                <span className="text-xs text-neutral-500 font-mono truncate">
+                <span className="text-xs sm:text-sm text-neutral-500 font-mono truncate">
                   {totalContributions} contributions
                 </span>
               )}
@@ -352,19 +352,19 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
             )}
 
             {/* Legend - moved to bottom-left with padding */}
-            <div className="absolute -left-4 -bottom-6 flex items-center gap-1.5 z-10">
-              <span className="text-[10px] text-neutral-600 font-mono">Less</span>
+            <div className="absolute -left-4 -bottom-7 sm:-bottom-8 flex items-center gap-1.5 sm:gap-2 z-10">
+              <span className="text-[8px] sm:text-[10px] text-neutral-600 font-mono">Less</span>
               {LEVEL_COLORS.map((color, i) => (
-                <div key={i} className={`w-[11px] h-[11px] rounded-sm ${color} ${LEVEL_GLOWS[i]}`} />
+                <div key={i} className={`w-3 sm:w-3.5 h-3 sm:h-3.5 rounded-sm ${color} ${LEVEL_GLOWS[i]}`} />
               ))}
-              <span className="text-[10px] text-neutral-600 font-mono">More</span>
+              <span className="text-[8px] sm:text-[10px] text-neutral-600 font-mono">More</span>
             </div>
 
             {/* Contribution grid with scrolling */}
             <div
               ref={containerRef}
-              className="overflow-hidden rounded-lg relative pr-[140px]"
-              style={{ height: `${7 * CELL_SIZE + 12}px` }}
+              className="overflow-hidden rounded-lg relative pr-[160px] sm:pr-[180px]"
+              style={{ height: `${7 * 18 + 14}px` }}
             >
               {/* Scroll indicator line */}
               {gameMode && !gameOver && (
@@ -379,7 +379,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
                 }}
               >
                 {weeks.map((week, weekIdx) => (
-                  <div key={weekIdx} className="flex flex-col gap-[3px]">
+                  <div key={weekIdx} className="flex flex-col gap-1 sm:gap-[3px]">
                     {week.map((day, dayIdx) => {
                       const isBroken = brokenCells.has(day.date);
                       const hasData = !!day.date;
@@ -387,7 +387,7 @@ const ContributionCalendar = memo(forwardRef(function ContributionCalendar({ use
                       return (
                         <motion.div
                           key={day.date || `empty-${weekIdx}-${dayIdx}`}
-                          className={`w-[11px] h-[11px] rounded-sm transition-all duration-150 ${
+                          className={`w-4 sm:w-4.5 h-4 sm:h-4.5 rounded-sm transition-all duration-150 ${
                             gameMode && hasData && !isBroken && !gameOver
                               ? `${LEVEL_COLORS[day.level]} ${LEVEL_GLOWS[day.level]} cursor-crosshair hover:scale-[2] hover:brightness-150`
                               : isBroken

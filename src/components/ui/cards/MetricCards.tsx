@@ -68,13 +68,13 @@ export const StatCard = memo(function StatCard({
       viewport={{ once: true }}
       whileHover={{ scale: 1.05, y: -5 }}
       onClick={onClick}
-      className="p-4 rounded-lg bg-neutral-900/60 border border-cyan-900/30 hover:border-cyan-400/60 transition-all duration-300 text-center cursor-pointer"
+      className="p-3 sm:p-5 md:p-6 rounded-lg bg-neutral-900/60 border border-cyan-900/30 hover:border-cyan-400/60 transition-all duration-300 text-center cursor-pointer"
     >
-      <div className="flex justify-center mb-2 text-cyan-400">{icon}</div>
-      <div className="text-2xl font-bold text-cyan-400 font-mono mb-1">
+      <div className="flex justify-center mb-2 sm:mb-3 text-cyan-400">{icon}</div>
+      <div className="text-xl sm:text-2xl font-bold text-cyan-400 font-mono mb-1">
         <AnimatedCounter value={value} suffix={suffix} />
       </div>
-      <div className="text-xs text-neutral-500 font-mono uppercase tracking-widest">
+      <div className="text-[10px] sm:text-xs text-neutral-500 font-mono uppercase tracking-widest">
         {label}
       </div>
     </motion.div>

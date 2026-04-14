@@ -31,14 +31,14 @@ const ContactSection = memo(function ContactSection() {
   }, []);
 
   return (
-    <section id="contact" className="min-h-screen flex flex-col items-center justify-center px-8 md:px-12 relative py-20">
+    <section id="contact" className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-8 md:px-12 relative py-20 sm:py-0">
       {/* Floating Stats Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
         <div
-          className="absolute top-10 right-10 w-32 h-32 rounded-full border border-cyan-500/20 animate-[spin_20s_linear_infinite]"
+          className="absolute top-10 right-10 w-24 sm:w-32 h-24 sm:h-32 rounded-full border border-cyan-500/20 animate-[spin_20s_linear_infinite]"
         />
         <div
-          className="absolute bottom-20 left-10 w-40 h-40 rounded-full border border-cyan-500/10 animate-[spin_25s_linear_infinite_reverse]"
+          className="absolute bottom-20 left-10 w-32 sm:w-40 h-32 sm:h-40 rounded-full border border-cyan-500/10 animate-[spin_25s_linear_infinite_reverse]"
         />
       </div>
 
@@ -47,29 +47,29 @@ const ContactSection = memo(function ContactSection() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
-        className="w-full max-w-6xl relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
+        className="w-full max-w-6xl relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12"
       >
         {/* LEFT SIDE: Main Contact Terminal */}
         <div className="bg-neutral-950/90 backdrop-blur-xl border border-cyan-900/40 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.05)] h-fit">
           {/* Terminal Title Bar */}
-          <div className="flex items-center gap-2 px-4 py-3 bg-neutral-900/60 border-b border-cyan-900/30">
-            <div className="w-3 h-3 rounded-full bg-red-500/60 hover:bg-red-500/80 transition-colors" aria-hidden="true" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/60 hover:bg-yellow-500/80 transition-colors" aria-hidden="true" />
-            <div className="w-3 h-3 rounded-full bg-green-500/60 hover:bg-green-500/80 transition-colors" aria-hidden="true" />
-            <span className="ml-3 text-xs font-mono text-neutral-500">contact_protocol.sh â€” bash</span>
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-neutral-900/60 border-b border-cyan-900/30">
+            <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-red-500/60 hover:bg-red-500/80 transition-colors" aria-hidden="true" />
+            <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-yellow-500/60 hover:bg-yellow-500/80 transition-colors" aria-hidden="true" />
+            <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-500/60 hover:bg-green-500/80 transition-colors" aria-hidden="true" />
+            <span className="ml-2 sm:ml-3 text-[10px] sm:text-xs font-mono text-neutral-500 truncate">contact_protocol.sh</span>
           </div>
 
           {/* Terminal Content */}
-          <div className="p-8 md:p-10">
-            <motion.h2 variants={headingVariants} className="text-2xl font-bold text-cyan-400 mb-2 tracking-wider uppercase font-mono">
+          <div className="p-4 sm:p-8 md:p-10">
+            <motion.h2 variants={headingVariants} className="text-xl sm:text-2xl font-bold text-cyan-400 mb-2 tracking-wider uppercase font-mono">
               <span className="text-neutral-600" aria-hidden="true">$</span> 06. initiate_protocol
             </motion.h2>
-            <motion.p variants={cardVariants} className="text-neutral-500 text-xs font-mono mb-8">
+            <motion.p variants={cardVariants} className="text-neutral-500 text-xs font-mono mb-6 sm:mb-8">
               Establish a connection through any channel below.
             </motion.p>
 
             {/* Social Links Grid */}
-            <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
               <GlitchSocialLink
                 href="https://github.com/2241812"
                 onClick={handleConfettiClick}

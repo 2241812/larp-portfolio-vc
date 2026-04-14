@@ -28,13 +28,13 @@ const SkillsList = memo(function SkillsList({
   isLoadingGitHub: boolean;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {Object.entries(enhancedSkills).map(([category, skills]) => (
         <div key={category}>
-          <h4 className="text-sm font-bold text-neutral-400 mb-3 uppercase tracking-widest border-b border-cyan-900/50 pb-2">
+          <h4 className="text-xs sm:text-sm font-bold text-neutral-400 mb-2 sm:mb-3 uppercase tracking-widest border-b border-cyan-900/50 pb-2">
             {category}
           </h4>
-          <div className="flex flex-wrap gap-2" role="group" aria-label={`${category} skills`}>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2" role="group" aria-label={`${category} skills`}>
             {skills.map((skill, i) => {
               const isActive = activeSkill === skill.name;
               return (
@@ -48,7 +48,7 @@ const SkillsList = memo(function SkillsList({
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveSkill(isActive ? null : skill.name)}
                   aria-pressed={isActive}
-                  className={`relative px-3 py-1.5 text-sm font-mono rounded-md border transition-all duration-300 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-neutral-950 ${
+                  className={`relative px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-mono rounded-md border transition-all duration-300 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-neutral-950 ${
                     isActive
                       ? 'bg-cyan-500/10 text-cyan-400 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
                       : 'bg-neutral-900/50 text-neutral-400 border-neutral-800 hover:border-cyan-500/50 hover:text-cyan-300'
@@ -61,7 +61,7 @@ const SkillsList = memo(function SkillsList({
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                      className="ml-1 sm:ml-2 inline-flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
                       title={`Found in ${skill.endorsements} repository(ies)`}
                     >
                       <span className="w-1 h-1 rounded-full bg-cyan-400" aria-hidden="true" />
@@ -148,7 +148,7 @@ const ProjectResultCard = memo(function ProjectResultCard({
       animate={{ opacity: 1, y: 0, borderColor: 'rgba(8, 145, 178, 0.2)' }}
       transition={{ delay: index * 0.05 }}
       whileHover={{ scale: 1.01, borderColor: 'rgba(34, 211, 238, 0.4)' }}
-      className="group block p-4 bg-neutral-950/60 border rounded-lg transition-all duration-300 no-underline focus:outline-none focus:ring-2 focus:ring-cyan-400"
+      className="group block p-3 sm:p-4 bg-neutral-950/60 border rounded-lg transition-all duration-300 no-underline focus:outline-none focus:ring-2 focus:ring-cyan-400"
     >
         {content}
       </motion.a>
@@ -161,7 +161,7 @@ const ProjectResultCard = memo(function ProjectResultCard({
       animate={{ opacity: 1, y: 0, borderColor: 'rgba(8, 145, 178, 0.2)' }}
       transition={{ delay: index * 0.05 }}
       whileHover={{ scale: 1.01, borderColor: 'rgba(34, 211, 238, 0.4)' }}
-      className="group block p-4 bg-neutral-950/60 border rounded-lg transition-all duration-300"
+      className="group block p-3 sm:p-4 bg-neutral-950/60 border rounded-lg transition-all duration-300"
     >
       {content}
     </motion.div>
@@ -206,11 +206,11 @@ const RelatedProjectsPanel = memo(function RelatedProjectsPanel({
     : [];
 
   return (
-    <div className="relative min-h-[400px] bg-neutral-900/30 border border-cyan-900/20 rounded-xl p-6 overflow-hidden">
+    <div className="relative min-h-[350] sm:min-h-[400px] bg-neutral-900/30 border border-cyan-900/20 rounded-xl p-4 sm:p-6 overflow-hidden">
       {/* Terminal header */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-cyan-900/20">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-cyan-900/20">
         <span className="text-cyan-400 text-lg leading-none">—</span>
-        <span className="text-xs font-mono text-neutral-500">
+        <span className="text-[11px] sm:text-xs font-mono text-neutral-500 truncate">
           {activeSkill ? `query_results — ${activeSkill}` : 'awaiting_selection'}
         </span>
       </div>
@@ -310,7 +310,7 @@ const SkillsSection = memo(function SkillsSection({ allProjects, pinnedRepos }: 
   }, [analysis]);
 
   return (
-    <section ref={sectionRef} id="skills" className="min-h-screen flex items-center justify-start px-8 md:px-12 relative">
+    <section ref={sectionRef} id="skills" className="min-h-screen flex items-center justify-start px-4 sm:px-8 md:px-12 relative py-20 sm:py-0">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -318,22 +318,22 @@ const SkillsSection = memo(function SkillsSection({ allProjects, pinnedRepos }: 
         viewport={{ once: true, amount: 0.15 }}
         className="w-full max-w-5xl relative z-10 py-12"
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-3 sm:gap-4">
           <motion.div variants={headingVariants} className="flex items-center gap-4">
-            <div className="w-8 h-[1px] bg-cyan-500/50" aria-hidden="true" />
-            <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">04. Skills & Expertise</h2>
+            <div className="w-6 sm:w-8 h-[1px] bg-cyan-500/50" aria-hidden="true" />
+            <h2 className="text-xl sm:text-2xl font-mono text-cyan-400 tracking-widest uppercase">04. Skills & Expertise</h2>
           </motion.div>
-          <motion.p variants={cardVariants} className="text-xs font-mono text-neutral-500">
+          <motion.p variants={cardVariants} className="text-[10px] sm:text-xs font-mono text-neutral-500 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             [ SELECT SKILL TO FILTER PROJECTS ]
             {analysis && (
-              <span className="ml-2 text-cyan-400">
+              <span className="text-cyan-400">
                 {analysis.skills.length} skills detected
               </span>
             )}
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-8">
           <SkillsList
             activeSkill={activeSkill}
             setActiveSkill={setActiveSkill}

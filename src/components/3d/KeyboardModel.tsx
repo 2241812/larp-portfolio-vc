@@ -16,7 +16,7 @@ const KEY_MAP: Record<string, string> = {
   'Digit1': 'Object_104', 'Digit2': 'Object_106', 'Digit3': 'Object_108', 'Digit4': 'Object_110', 'Digit5': 'Object_112', 'Digit6': 'Object_114', 'Digit7': 'Object_116', 'Digit8': 'Object_118', 'Digit9': 'Object_120', 'Digit0': 'Object_122', 'Minus': 'Object_124', 'Backspace': 'Object_98', 'KeyQ': 'Object_74', 'KeyW': 'Object_166', 'KeyE': 'Object_168', 'KeyR': 'Object_170', 'KeyT': 'Object_172', 'KeyY': 'Object_174', 'KeyU': 'Object_176', 'KeyI': 'Object_178', 'KeyO': 'Object_180', 'KeyP': 'Object_182', 'KeyA': 'Object_68', 'KeyS': 'Object_128', 'KeyD': 'Object_130', 'KeyF': 'Object_132', 'KeyG': 'Object_134', 'KeyH': 'Object_136', 'KeyJ': 'Object_138', 'KeyK': 'Object_140', 'KeyL': 'Object_142', 'Enter': 'Object_100', 'KeyZ': 'Object_70', 'KeyX': 'Object_148', 'KeyC': 'Object_150', 'KeyV': 'Object_152', 'KeyB': 'Object_154', 'KeyN': 'Object_156', 'KeyM': 'Object_158', 'Comma': 'Object_160', 'Period': 'Object_162', 'Slash': 'Object_164', 'Space': 'Object_80'
 };
 
-const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: boolean }) {
+const KeyboardModel = memo(function KeyboardModel({ isSettled, modelScale = 1 }: { isSettled: boolean; modelScale?: number }) {
   const { scene, nodes } = useGLTF('/models/keyboard.glb') as any;
   const groupRef = useRef<THREE.Group>(null);
   const targetRotY = useRef<number | null>(null);
@@ -128,9 +128,10 @@ const KeyboardModel = memo(function KeyboardModel({ isSettled }: { isSettled: bo
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    let targetScale = isSettled ? 15.0 : 18.0;
+    // Scale responsive to viewport - reduce scale on mobile/tablet
+    let targetScale = isSettled ? (15.0 * modelScale) : (18.0 * modelScale);
     const targetPosX = 0;
-    let targetPosY = isSettled ? 0.45 : 2;
+    let targetPosY = isSettled ? (0.45 * modelScale) : (2 * modelScale);
     let targetRotX = isSettled ? 0.4 : 0.6;
     let finalRotY = isSettled ? (targetRotY.current || 0) : 0;
 

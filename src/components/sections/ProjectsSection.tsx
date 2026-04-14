@@ -25,15 +25,15 @@ const TerminalProjectCard = memo(function TerminalProjectCard({ repo, index }: {
         <span className="ml-2 text-[10px] font-mono text-neutral-500 truncate">{repo.name}</span>
       </div>
 
-      <div className="p-5">
-        <h3 className="text-lg font-bold text-neutral-100 group-hover:text-cyan-300 transition-colors duration-300 font-mono">
+      <div className="p-3 sm:p-5">
+        <h3 className="text-base sm:text-lg font-bold text-neutral-100 group-hover:text-cyan-300 transition-colors duration-300 font-mono">
           {repo.name}
         </h3>
-        <p className="text-sm leading-relaxed text-neutral-400 mt-2 mb-4 line-clamp-3 min-h-[3rem]">
+        <p className="text-xs sm:text-sm leading-relaxed text-neutral-400 mt-2 mb-4 line-clamp-3 min-h-[3rem]">
           {repo.description || 'No description provided.'}
         </p>
 
-        <div className="flex items-center gap-4 text-xs font-mono text-neutral-500">
+        <div className="flex items-center gap-3 sm:gap-4 text-xs font-mono text-neutral-500 flex-wrap">
           {repo.language && (
             <span className="flex items-center gap-1.5">
               <span
@@ -41,7 +41,7 @@ const TerminalProjectCard = memo(function TerminalProjectCard({ repo, index }: {
                 style={{ backgroundColor: langColors[repo.language] || '#22d3ee' }}
                 aria-hidden="true"
               />
-              {repo.language}
+              <span className="text-xs sm:text-xs">{repo.language}</span>
             </span>
           )}
           <span className="flex items-center gap-1">
@@ -107,7 +107,7 @@ interface ProjectsSectionProps {
 
 const ProjectsSection = memo(function ProjectsSection({ pinnedRepos, reposLoading, reposError, onRetry }: ProjectsSectionProps) {
   return (
-    <section id="projects" className="min-h-screen flex items-center justify-start px-8 md:px-12 relative">
+    <section id="projects" className="min-h-screen flex items-center justify-start px-4 sm:px-8 md:px-12 relative py-20 sm:py-0">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -115,35 +115,35 @@ const ProjectsSection = memo(function ProjectsSection({ pinnedRepos, reposLoadin
         viewport={{ once: true, amount: 0.15 }}
         className="w-full max-w-5xl relative z-10 py-12"
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-3 sm:gap-4">
           <motion.div variants={headingVariants} className="flex items-center gap-4">
-            <div className="w-8 h-[1px] bg-cyan-500/50" aria-hidden="true" />
-            <h2 className="text-2xl font-mono text-cyan-400 tracking-widest uppercase">03. Featured Output</h2>
+            <div className="w-6 sm:w-8 h-[1px] bg-cyan-500/50" aria-hidden="true" />
+            <h2 className="text-xl sm:text-2xl font-mono text-cyan-400 tracking-widest uppercase">03. Featured Output</h2>
           </motion.div>
-          <motion.p variants={cardVariants} className="text-xs font-mono text-neutral-500">
+          <motion.p variants={cardVariants} className="text-[10px] sm:text-xs font-mono text-neutral-500">
             [ LIVE REPOSITORIES ]
           </motion.p>
         </div>
 
         {reposLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" aria-label="Loading projects">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6" aria-label="Loading projects">
             <ProjectSkeleton />
             <ProjectSkeleton />
           </div>
         ) : reposError ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-left py-12" role="alert">
-            <div className="text-cyan-400 font-mono text-sm mb-4">[ CONNECTION FAILED ]</div>
+            <div className="text-cyan-400 font-mono text-xs sm:text-sm mb-4">[ CONNECTION FAILED ]</div>
             <button
               onClick={onRetry}
-              className="px-6 py-2 text-xs font-mono uppercase tracking-wider rounded border border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/10 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="px-4 sm:px-6 py-2 text-xs font-mono uppercase tracking-wider rounded border border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/10 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400"
             >
               RETRY
             </button>
           </motion.div>
         ) : pinnedRepos.length === 0 ? (
-          <div className="text-neutral-500 font-mono text-sm">[ NO DATA ]</div>
+          <div className="text-neutral-500 font-mono text-xs sm:text-sm">[ NO DATA ]</div>
         ) : (
-          <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {pinnedRepos.map((repo) => (
               <TerminalProjectCard key={repo.name} repo={repo} index={0} />
             ))}
