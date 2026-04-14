@@ -259,7 +259,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
     <div className="w-full h-screen bg-neutral-950 flex overflow-hidden relative">
       {/* 3D Background Scene - Full screen backdrop */}
       <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
-        <Scene isSettled={true} isTypingMode={true} />
+        <Scene isSettled={true} />
       </div>
 
       {/* Welcome Screen */}
@@ -788,7 +788,7 @@ const TypingGame = memo(function TypingGame({ testText: initialTestText, onKeyPr
             transition={{ duration: 0.6, delay: 0.3 }}
             className="w-full max-w-5xl h-64 md:h-96 flex-shrink-0 pointer-events-none"
           >
-            <Scene isSettled={true} isTypingMode={true} />
+            <Scene isSettled={true} />
           </motion.div>
         </div>
       </div>
