@@ -33,7 +33,7 @@ const ChatWidget = memo(function ChatWidget({ isOpen: initialOpen = false, onClo
     if (isOpen && messages.length === 0) {
       const welcomeMessage: Message = {
         id: 'welcome',
-        content: "Hi! 👋 I'm a portfolio chatbot powered by AI. Ask me about skills, projects, education, or how to get in touch!",
+        content: "Hey! 👋 I'm Narciso, a CS student and AI Development Intern. Ask me anything about my skills, projects, or how to get in touch!",
         role: 'assistant',
         timestamp: new Date(),
       };
@@ -91,7 +91,7 @@ const ChatWidget = memo(function ChatWidget({ isOpen: initialOpen = false, onClo
     setMessages([
       {
         id: 'welcome',
-        content: "Hi! 👋 I'm a portfolio chatbot. Ask me anything about skills, projects, or experience!",
+        content: "Hey! 👋 I'm Narciso. What would you like to know about me?",
         role: 'assistant',
         timestamp: new Date(),
       },
