@@ -454,9 +454,14 @@ const GitHubStats = memo(function GitHubStats() {
     }
   }, []);
 
+  // Fetch activity on component mount (don't wait for isInView)
+  useEffect(() => {
+    fetchActivity();
+  }, [fetchActivity]);
+
+  // Set up polling interval when section comes into view
   useEffect(() => {
     if (!isInView) return;
-    fetchActivity();
     const interval = setInterval(fetchActivity, 300_000);
     return () => clearInterval(interval);
   }, [fetchActivity, isInView]);
@@ -715,7 +720,7 @@ const GitHubStats = memo(function GitHubStats() {
           )}
 
           {!activityLoading && !activityError && events.length > 0 && (
-            <motion.div variants={containerVariants} className="space-y-2">
+            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-2">
               {events.map((event) => {
                 const info = getEventInfo(event);
                 return (

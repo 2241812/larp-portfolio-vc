@@ -50,3 +50,6 @@ Desktop.ini
 
 # misc config
 monitor_config.json
+
+.vercel
+.env*.local
