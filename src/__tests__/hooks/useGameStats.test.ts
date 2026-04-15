@@ -20,7 +20,7 @@ const storageMock: Storage = {
 };
 
 // Replace the global localStorage so that compiled hook modules see our mock.
-// @ts-ignore
+// @ts-expect-error – global.localStorage is not in Node.js types but is valid in jest-environment-jsdom
 global.localStorage = storageMock;
 try {
   Object.defineProperty(window, 'localStorage', {
